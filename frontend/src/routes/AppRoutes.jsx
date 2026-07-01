@@ -7,10 +7,13 @@ import MeusTreinos from "../pages/aluno/MeusTreinos";
 import Treino from "../pages/aluno/Treino";
 import Login from "../pages/auth/Login";
 import Alunos from "../pages/personal/Alunos";
+import AlunosIndex from "../pages/personal/Alunos/AlunosIndex";
+import AlunosNewEdit from "../pages/personal/Alunos/AlunosNewEdit";
+import AlunosShow from "../pages/personal/Alunos/AlunosShow";
 import DashboardPersonal from "../pages/personal/Dashboard";
-import ExerciciosIndex from "../pages/personal/ExerciciosIndex";
-import ExerciciosNewEdit from "../pages/personal/ExerciciosNewEdit";
-import ExerciciosShow from "../pages/personal/ExerciciosShow";
+import ExerciciosIndex from "../pages/personal/Exercicios/ExerciciosIndex";
+import ExerciciosNewEdit from "../pages/personal/Exercicios/ExerciciosNewEdit";
+import ExerciciosShow from "../pages/personal/Exercicios/ExerciciosShow";
 import Treinos from "../pages/personal/Treinos";
 
 export default function AppRoutes() {
@@ -24,7 +27,10 @@ export default function AppRoutes() {
         <Route path="/personal" element={<PersonalLayout />}>
           <Route index element={<DashboardPersonal />} />
 
-          <Route path="alunos" element={<Alunos />} />
+          <Route path="alunos" element={<AlunosIndex />} />
+          <Route path="alunos/novo" element={<AlunosNewEdit />} />
+          <Route path="alunos/:id" element={<AlunosShow />} />
+          <Route path="alunos/:id/editar" element={<AlunosNewEdit />} />
 
           <Route path="treinos" element={<Treinos />} />
 

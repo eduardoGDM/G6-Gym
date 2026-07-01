@@ -9,17 +9,17 @@ import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { useNavigate, useParams } from "react-router-dom";
 
-import api from "../../api/axios";
-import PageContainer from "../../components/common/PageContainer";
-import PageTitle from "../../components/common/PageTitle";
-import { Button } from "../../components/ui/button";
+import api from "../../../api/axios";
+import PageContainer from "../../../components/common/PageContainer";
+import PageTitle from "../../../components/common/PageTitle";
+import { Button } from "../../../components/ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "../../components/ui/card";
+} from "../../../components/ui/card";
 
 export default function ExerciciosShow() {
   const navigate = useNavigate();

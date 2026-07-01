@@ -6,21 +6,21 @@ import toast from "react-hot-toast";
 import { useNavigate, useParams } from "react-router-dom";
 import * as yup from "yup";
 
-import api from "../../api/axios";
-import PageContainer from "../../components/common/PageContainer";
-import PageTitle from "../../components/common/PageTitle";
-import { Button } from "../../components/ui/button";
+import api from "../../../api/axios";
+import PageContainer from "../../../components/common/PageContainer";
+import PageTitle from "../../../components/common/PageTitle";
+import { Button } from "../../../components/ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "../../components/ui/card";
-import { Input } from "../../components/ui/input";
-import { Label } from "../../components/ui/label";
-import { Select } from "../../components/ui/select";
-import { Textarea } from "../../components/ui/textarea";
+} from "../../../components/ui/card";
+import { Input } from "../../../components/ui/input";
+import { Label } from "../../../components/ui/label";
+import { Select } from "../../../components/ui/select";
+import { Textarea } from "../../../components/ui/textarea";
 
 const schema = yup.object({
   grupo_muscular_id: yup.string().required("Selecione um grupo muscular"),
@@ -111,7 +111,7 @@ export default function ExerciciosNewEdit() {
           });
         }
       } catch (error) {
-        toast.error("Não foi possível carregar os dados do exercício.");
+        toast.error("Não foi possível carregar os dados do exercício.", error);
       } finally {
         setInitialLoading(false);
       }
