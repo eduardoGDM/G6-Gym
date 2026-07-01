@@ -1,5 +1,5 @@
-import { ListItemButton, ListItemIcon, ListItemText } from "@mui/material";
-import { NavLink, useLocation } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
+import { cn } from "../../lib/utils";
 
 export default function MenuItem({ item, onClick }) {
   const location = useLocation();
@@ -7,30 +7,23 @@ export default function MenuItem({ item, onClick }) {
     location.pathname === item.path ||
     location.pathname.startsWith(`${item.path}/`);
 
+  const Icon = item.icon;
+
   return (
-    <ListItemButton
-      component={NavLink}
+    <Link
       to={item.path}
       onClick={onClick}
-      selected={selected}
-      sx={{
-        borderRadius: 2,
-        mb: 0.75,
-        color: "text.secondary",
-        px: 1.5,
-        py: 1,
-        "&.Mui-selected": {
-          bgcolor: "action.selected",
-          color: "text.primary",
-        },
-      }}
+      className={cn(
+        "flex items-center gap-3 rounded-2xl border px-3.5 py-3 text-sm transition-all duration-200",
+        selected
+          ? "border-primary/30 bg-primary/15 text-foreground shadow-[0_10px_25px_rgba(124,58,237,0.12)]"
+          : "border-transparent bg-transparent text-muted-foreground hover:border-border hover:bg-accent/70 hover:text-foreground",
+      )}
     >
-      <ListItemIcon
-        sx={{ minWidth: 36, color: selected ? "primary.main" : "inherit" }}
-      >
-        {item.icon}
-      </ListItemIcon>
-      <ListItemText primary={item.label} />
-    </ListItemButton>
+      {Icon ? (
+        <Icon className={cn("h-4 w-4", selected ? "text-primary" : "text-muted-foreground")} />
+      ) : null}
+      <span className="font-medium">{item.label}</span>
+    </Link>
   );
 }

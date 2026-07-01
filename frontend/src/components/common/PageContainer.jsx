@@ -1,17 +1,9 @@
-import { Box, Container } from "@mui/material";
+import { cn } from "../../lib/utils";
 
-export default function PageContainer({ children, sx = {} }) {
+export default function PageContainer({ children, className = "" }) {
   return (
-    <Box
-      component="main"
-      sx={{
-        flexGrow: 1,
-        px: { xs: 2, sm: 3, md: 0 },
-        py: { xs: 2, sm: 3, md: 4 },
-        ...sx,
-      }}
-    >
-      <Container maxWidth="xl">{children}</Container>
-    </Box>
+    <main className={cn("mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8 lg:py-8", className)}>
+      {children}
+    </main>
   );
 }

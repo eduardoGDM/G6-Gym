@@ -8,7 +8,9 @@ import Treino from "../pages/aluno/Treino";
 import Login from "../pages/auth/Login";
 import Alunos from "../pages/personal/Alunos";
 import DashboardPersonal from "../pages/personal/Dashboard";
-import Exercicios from "../pages/personal/Exercicios";
+import ExerciciosIndex from "../pages/personal/ExerciciosIndex";
+import ExerciciosNewEdit from "../pages/personal/ExerciciosNewEdit";
+import ExerciciosShow from "../pages/personal/ExerciciosShow";
 import Treinos from "../pages/personal/Treinos";
 
 export default function AppRoutes() {
@@ -26,7 +28,10 @@ export default function AppRoutes() {
 
           <Route path="treinos" element={<Treinos />} />
 
-          <Route path="exercicios" element={<Exercicios />} />
+          <Route path="exercicios" element={<ExerciciosIndex />} />
+          <Route path="exercicios/novo" element={<ExerciciosNewEdit />} />
+          <Route path="exercicios/:id" element={<ExerciciosShow />} />
+          <Route path="exercicios/:id/editar" element={<ExerciciosNewEdit />} />
         </Route>
 
         <Route path="/aluno" element={<AlunoLayout />}>

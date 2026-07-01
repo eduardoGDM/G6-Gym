@@ -1,30 +1,18 @@
-import FitnessCenterIcon from "@mui/icons-material/FitnessCenter";
-import { Avatar, Stack, Typography } from "@mui/material";
+import { Dumbbell } from "lucide-react";
 
 export default function Logo({ compact = false }) {
   return (
-    <Stack direction="row" alignItems="center" spacing={1.25}>
-      <Avatar
-        sx={{
-          width: 42,
-          height: 42,
-          bgcolor: "primary.main",
-          color: "white",
-        }}
-      >
-        <FitnessCenterIcon />
-      </Avatar>
+    <div className="flex items-center gap-3">
+      <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-lg shadow-primary/20">
+        <Dumbbell className="h-5 w-5" />
+      </div>
 
       {!compact ? (
-        <Stack spacing={-0.25}>
-          <Typography variant="subtitle1" fontWeight={700}>
-            G6
-          </Typography>
-          <Typography variant="caption" color="text.secondary">
-            Academia
-          </Typography>
-        </Stack>
+        <div className="leading-tight">
+          <p className="text-base font-bold text-foreground">G6</p>
+          <p className="text-xs text-muted-foreground">Academia</p>
+        </div>
       ) : null}
-    </Stack>
+    </div>
   );
 }

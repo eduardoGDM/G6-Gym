@@ -1,78 +1,49 @@
-import { Box } from "@mui/material";
-import { useTheme } from "@mui/material/styles";
-import useMediaQuery from "@mui/material/useMediaQuery";
-import { useState } from "react";
-import { Outlet } from "react-router-dom";
-
+import { useEffect, useState } from "react";
+import { Outlet, useLocation } from "react-router-dom";
 import Sidebar from "./Sidebar";
-import Topbar from "./Topbar";
+import Topbar from "./TopBar";
 
 const DRAWER_WIDTH = 280;
 
 export default function RoleLayout({ menuItems, title }) {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [isDesktop, setIsDesktop] = useState(() =>
+    typeof window !== "undefined" ? window.innerWidth >= 900 : true,
+  );
+  const location = useLocation();
 
-  const theme = useTheme();
-  const isDesktop = useMediaQuery(theme.breakpoints.up("md"));
-
-  const handleDrawerToggle = () => {
-    setMobileOpen((prev) => !prev);
-  };
-
-  const handleDrawerClose = () => {
+  useEffect(() => {
     setMobileOpen(false);
-  };
+  }, [location.pathname]);
+
+  useEffect(() => {
+    const handleResize = () => setIsDesktop(window.innerWidth >= 900);
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   return (
-    <Box
-      sx={{
-        display: "flex",
-        minHeight: "100vh",
-        bgcolor: "background.default",
-      }}
-    >
+    <div className="min-h-screen bg-background text-foreground">
       <Sidebar
         menuItems={menuItems}
         drawerWidth={DRAWER_WIDTH}
         mobileOpen={mobileOpen}
-        onClose={handleDrawerClose}
+        onClose={() => setMobileOpen(false)}
         isDesktop={isDesktop}
       />
 
-      <Box
-        component="main"
-        sx={{
-          flexGrow: 1,
-          ml: {
-            xs: 0,
-            md: `${DRAWER_WIDTH}px`,
-          },
-          width: {
-            xs: "100%",
-            md: `calc(100% - ${DRAWER_WIDTH}px)`,
-          },
-          display: "flex",
-          flexDirection: "column",
-        }}
-      >
+      <div className={isDesktop ? "pl-[280px]" : "pl-0"}>
         <Topbar
-          title={title}
-          onMenuClick={handleDrawerToggle}
-          drawerWidth={DRAWER_WIDTH}
+          title={title || "G6 Academia"}
+          onMenuClick={() => setMobileOpen((prev) => !prev)}
           isDesktop={isDesktop}
         />
 
-        <Box
-          sx={{
-            flexGrow: 1,
-            pt: { xs: 8, md: 9 },
-            px: { xs: 2, sm: 3, md: 4 },
-            pb: 3,
-          }}
-        >
+        <main className="px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
           <Outlet />
-        </Box>
-      </Box>
-    </Box>
+        </main>
+      </div>
+    </div>
   );
 }
