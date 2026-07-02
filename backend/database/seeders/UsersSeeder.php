@@ -14,14 +14,14 @@ class UsersSeeder extends Seeder
 			'name' => 'Personal Teste',
 			'email' => 'persona@teste.com',
 			'password' => Hash::make('123456'),
-			'role' => 'personal',
+			'role' => 'trainer',
 		]);
 
 		User::create([
 			'name' => 'Aluno Teste',
-			'email' => 'aluno@teste.com',
+			'email' => 'student@teste.com',
 			'password' => Hash::make('123456'),
-			'role' => 'aluno',
+			'role' => 'student',
 		]);
 	}
 }

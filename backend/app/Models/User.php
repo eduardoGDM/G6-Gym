@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use App\Models\StudentProfile;
+use App\Models\Workout;
 
 class User extends Authenticatable
 {
@@ -30,23 +32,23 @@ class User extends Authenticatable
 		'password' => 'hashed',
 	];
 
-	public function perfilAluno(): HasOne
+	public function studentProfile(): HasOne
 	{
-		return $this->hasOne(PerfilAluno::class);
+		return $this->hasOne(StudentProfile::class);
 	}
 
-	public function treinosComoPersonal(): HasMany
+	public function workoutsAsTrainer(): HasMany
 	{
-		return $this->hasMany(Treino::class, 'personal_id');
+		return $this->hasMany(Workout::class, 'trainer_id');
 	}
 
-	public function isPersonal(): bool
+	public function isTrainer(): bool
 	{
-		return $this->role === 'personal';
+		return $this->role === 'trainer';
 	}
 
-	public function isAluno(): bool
+	public function isStudent(): bool
 	{
-		return $this->role === 'aluno';
+		return $this->role === 'student';
 	}
 }

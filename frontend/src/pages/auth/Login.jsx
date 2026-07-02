@@ -16,7 +16,9 @@ export default function Login() {
               </div>
               <div>
                 <p className="text-2xl font-bold tracking-tight">G6 Academia</p>
-                <p className="text-sm text-muted-foreground">Gestão moderna para academia</p>
+                <p className="text-sm text-muted-foreground">
+                  Gestão moderna para academia
+                </p>
               </div>
             </div>
 
@@ -28,7 +30,8 @@ export default function Login() {
                 Controle seus alunos, treinos e resultados com mais clareza.
               </h1>
               <p className="max-w-lg text-sm leading-6 text-muted-foreground sm:text-base">
-                Interface mais limpa, organizada e profissional para o dia a dia do personal.
+                Interface mais limpa, organizada e profissional para o dia a dia
+                do trainer.
               </p>
             </div>
           </div>
@@ -39,7 +42,10 @@ export default function Login() {
               "Acesso responsivo",
               "Fluxo mais intuitivo",
             ].map((item) => (
-              <div key={item} className="rounded-2xl border border-border bg-background/60 px-4 py-4 text-sm text-muted-foreground">
+              <div
+                key={item}
+                className="rounded-2xl border border-border bg-background/60 px-4 py-4 text-sm text-muted-foreground"
+              >
                 {item}
               </div>
             ))}
@@ -52,7 +58,9 @@ export default function Login() {
               <p className="text-xs font-semibold uppercase tracking-[0.28em] text-primary/80">
                 Acesso
               </p>
-              <h2 className="mt-2 text-2xl font-semibold tracking-tight">Entrar na plataforma</h2>
+              <h2 className="mt-2 text-2xl font-semibold tracking-tight">
+                Entrar na plataforma
+              </h2>
               <p className="mt-2 text-sm text-muted-foreground">
                 Use suas credenciais para acessar o painel.
               </p>
@@ -63,7 +71,12 @@ export default function Login() {
                 <Label htmlFor="email">E-mail</Label>
                 <div className="relative">
                   <Mail className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                  <Input id="email" type="email" placeholder="usuario@email.com" className="pl-10" />
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="usuario@email.com"
+                    className="pl-10"
+                  />
                 </div>
               </div>
 
@@ -71,16 +84,27 @@ export default function Login() {
                 <Label htmlFor="password">Senha</Label>
                 <div className="relative">
                   <Lock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                  <Input id="password" type="password" placeholder="Sua senha" className="pl-10" />
+                  <Input
+                    id="password"
+                    type="password"
+                    placeholder="Sua senha"
+                    className="pl-10"
+                  />
                 </div>
               </div>
 
               <div className="flex items-center justify-between text-sm">
                 <label className="flex items-center gap-2 text-muted-foreground">
-                  <input type="checkbox" className="h-4 w-4 rounded border-border bg-card" />
+                  <input
+                    type="checkbox"
+                    className="h-4 w-4 rounded border-border bg-card"
+                  />
                   Lembrar-me
                 </label>
-                <button type="button" className="font-medium text-primary hover:underline">
+                <button
+                  type="button"
+                  className="font-medium text-primary hover:underline"
+                >
                   Esqueci minha senha
                 </button>
               </div>
