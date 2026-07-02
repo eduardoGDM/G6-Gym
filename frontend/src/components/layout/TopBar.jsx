@@ -1,91 +1,71 @@
-import AccountCircleIcon from "@mui/icons-material/AccountCircle";
-import MenuIcon from "@mui/icons-material/Menu";
-import NotificationsNoneIcon from "@mui/icons-material/NotificationsNone";
-import {
-  AppBar,
-  Avatar,
-  Box,
-  IconButton,
-  Stack,
-  Toolbar,
-  Typography,
-  useMediaQuery,
-} from "@mui/material";
+import { Bell, Menu, MoonStar, UserCircle2 } from "lucide-react";
+import { cn } from "../../lib/utils";
 
-export default function Topbar({ onMenuClick }) {
-  const isDesktop = useMediaQuery("(min-width:900px)");
-
+export default function Topbar({
+  onMenuClick,
+  title = "G6 Academia",
+  subtitle = "Painel administrativo",
+  isDesktop,
+}) {
   return (
-    <AppBar
-      position="sticky"
-      elevation={0}
-      sx={{
-        bgcolor: "background.paper",
-        color: "text.primary",
-        boxShadow: "none",
-        backgroundImage: "none",
-      }}
-    >
-      <Toolbar
-        sx={{
-          display: "flex",
-          justifyContent: "space-between",
-          minHeight: 64,
-          px: 2.5,
-        }}
+    <header className="sticky top-0 z-30 border-b border-border bg-background/80 backdrop-blur-xl">
+      <div
+        className={cn(
+          "flex items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8",
+          isDesktop ? "min-h-[72px]" : "min-h-[64px]",
+        )}
       >
-        {/* ESQUERDA */}
-        <Stack direction="row" alignItems="center" spacing={1}>
-          {!isDesktop && (
-            <IconButton onClick={onMenuClick}>
-              <MenuIcon />
-            </IconButton>
-          )}
+        <div className="flex items-center gap-3">
+          {!isDesktop ? (
+            <button
+              type="button"
+              onClick={onMenuClick}
+              className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-border bg-card text-foreground transition hover:bg-accent"
+              aria-label="Abrir menu"
+            >
+              <Menu className="h-5 w-5" />
+            </button>
+          ) : null}
 
-          <Typography variant="h6" fontWeight={700}>
-            G6 Academia
-          </Typography>
-        </Stack>
+          <div>
+            <p className="text-lg font-bold tracking-tight text-foreground sm:text-xl">
+              {title}
+            </p>
+            {isDesktop ? (
+              <p className="text-xs text-muted-foreground">{subtitle}</p>
+            ) : null}
+          </div>
+        </div>
 
-        {/* DIREITA */}
-        <Stack direction="row" alignItems="center" spacing={1.5}>
-          <IconButton>
-            <NotificationsNoneIcon />
-          </IconButton>
-
-          <Box
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              gap: 1,
-              pl: 1,
-              pr: 1.5,
-              py: 0.5,
-              borderRadius: 999,
-              bgcolor: "background.default",
-            }}
+        <div className="flex items-center gap-2 sm:gap-3">
+          <button
+            type="button"
+            className="hidden h-11 w-11 items-center justify-center rounded-2xl border border-border bg-card text-foreground transition hover:bg-accent sm:inline-flex"
+            aria-label="Alternar tema"
           >
-            <Avatar sx={{ width: 32, height: 32 }}>
-              <AccountCircleIcon />
-            </Avatar>
+            <MoonStar className="h-4 w-4" />
+          </button>
 
-            {isDesktop && (
-              <Box>
-                <Typography variant="caption" fontWeight={600}>
-                  Usuário
-                </Typography>
-                <Typography
-                  variant="caption"
-                  display="block"
-                  color="text.secondary"
-                >
-                  Personal
-                </Typography>
-              </Box>
-            )}
-          </Box>
-        </Stack>
-      </Toolbar>
-    </AppBar>
+          <button
+            type="button"
+            className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-border bg-card text-foreground transition hover:bg-accent"
+            aria-label="Notificações"
+          >
+            <Bell className="h-4 w-4" />
+          </button>
+
+          <div className="flex items-center gap-3 rounded-full border border-border bg-card px-1.5 py-1.5 pr-4">
+            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/15 text-primary">
+              <UserCircle2 className="h-5 w-5" />
+            </div>
+
+            <div className="hidden leading-tight sm:block">
+              <p className="text-sm font-semibold text-foreground">Usuario</p>
+              <p className="text-xs text-muted-foreground">Personal</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
   );
 }

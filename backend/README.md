@@ -100,7 +100,7 @@ POST /api/auth/login
 ### Body
 
 {
-"email": "aluno@teste.com",
+"email": "student@teste.com",
 "password": "123456"
 }
 
@@ -116,12 +116,12 @@ Authorization: Bearer SEU_TOKEN
 
 ## Personal
 
-email: personal@teste.com
+email: trainer@teste.com
 senha: 123456
 
 ## Aluno
 
-email: aluno@teste.com
+email: student@teste.com
 senha: 123456
 
 ---
