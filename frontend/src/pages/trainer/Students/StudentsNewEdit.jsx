@@ -48,13 +48,13 @@ const schema = yup.object({
     .trim()
     .required("O CPF é obrigatório")
     .length(14, "O CPF deve ter 14 caracteres"),
-  telefone: yup
+  phone: yup
     .string()
     .trim()
     .nullable()
     .notRequired()
     .max(20, "O telefone deve ter no máximo 20 caracteres"),
-  data_nascimento: yup.string().trim().nullable().notRequired(),
+  birth_date: yup.string().trim().nullable().notRequired(),
   gender: yup
     .string()
     .trim()
@@ -75,7 +75,7 @@ const schema = yup.object({
     .notRequired()
     .min(0, "O peso deve ser maior ou igual a 0")
     .max(500, "O peso deve ser menor ou igual a 500"),
-  observacoes: yup.string().trim().nullable().notRequired(),
+  observations: yup.string().trim().nullable().notRequired(),
 });
 
 const GENDER_OPTIONS = [
@@ -103,12 +103,12 @@ export default function StudentsNewEdit() {
       email: "",
       password: "",
       cpf: "",
-      phone: "",
-      birth_date: "",
+      phone: "", // Alterado de telefone para phone
+      birth_date: "", // Alterado de data_nascimento para birth_date
       gender: "",
       height: "",
       current_weight: "",
-      observations: "",
+      observations: "", // Alterado de observacoes para observations
     },
   });
 
@@ -182,10 +182,6 @@ export default function StudentsNewEdit() {
     }
   };
 
-  useEffect(() => {
-    console.log("enntrou");
-  }, []);
-
   return (
     <PageContainer>
       <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
@@ -204,12 +200,12 @@ export default function StudentsNewEdit() {
       <Card className="border-border/80 bg-card/90">
         <CardHeader className="border-b border-border/80 px-6 py-6 sm:px-8">
           <CardTitle className="text-2xl">
-            {isEdit ? "Editar student" : "Novo student"}
+            {isEdit ? "Editar Aluno" : "Novo Aluno"}
           </CardTitle>
           <CardDescription>
             {isEdit
-              ? "Atualize as informações do student conforme as regras do controller."
-              : "Preencha os campos necessários para cadastrar um novo student."}
+              ? "Atualize as informações do aluno conforme as regras do controller."
+              : "Preencha os campos necessários para cadastrar um novo aluno."}
           </CardDescription>
         </CardHeader>
 

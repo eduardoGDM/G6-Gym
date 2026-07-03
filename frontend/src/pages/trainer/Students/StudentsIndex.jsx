@@ -64,7 +64,7 @@ export default function StudentsIndex() {
           onClick={() => navigate("/trainer/students/new")}
         >
           <Plus className="h-4 w-4" />
-          Novo student
+          Novo Aluno
         </Button>
       </div>
 

@@ -76,8 +76,11 @@ class StudentProfileController extends Controller
 		if (!$profile) {
 			return response()->json(['message' => 'Aluno não encontrado'], 404);
 		}
-
 		$request->validate([
+			'name' => 'sometimes|string|max:255',
+			'email' => 'sometimes|email|unique:users,email,' . $profile->user_id,
+			'password' => 'nullable|string|min:6',
+
 			'cpf' => 'sometimes|string|size:14|unique:student_profiles,cpf,' . $id,
 			'phone' => 'nullable|string|max:20',
 			'birth_date' => 'nullable|date|before:today',
@@ -87,6 +90,17 @@ class StudentProfileController extends Controller
 			'photo' => 'nullable|string|max:255',
 			'observations' => 'nullable|string',
 		]);
+
+		$user = $profile->user;
+
+		$user->name = $request->name ?? $user->name;
+		$user->email = $request->email ?? $user->email;
+
+		if ($request->filled('password')) {
+			$user->password = bcrypt($request->password);
+		}
+
+		$user->save();
 
 		$profile->update($request->only([
 			'cpf',

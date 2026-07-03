@@ -1,24 +1,31 @@
-import api from "../api/axios";
+import { sanctumRequest } from "../sanctumRequest";
 
 const authService = {
-  async login(email, password) {
-    const { data } = await api.post("/auth/login", {
-      email,
-      password,
-    });
-
+  async me() {
+    const { data } = await sanctumRequest("get", "/api/auth/user");
     return data;
   },
 
-  async me() {
-    const { data } = await api.get("/auth/me");
+  // TODO - resolver pendencia de 401 quando nao esta autenticado, ( chamada desnecessaria )
+  async initAuth() {
+    try {
+      return await this.me();
+    } catch {
+      return null;
+    }
+  },
 
+  async login(credentials) {
+    const { data } = await sanctumRequest(
+      "post",
+      "/api/auth/login",
+      credentials,
+    );
     return data;
   },
 
   async logout() {
-    const { data } = await api.post("/auth/logout");
-
+    const { data } = await sanctumRequest("post", "/api/auth/logout");
     return data;
   },
 };
