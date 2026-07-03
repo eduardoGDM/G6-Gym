@@ -1,5 +1,9 @@
-import { Menu, X } from "lucide-react";
-import { useEffect } from "react";
+import { LogOut, X } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+
+import authService from "../../services/authService";
+import useAuthStore from "../../store/authStore";
 import Logo from "./Logo";
 import MenuItem from "./MenuItem";
 
@@ -10,6 +14,10 @@ export default function Sidebar({
   onClose,
   isDesktop,
 }) {
+  const navigate = useNavigate();
+  const { logout } = useAuthStore();
+  const [loadingLogout, setLoadingLogout] = useState(false);
+
   useEffect(() => {
     if (mobileOpen && !isDesktop) {
       document.body.style.overflow = "hidden";
@@ -19,6 +27,20 @@ export default function Sidebar({
       document.body.style.overflow = "";
     };
   }, [mobileOpen, isDesktop]);
+
+  const handleLogout = async () => {
+    setLoadingLogout(true);
+
+    try {
+      await authService.logout();
+    } catch (error) {
+      console.warn("Backend logout falhou:", error);
+    } finally {
+      logout();
+      navigate("/");
+      setLoadingLogout(false);
+    }
+  };
 
   return (
     <>
@@ -34,7 +56,11 @@ export default function Sidebar({
       <aside
         className={[
           "fixed inset-y-0 left-0 z-50 flex h-screen flex-col border-r border-border bg-card/95 backdrop-blur-xl transition-transform duration-300 ease-out",
-          isDesktop ? "translate-x-0" : mobileOpen ? "translate-x-0" : "-translate-x-full",
+          isDesktop
+            ? "translate-x-0"
+            : mobileOpen
+              ? "translate-x-0"
+              : "-translate-x-full",
         ].join(" ")}
         style={{ width: isDesktop ? drawerWidth : "min(88vw, 320px)" }}
       >
@@ -65,7 +91,7 @@ export default function Sidebar({
           </nav>
         </div>
 
-        <div className="border-t border-border p-4">
+        <div className="border-t border-border p-4 space-y-3">
           <div className="flex items-center justify-between rounded-2xl border border-border bg-background/60 px-4 py-3">
             <div>
               <p className="text-sm font-semibold text-foreground">Modo</p>
@@ -85,6 +111,15 @@ export default function Sidebar({
               </button>
             ) : null}
           </div>
+
+          <button
+            onClick={handleLogout}
+            disabled={loadingLogout}
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-red-500/10 px-4 py-3 text-sm font-semibold text-red-500 transition hover:bg-red-500/20 disabled:opacity-50"
+          >
+            <LogOut className="h-4 w-4" />
+            {loadingLogout ? "Saindo..." : "Sair da conta"}
+          </button>
         </div>
       </aside>
     </>

@@ -4,29 +4,45 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
-use App\Models\User;
+use Illuminate\Support\Facades\Auth;
 
 class AuthController extends Controller
 {
-    public function login(Request $request)
-    {
-        $request->validate([
-            'email' => 'required|email',
-            'password' => 'required'
-        ]);
+	public function login(Request $request)
+	{
+		$credentials = $request->validate([
+			'email' => 'required|email',
+			'password' => 'required',
+		]);
 
-        $user = User::where('email', $request->email)->first();
+		if (!Auth::attempt($credentials)) {
+			return response()->json([
+				'message' => 'Credenciais inválidas'
+			], 401);
+		}
 
-        if (!$user || !Hash::check($request->password, $user->password)) {
-            return response()->json(['message' => 'Credenciais inválidas'], 401);
-        }
+		$user = Auth::user();
 
-        $token = $user->createToken('api-token')->plainTextToken;
+		return response()->json([
+			'user' => $user,
+			'message' => 'Login realizado com sucesso'
+		]);
+	}
 
-        return response()->json([
-            'token' => $token,
-            'user' => $user
-        ]);
-    }
+	public function logout(Request $request)
+	{
+		Auth::guard('web')->logout();
+
+		$request->session()->invalidate();
+		$request->session()->regenerateToken();
+
+		return response()->json([
+			'message' => 'Logout realizado com sucesso'
+		]);
+	}
+
+	public function me(Request $request)
+	{
+		return response()->json($request->user());
+	}
 }

@@ -1,34 +1,19 @@
 import { create } from "zustand";
 
-const useAuthStore = create((set) => ({
-  token: localStorage.getItem("token") || null,
+const useAuthStore = create((set, get) => ({
   user: null,
+  isLoading: true,
 
-  login: (token) => {
-    localStorage.setItem("token", token);
-
-    set({
-      token,
-    });
+  setUser: (user) => set({ user }),
+  setLoading: (isLoading) => set({ isLoading }),
+  login: (user) => {
+    set({ user });
   },
-
-  setUser: (user) => {
-    set({
-      user,
-    });
-  },
-
   logout: () => {
-    localStorage.removeItem("token");
-
-    set({
-      token: null,
-      user: null,
-    });
+    set({ user: null });
   },
-
   isAuthenticated: () => {
-    return !!localStorage.getItem("token");
+    return !!get().user;
   },
 }));
 
