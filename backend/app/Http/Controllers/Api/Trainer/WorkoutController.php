@@ -14,11 +14,14 @@ class WorkoutController extends Controller
 	private const WORKOUT_RELATIONS = [
 		'studentProfile.user',
 		'trainer',
+		'muscleGroups',
 		'workoutExercises.exercise.muscleGroup',
 		'workoutExercises.series',
 	];
 
 	private const EXERCISES_VALIDATION_RULES = [
+		'muscle_groups' => 'nullable|array',
+		'muscle_groups.*' => 'integer|exists:muscle_groups,id',
 		'exercises' => 'nullable|array',
 		'exercises.*.exercise_id' => 'required|exists:exercises,id',
 		'exercises.*.order' => 'required|integer|min:1',
@@ -63,6 +66,8 @@ class WorkoutController extends Controller
 				'end_date' => $request->end_date,
 				'active' => $request->active ?? true,
 			]);
+
+			$workout->muscleGroups()->sync($request->input('muscle_groups', []));
 
 			$this->syncExercises($workout, $request->input('exercises', []));
 
@@ -118,6 +123,10 @@ class WorkoutController extends Controller
 				'end_date',
 				'active'
 			]));
+
+			if ($request->has('muscle_groups')) {
+				$workout->muscleGroups()->sync($request->input('muscle_groups', []));
+			}
 
 			if ($request->has('exercises')) {
 				$workout->workoutExercises()->delete();

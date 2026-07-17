@@ -46,6 +46,7 @@ export const workoutSchema = yup.object({
   description: yup.string().trim().nullable().notRequired(),
   start_date: yup.string().trim().required("Informe a data de início"),
   end_date: yup.string().trim().nullable().notRequired(),
+  muscle_groups: yup.array().of(yup.number()).notRequired(),
   exercises: yup
     .array()
     .of(workoutExerciseItemSchema)

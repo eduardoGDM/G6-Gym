@@ -11,7 +11,7 @@ const exercisesService = {
     return data.data;
   },
 
-  async search({ page = 1, perPage = 10, search = "" } = {}) {
+  async search({ page = 1, perPage = 10, search = "", muscleGroups = [] } = {}) {
     const { data } = await sanctumRequest(
       "get",
       "/trainer/exercises",
@@ -21,6 +21,7 @@ const exercisesService = {
           page,
           per_page: perPage,
           search: search || undefined,
+          muscle_groups: muscleGroups.length ? muscleGroups : undefined,
         },
       },
     );

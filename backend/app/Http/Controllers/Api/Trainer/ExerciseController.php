@@ -11,7 +11,13 @@ class ExerciseController extends Controller
 {
 	public function index(Request $request)
 	{
+		$request->validate([
+			'muscle_groups' => 'nullable|array',
+			'muscle_groups.*' => 'integer|exists:muscle_groups,id',
+		]);
+
 		$search = $request->input('search');
+		$muscleGroups = $request->input('muscle_groups', []);
 		$perPage = (int) $request->input('per_page', 10);
 
 		$exercises = Exercise::with('muscleGroup')
@@ -20,6 +26,9 @@ class ExerciseController extends Controller
 					->orWhereHas('muscleGroup', function ($query) use ($search) {
 						$query->where('name', 'like', "%{$search}%");
 					});
+			})
+			->when(!empty($muscleGroups), function ($query) use ($muscleGroups) {
+				$query->whereIn('muscle_group_id', $muscleGroups);
 			})
 			->orderBy('name')
 			->paginate($perPage);

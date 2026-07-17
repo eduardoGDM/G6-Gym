@@ -1,7 +1,7 @@
 import { yupResolver } from "@hookform/resolvers/yup";
-import { ArrowLeft, Plus, Save } from "lucide-react";
+import { ArrowLeft, Save } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import { useFieldArray, useForm } from "react-hook-form";
+import { Controller, useFieldArray, useForm } from "react-hook-form";
 import toast from "react-hot-toast";
 import { useNavigate, useParams } from "react-router-dom";
 
@@ -22,9 +22,11 @@ import { Input } from "../../../components/ui/input";
 import { Label } from "../../../components/ui/label";
 import { Select } from "../../../components/ui/select";
 import { Textarea } from "../../../components/ui/textarea";
-import exercisesService from "../../../services/ExercisesService";
+import muscleGroupsService from "../../../services/MuscleGroupsService";
 import studentsService from "../../../services/StudentsService";
 import workoutsService from "../../../services/WorkoutsService";
+import ExercisePicker from "./components/ExercisePicker";
+import MuscleGroupSelect from "./components/MuscleGroupSelect";
 import WorkoutExerciseCard from "./components/WorkoutExerciseCard";
 import { getTodayISO, workoutSchema } from "./utils";
 
@@ -65,8 +67,9 @@ export default function WorkoutsNewEdit() {
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
   const [students, setStudents] = useState([]);
-  const [exercisesList, setExercisesList] = useState([]);
-  const [exerciseToAdd, setExerciseToAdd] = useState("");
+  const [muscleGroupOptions, setMuscleGroupOptions] = useState([]);
+  const [muscleGroupsLoading, setMuscleGroupsLoading] = useState(true);
+  const [exerciseDetails, setExerciseDetails] = useState({});
 
   const {
     register,
@@ -74,6 +77,7 @@ export default function WorkoutsNewEdit() {
     handleSubmit,
     reset,
     setError,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm({
     resolver: yupResolver(workoutSchema),
@@ -83,6 +87,7 @@ export default function WorkoutsNewEdit() {
       description: "",
       start_date: getTodayISO(),
       end_date: "",
+      muscle_groups: [],
       exercises: [],
     },
   });
@@ -91,6 +96,8 @@ export default function WorkoutsNewEdit() {
     control,
     name: "exercises",
   });
+
+  const watchedMuscleGroups = watch("muscle_groups") || [];
 
   const pageTitle = useMemo(
     () => ({
@@ -106,18 +113,26 @@ export default function WorkoutsNewEdit() {
   useEffect(() => {
     const loadData = async () => {
       try {
-        const [studentsData, exercisesData, workout] = await Promise.all([
+        const [studentsData, muscleGroupsData, workout] = await Promise.all([
           studentsService.getAll(),
-          exercisesService.getAll(),
+          muscleGroupsService.getAll(),
           isEdit ? workoutsService.getById(id) : Promise.resolve(null),
         ]);
 
         setStudents(studentsData || []);
-        setExercisesList(exercisesData || []);
+        setMuscleGroupOptions(muscleGroupsData || []);
 
         if (isEdit && workout) {
           const sortedExercises = [...(workout.workout_exercises || [])].sort(
             (a, b) => a.order - b.order,
+          );
+
+          setExerciseDetails(
+            Object.fromEntries(
+              sortedExercises
+                .filter((item) => item.exercise)
+                .map((item) => [String(item.exercise_id), item.exercise]),
+            ),
           );
 
           reset({
@@ -128,6 +143,7 @@ export default function WorkoutsNewEdit() {
               ? workout.start_date.slice(0, 10)
               : getTodayISO(),
             end_date: workout.end_date ? workout.end_date.slice(0, 10) : "",
+            muscle_groups: (workout.muscle_groups || []).map((item) => item.id),
             exercises: sortedExercises.map((item) => ({
               exercise_id: String(item.exercise_id),
               notes: item.notes || "",
@@ -135,25 +151,28 @@ export default function WorkoutsNewEdit() {
             })),
           });
         }
-      } catch (error) {
+      } catch {
         toast.error("Não foi possível carregar os dados do treino.");
       } finally {
         setInitialLoading(false);
+        setMuscleGroupsLoading(false);
       }
     };
 
     loadData();
   }, [id, isEdit, reset]);
 
-  const handleAddExercise = () => {
-    if (!exerciseToAdd) return;
+  const handleAddExercise = (exercise) => {
+    setExerciseDetails((current) => ({
+      ...current,
+      [String(exercise.id)]: exercise,
+    }));
 
     append({
-      exercise_id: exerciseToAdd,
+      exercise_id: String(exercise.id),
       notes: "",
       series: [],
     });
-    setExerciseToAdd("");
   };
 
   const onSubmit = async (data) => {
@@ -166,6 +185,7 @@ export default function WorkoutsNewEdit() {
         description: emptyToNull(data.description),
         start_date: data.start_date,
         end_date: emptyToNull(data.end_date),
+        muscle_groups: (data.muscle_groups || []).map(Number),
         exercises: data.exercises.map((item, index) => ({
           exercise_id: Number(item.exercise_id),
           order: index + 1,
@@ -311,48 +331,42 @@ export default function WorkoutsNewEdit() {
                 ) : null}
               </div>
 
+              <div className="space-y-2 border-t border-border/80 pt-6">
+                <Label htmlFor="muscle_groups">Grupos musculares do treino</Label>
+                <p className="text-sm text-muted-foreground">
+                  Selecione os grupos trabalhados para filtrar a lista de
+                  exercícios abaixo. Deixe em branco para ver todos.
+                </p>
+                <Controller
+                  control={control}
+                  name="muscle_groups"
+                  render={({ field }) => (
+                    <MuscleGroupSelect
+                      options={muscleGroupOptions}
+                      value={field.value || []}
+                      onChange={field.onChange}
+                      loading={muscleGroupsLoading}
+                    />
+                  )}
+                />
+              </div>
+
               <div className="space-y-4 border-t border-border/80 pt-6">
                 <div>
                   <h3 className="text-lg font-semibold text-foreground">
                     Exercícios do treino
                   </h3>
                   <p className="text-sm text-muted-foreground">
-                    Adicione os exercícios, monte as séries de cada um e use
-                    as setas para reordenar.
+                    Busque e adicione os exercícios, monte as séries de cada
+                    um e use as setas para reordenar.
                   </p>
                 </div>
 
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
-                  <div className="flex-1 space-y-2">
-                    <Label htmlFor="exercise_to_add">
-                      Adicionar exercício
-                    </Label>
-                    <Select
-                      id="exercise_to_add"
-                      value={exerciseToAdd}
-                      onChange={(event) => setExerciseToAdd(event.target.value)}
-                    >
-                      <option value="">Selecione um exercício</option>
-                      {exercisesList.map((exercise) => (
-                        <option key={exercise.id} value={exercise.id}>
-                          {exercise.name}
-                          {exercise.muscle_group?.name
-                            ? ` — ${exercise.muscle_group.name}`
-                            : ""}
-                        </option>
-                      ))}
-                    </Select>
-                  </div>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={handleAddExercise}
-                    disabled={!exerciseToAdd}
-                  >
-                    <Plus className="h-4 w-4" />
-                    Adicionar
-                  </Button>
-                </div>
+                <ExercisePicker
+                  muscleGroups={watchedMuscleGroups}
+                  addedIds={fields.map((field) => field.exercise_id)}
+                  onAdd={handleAddExercise}
+                />
 
                 {errors.exercises?.message ? (
                   <p className="text-sm text-red-400">
@@ -362,9 +376,7 @@ export default function WorkoutsNewEdit() {
 
                 <div className="space-y-4">
                   {fields.map((field, index) => {
-                    const exercise = exercisesList.find(
-                      (item) => String(item.id) === String(field.exercise_id),
-                    );
+                    const exercise = exerciseDetails[String(field.exercise_id)];
 
                     return (
                       <WorkoutExerciseCard
