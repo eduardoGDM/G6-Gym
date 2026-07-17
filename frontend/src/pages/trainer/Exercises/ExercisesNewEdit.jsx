@@ -4,11 +4,12 @@ import { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
 import { useNavigate, useParams } from "react-router-dom";
-import * as yup from "yup";
 
-import api from "../../../api/axios";
 import PageContainer from "../../../components/common/PageContainer";
+import { crudToast } from "../../../components/common/crudToast";
+import PageLoader from "../../../components/common/PageLoader";
 import PageTitle from "../../../components/common/PageTitle";
+import Spinner from "../../../components/common/Spinner";
 import { Button } from "../../../components/ui/button";
 import {
   Card,
@@ -21,28 +22,9 @@ import { Input } from "../../../components/ui/input";
 import { Label } from "../../../components/ui/label";
 import { Select } from "../../../components/ui/select";
 import { Textarea } from "../../../components/ui/textarea";
-
-const schema = yup.object({
-  grupo_muscular_id: yup.string().required("Selecione um grupo muscular"),
-  nome: yup
-    .string()
-    .trim()
-    .required("O nome é obrigatório")
-    .max(255, "O nome deve ter no máximo 255 caracteres"),
-  descricao: yup.string().trim().nullable().notRequired(),
-  equipamento: yup
-    .string()
-    .trim()
-    .nullable()
-    .notRequired()
-    .max(255, "O equipamento deve ter no máximo 255 caracteres"),
-  video_url: yup
-    .string()
-    .trim()
-    .nullable()
-    .notRequired()
-    .url("Digite uma URL válida"),
-});
+import exercisesService from "../../../services/ExercisesService";
+import muscleGroupsService from "../../../services/MuscleGroupsService";
+import { exerciseSchema } from "./utils";
 
 export default function ExercisesNewEdit() {
   const navigate = useNavigate();
@@ -50,20 +32,21 @@ export default function ExercisesNewEdit() {
   const isEdit = Boolean(id);
   const [loading, setLoading] = useState(false);
   const [groups, setGroups] = useState([]);
-  const [initialLoading, setInitialLoading] = useState(isEdit);
+  const [initialLoading, setInitialLoading] = useState(true);
 
   const {
     register,
     handleSubmit,
     reset,
+    setError,
     formState: { errors, isSubmitting },
   } = useForm({
-    resolver: yupResolver(schema),
+    resolver: yupResolver(exerciseSchema),
     defaultValues: {
-      grupo_muscular_id: "",
-      nome: "",
-      descricao: "",
-      equipamento: "",
+      muscle_group_id: "",
+      name: "",
+      description: "",
+      equipment: "",
       video_url: "",
     },
   });
@@ -80,65 +63,68 @@ export default function ExercisesNewEdit() {
   );
 
   useEffect(() => {
-    const carregarDados = async () => {
+    const loadData = async () => {
       try {
-        const [{ data: gruposData }, response] = await Promise.all([
-          api.get("/trainer/exercicios"),
-          isEdit ? api.get(`/trainer/exercises/${id}`) : Promise.resolve(null),
+        const [muscleGroups, exercise] = await Promise.all([
+          muscleGroupsService.getAll(),
+          isEdit ? exercisesService.getById(id) : Promise.resolve(null),
         ]);
 
-        const grupoOptions = Array.isArray(gruposData)
-          ? gruposData
-          : gruposData?.data || [];
-        const gruposMusculares = grupoOptions
-          .map((item) => item.grupoMuscular)
-          .filter(Boolean);
+        setGroups(muscleGroups || []);
 
-        const uniqueGroups = Array.from(
-          new Map(gruposMusculares.map((item) => [item.id, item])).values(),
-        );
-        setGroups(uniqueGroups);
-
-        if (isEdit && response?.data) {
+        if (isEdit && exercise) {
           reset({
-            grupo_muscular_id: String(response.data.grupo_muscular_id || ""),
-            nome: response.data.nome || "",
-            descricao: response.data.descricao || "",
-            equipamento: response.data.equipamento || "",
-            video_url: response.data.video_url || "",
+            muscle_group_id: String(exercise.muscle_group_id || ""),
+            name: exercise.name || "",
+            description: exercise.description || "",
+            equipment: exercise.equipment || "",
+            video_url: exercise.video_url || "",
           });
         }
       } catch (error) {
-        toast.error("Não foi possível carregar os dados do exercício.", error);
+        toast.error("Não foi possível carregar os dados do exercício.");
       } finally {
         setInitialLoading(false);
       }
     };
 
-    carregarDados();
+    loadData();
   }, [id, isEdit, reset]);
 
   const onSubmit = async (data) => {
     try {
       setLoading(true);
+      const emptyToNull = (value) => (value === "" ? null : value);
+
       const payload = {
-        ...data,
-        grupo_muscular_id: Number(data.grupo_muscular_id),
+        muscle_group_id: Number(data.muscle_group_id),
+        name: data.name,
+        description: emptyToNull(data.description),
+        equipment: emptyToNull(data.equipment),
+        video_url: emptyToNull(data.video_url),
       };
 
-      if (isEdit) {
-        await api.put(`/trainer/exercises/${id}`, payload);
-        toast.success("Exercício atualizado com sucesso");
-      } else {
-        await api.post("/trainer/exercicios", payload);
-        toast.success("Exercício criado com sucesso");
-      }
+      const request = isEdit
+        ? exercisesService.update(id, payload)
+        : exercisesService.create(payload);
+
+      await crudToast(request, {
+        action: isEdit ? "update" : "create",
+        entity: "Exercício",
+        onError: (error) => {
+          const validationErrors = error.response?.data?.errors;
+
+          if (validationErrors) {
+            Object.entries(validationErrors).forEach(([field, messages]) => {
+              setError(field, { type: "server", message: messages[0] });
+            });
+          }
+        },
+      });
 
       navigate("/trainer/exercises");
-    } catch (error) {
-      const message =
-        error.response?.data?.message || "Erro ao salvar o exercício";
-      toast.error(message);
+    } catch {
+      // erro já exibido pelo crudToast
     } finally {
       setLoading(false);
     }
@@ -166,49 +152,47 @@ export default function ExercisesNewEdit() {
           </CardTitle>
           <CardDescription>
             {isEdit
-              ? "Atualize as informações conforme o controller do backend."
+              ? "Atualize as informações do exercício conforme as regras do controller."
               : "Preencha os campos necessários para cadastrar um novo exercício."}
           </CardDescription>
         </CardHeader>
 
         <CardContent className="px-6 py-6 sm:px-8">
           {initialLoading ? (
-            <div className="py-8 text-center text-sm text-muted-foreground">
-              Carregando formulário...
-            </div>
+            <PageLoader label="Carregando formulário..." />
           ) : (
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+            <form
+              onSubmit={handleSubmit(onSubmit)}
+              className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300"
+            >
               <div className="grid gap-6 md:grid-cols-2">
                 <div className="space-y-2">
-                  <Label htmlFor="grupo_muscular_id">Grupo muscular</Label>
-                  <Select
-                    id="grupo_muscular_id"
-                    {...register("grupo_muscular_id")}
-                  >
+                  <Label htmlFor="muscle_group_id">Grupo muscular</Label>
+                  <Select id="muscle_group_id" {...register("muscle_group_id")}>
                     <option value="">Selecione</option>
-                    {groups.map((grupo) => (
-                      <option key={grupo.id} value={grupo.id}>
-                        {grupo.nome}
+                    {groups.map((group) => (
+                      <option key={group.id} value={group.id}>
+                        {group.name}
                       </option>
                     ))}
                   </Select>
-                  {errors.grupo_muscular_id ? (
+                  {errors.muscle_group_id ? (
                     <p className="text-sm text-red-400">
-                      {errors.grupo_muscular_id.message}
+                      {errors.muscle_group_id.message}
                     </p>
                   ) : null}
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="nome">Nome</Label>
+                  <Label htmlFor="name">Nome</Label>
                   <Input
-                    id="nome"
+                    id="name"
                     placeholder="Nome do exercício"
-                    {...register("nome")}
+                    {...register("name")}
                   />
-                  {errors.nome ? (
+                  {errors.name ? (
                     <p className="text-sm text-red-400">
-                      {errors.nome.message}
+                      {errors.name.message}
                     </p>
                   ) : null}
                 </div>
@@ -216,15 +200,15 @@ export default function ExercisesNewEdit() {
 
               <div className="grid gap-6 md:grid-cols-2">
                 <div className="space-y-2">
-                  <Label htmlFor="equipamento">Equipamento</Label>
+                  <Label htmlFor="equipment">Equipamento</Label>
                   <Input
-                    id="equipamento"
+                    id="equipment"
                     placeholder="Equipamento utilizado"
-                    {...register("equipamento")}
+                    {...register("equipment")}
                   />
-                  {errors.equipamento ? (
+                  {errors.equipment ? (
                     <p className="text-sm text-red-400">
-                      {errors.equipamento.message}
+                      {errors.equipment.message}
                     </p>
                   ) : null}
                 </div>
@@ -245,15 +229,15 @@ export default function ExercisesNewEdit() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="descricao">Descrição</Label>
+                <Label htmlFor="description">Descrição</Label>
                 <Textarea
-                  id="descricao"
+                  id="description"
                   placeholder="Descreva o exercício"
-                  {...register("descricao")}
+                  {...register("description")}
                 />
-                {errors.descricao ? (
+                {errors.description ? (
                   <p className="text-sm text-red-400">
-                    {errors.descricao.message}
+                    {errors.description.message}
                   </p>
                 ) : null}
               </div>
@@ -267,7 +251,11 @@ export default function ExercisesNewEdit() {
                   Cancelar
                 </Button>
                 <Button type="submit" disabled={loading || isSubmitting}>
-                  <Save className="h-4 w-4" />
+                  {loading || isSubmitting ? (
+                    <Spinner className="h-4 w-4" />
+                  ) : (
+                    <Save className="h-4 w-4" />
+                  )}
                   {loading || isSubmitting
                     ? "Salvando..."
                     : isEdit

@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\Trainer\StudentProfileController;
 use App\Http\Controllers\Api\Trainer\WorkoutController;
 use App\Http\Controllers\Api\Trainer\ExerciseController;
 use App\Http\Controllers\Api\Trainer\WorkoutExerciseController;
+use App\Http\Controllers\Api\Trainer\MuscleGroupController;
 use App\Http\Controllers\Api\Student\WorkoutController as StudentWorkoutController;
 use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
 
@@ -28,6 +29,7 @@ Route::middleware('auth:sanctum')->group(function () {
 			Route::apiResource('workouts', WorkoutController::class);
 			Route::apiResource('exercises', ExerciseController::class);
 			Route::apiResource('workout-exercises', WorkoutExerciseController::class);
+			Route::get('muscle-groups', [MuscleGroupController::class, 'index']);
 		});
 
 	Route::prefix('student')

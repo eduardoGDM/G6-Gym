@@ -41,7 +41,42 @@ class MuscleGroupSeeder extends Seeder
 				'updated_at' => now(),
 			],
 			[
+				'name' => 'Antebraços',
+				'created_at' => now(),
+				'updated_at' => now(),
+			],
+			[
+				'name' => 'Trapézio',
+				'created_at' => now(),
+				'updated_at' => now(),
+			],
+			[
+				'name' => 'Lombar',
+				'created_at' => now(),
+				'updated_at' => now(),
+			],
+			[
+				'name' => 'Glúteos',
+				'created_at' => now(),
+				'updated_at' => now(),
+			],
+			[
+				'name' => 'Panturrilhas',
+				'created_at' => now(),
+				'updated_at' => now(),
+			],
+			[
 				'name' => 'Abdômen',
+				'created_at' => now(),
+				'updated_at' => now(),
+			],
+			[
+				'name' => 'Cardio',
+				'created_at' => now(),
+				'updated_at' => now(),
+			],
+			[
+				'name' => 'Corpo Inteiro',
 				'created_at' => now(),
 				'updated_at' => now(),
 			],

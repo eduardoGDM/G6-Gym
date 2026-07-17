@@ -1,0 +1,134 @@
+import { ArrowDown, ArrowUp, Plus, Trash2 } from "lucide-react";
+import { useFieldArray } from "react-hook-form";
+
+import { Button } from "../../../../components/ui/button";
+import { Label } from "../../../../components/ui/label";
+import { Textarea } from "../../../../components/ui/textarea";
+import WorkoutSeriesCard from "./WorkoutSeriesCard";
+
+const emptySeries = {
+  repetitions: "",
+  weight: "",
+  rest_time: "",
+  rir: "",
+  tempo: "",
+  cadence: "",
+  duration: "",
+  notes: "",
+};
+
+export default function WorkoutExerciseCard({
+  control,
+  register,
+  index,
+  exercise,
+  errors,
+  isFirst,
+  isLast,
+  onMoveUp,
+  onMoveDown,
+  onRemove,
+}) {
+  const {
+    fields: seriesFields,
+    append: appendSeries,
+    remove: removeSeries,
+  } = useFieldArray({
+    control,
+    name: `exercises.${index}.series`,
+  });
+
+  return (
+    <div className="space-y-4 rounded-2xl border border-border/80 bg-background/60 p-5">
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/15 text-sm font-semibold text-primary">
+            {index + 1}
+          </span>
+          <div>
+            <p className="text-sm font-semibold text-foreground">
+              {exercise?.name || "Exercício"}
+            </p>
+            <p className="text-xs text-muted-foreground">
+              {exercise?.muscle_group?.name || "—"}
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-1">
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            disabled={isFirst}
+            onClick={onMoveUp}
+          >
+            <ArrowUp className="h-4 w-4" />
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            disabled={isLast}
+            onClick={onMoveDown}
+          >
+            <ArrowDown className="h-4 w-4" />
+          </Button>
+          <Button type="button" variant="destructive" size="icon" onClick={onRemove}>
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
+
+      <div className="space-y-1.5">
+        <Label htmlFor={`exercises.${index}.notes`}>
+          Observação geral do exercício
+        </Label>
+        <Textarea
+          id={`exercises.${index}.notes`}
+          rows={1}
+          autoResize
+          placeholder="Instruções válidas para todas as séries (opcional)"
+          {...register(`exercises.${index}.notes`)}
+        />
+      </div>
+
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <span className="text-sm font-medium text-foreground">
+            Séries ({seriesFields.length})
+          </span>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => appendSeries({ ...emptySeries })}
+          >
+            <Plus className="h-4 w-4" />
+            Adicionar série
+          </Button>
+        </div>
+
+        {seriesFields.length === 0 ? (
+          <p className="text-sm text-muted-foreground">
+            Nenhuma série adicionada. Use o botão acima para detalhar este
+            exercício, se desejar.
+          </p>
+        ) : (
+          <div className="space-y-3">
+            {seriesFields.map((field, seriesIndex) => (
+              <WorkoutSeriesCard
+                key={field.id}
+                register={register}
+                namePrefix={`exercises.${index}.series.${seriesIndex}`}
+                seriesNumber={seriesIndex + 1}
+                errors={errors?.series?.[seriesIndex]}
+                onRemove={() => removeSeries(seriesIndex)}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}

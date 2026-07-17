@@ -22,7 +22,9 @@ import ExercisesShow from "../pages/trainer/Exercises/ExercisesShow";
 import StudentsIndex from "../pages/trainer/Students/StudentsIndex";
 import StudentsNewEdit from "../pages/trainer/Students/StudentsNewEdit";
 import StudentsShow from "../pages/trainer/Students/StudentsShow";
-import Workouts from "../pages/trainer/Workouts";
+import WorkoutsIndex from "../pages/trainer/Workouts/WorkoutsIndex";
+import WorkoutsNewEdit from "../pages/trainer/Workouts/WorkoutsNewEdit";
+import WorkoutsShow from "../pages/trainer/Workouts/WorkoutsShow";
 
 export default function AppRoutes() {
   const { user, setUser, isLoading, setLoading } = useAuthStore();
@@ -83,7 +85,10 @@ export default function AppRoutes() {
           <Route path="students/:id" element={<StudentsShow />} />
           <Route path="students/:id/editar" element={<StudentsNewEdit />} />
 
-          <Route path="workouts" element={<Workouts />} />
+          <Route path="workouts" element={<WorkoutsIndex />} />
+          <Route path="workouts/new" element={<WorkoutsNewEdit />} />
+          <Route path="workouts/:id" element={<WorkoutsShow />} />
+          <Route path="workouts/:id/edit" element={<WorkoutsNewEdit />} />
 
           <Route path="exercises" element={<ExercisesIndex />} />
           <Route path="exercises/new" element={<ExercisesNewEdit />} />

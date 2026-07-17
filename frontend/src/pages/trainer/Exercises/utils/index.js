@@ -1,0 +1,1 @@
+export { exerciseSchema } from "./schema";

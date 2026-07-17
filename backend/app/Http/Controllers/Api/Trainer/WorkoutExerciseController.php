@@ -4,14 +4,29 @@ namespace App\Http\Controllers\Api\Trainer;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use App\Models\WorkoutExercise;
+use App\Models\WorkoutExerciseSeries;
 
 class WorkoutExerciseController extends Controller
 {
+	private const SERIES_VALIDATION_RULES = [
+		'series' => 'nullable|array',
+		'series.*.order' => 'required|integer|min:1',
+		'series.*.repetitions' => 'nullable|integer|min:0',
+		'series.*.weight' => 'nullable|numeric|min:0',
+		'series.*.rest_time' => 'nullable|integer|min:0',
+		'series.*.rir' => 'nullable|integer|min:0|max:10',
+		'series.*.tempo' => 'nullable|string|max:20',
+		'series.*.cadence' => 'nullable|string|max:20',
+		'series.*.duration' => 'nullable|integer|min:0',
+		'series.*.notes' => 'nullable|string',
+	];
+
 	public function index($workoutId)
 	{
 		return response()->json(
-			WorkoutExercise::with(['exercise', 'trainingMethod'])
+			WorkoutExercise::with('exercise', 'series')
 				->where('workout_id', $workoutId)
 				->orderBy('order')
 				->get()
@@ -20,37 +35,40 @@ class WorkoutExerciseController extends Controller
 
 	public function store(Request $request)
 	{
-		$request->validate([
+		$request->validate(array_merge([
 			'workout_id' => 'required|exists:workouts,id',
 			'exercise_id' => 'required|exists:exercises,id',
-			'training_method_id' => 'nullable|exists:training_methods,id',
 			'order' => 'nullable|integer|min:1',
-			'warm_up_sets' => 'nullable|integer|min:0',
-			'recognition_sets' => 'nullable|integer|min:0',
-			'valid_sets' => 'required|integer|min:1',
-			'reps' => 'nullable|string|max:50',
-			'rir' => 'nullable|integer|min:0|max:10',
-			'rest_seconds' => 'nullable|integer|min:0',
-			'cadence' => 'nullable|string|max:20',
-			'load' => 'nullable|numeric|min:0',
-			'observations' => 'nullable|string',
-		]);
+			'notes' => 'nullable|string',
+		], self::SERIES_VALIDATION_RULES));
 
-		$workoutExercise = WorkoutExercise::create([
-			'workout_id' => $request->workout_id,
-			'exercise_id' => $request->exercise_id,
-			'training_method_id' => $request->training_method_id,
-			'order' => $request->order ?? 1,
-			'warm_up_sets' => $request->warm_up_sets,
-			'recognition_sets' => $request->recognition_sets,
-			'valid_sets' => $request->valid_sets,
-			'reps' => $request->reps,
-			'rir' => $request->rir,
-			'rest_seconds' => $request->rest_seconds,
-			'cadence' => $request->cadence,
-			'load' => $request->load,
-			'observations' => $request->observations,
-		]);
+		$workoutExercise = DB::transaction(function () use ($request) {
+			$workoutExercise = WorkoutExercise::create([
+				'workout_id' => $request->workout_id,
+				'exercise_id' => $request->exercise_id,
+				'order' => $request->order ?? 1,
+				'notes' => $request->notes,
+			]);
+
+			foreach ($request->input('series', []) as $series) {
+				WorkoutExerciseSeries::create([
+					'workout_exercise_id' => $workoutExercise->id,
+					'order' => $series['order'],
+					'repetitions' => $series['repetitions'] ?? null,
+					'weight' => $series['weight'] ?? null,
+					'rest_time' => $series['rest_time'] ?? null,
+					'rir' => $series['rir'] ?? null,
+					'tempo' => $series['tempo'] ?? null,
+					'cadence' => $series['cadence'] ?? null,
+					'duration' => $series['duration'] ?? null,
+					'notes' => $series['notes'] ?? null,
+				]);
+			}
+
+			return $workoutExercise;
+		});
+
+		$workoutExercise->load('exercise', 'series');
 
 		return response()->json([
 			'message' => 'Exercício adicionado ao treino com sucesso',
@@ -60,7 +78,7 @@ class WorkoutExerciseController extends Controller
 
 	public function show($id)
 	{
-		$workoutExercise = WorkoutExercise::with(['exercise', 'trainingMethod', 'workout'])
+		$workoutExercise = WorkoutExercise::with(['exercise', 'workout', 'series'])
 			->find($id);
 
 		if (!$workoutExercise) {
@@ -82,31 +100,38 @@ class WorkoutExerciseController extends Controller
 			], 404);
 		}
 
-		$request->validate([
+		$request->validate(array_merge([
 			'order' => 'sometimes|integer|min:1',
-			'warm_up_sets' => 'nullable|integer|min:0',
-			'recognition_sets' => 'nullable|integer|min:0',
-			'valid_sets' => 'nullable|integer|min:1',
-			'reps' => 'nullable|string|max:50',
-			'rir' => 'nullable|integer|min:0|max:10',
-			'rest_seconds' => 'nullable|integer|min:0',
-			'cadence' => 'nullable|string|max:20',
-			'load' => 'nullable|numeric|min:0',
-			'observations' => 'nullable|string',
-		]);
+			'notes' => 'nullable|string',
+		], self::SERIES_VALIDATION_RULES));
 
-		$workoutExercise->update($request->only([
-			'order',
-			'warm_up_sets',
-			'recognition_sets',
-			'valid_sets',
-			'reps',
-			'rir',
-			'rest_seconds',
-			'cadence',
-			'load',
-			'observations',
-		]));
+		DB::transaction(function () use ($request, $workoutExercise) {
+			$workoutExercise->update($request->only([
+				'order',
+				'notes',
+			]));
+
+			if ($request->has('series')) {
+				$workoutExercise->series()->delete();
+
+				foreach ($request->input('series', []) as $series) {
+					WorkoutExerciseSeries::create([
+						'workout_exercise_id' => $workoutExercise->id,
+						'order' => $series['order'],
+						'repetitions' => $series['repetitions'] ?? null,
+						'weight' => $series['weight'] ?? null,
+						'rest_time' => $series['rest_time'] ?? null,
+						'rir' => $series['rir'] ?? null,
+						'tempo' => $series['tempo'] ?? null,
+						'cadence' => $series['cadence'] ?? null,
+						'duration' => $series['duration'] ?? null,
+						'notes' => $series['notes'] ?? null,
+					]);
+				}
+			}
+		});
+
+		$workoutExercise->load('exercise', 'series');
 
 		return response()->json([
 			'message' => 'Exercício do treino atualizado com sucesso',

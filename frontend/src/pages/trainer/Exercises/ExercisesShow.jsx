@@ -9,8 +9,8 @@ import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { useNavigate, useParams } from "react-router-dom";
 
-import api from "../../../api/axios";
 import PageContainer from "../../../components/common/PageContainer";
+import PageLoader from "../../../components/common/PageLoader";
 import PageTitle from "../../../components/common/PageTitle";
 import { Button } from "../../../components/ui/button";
 import {
@@ -20,19 +20,20 @@ import {
   CardHeader,
   CardTitle,
 } from "../../../components/ui/card";
+import exercisesService from "../../../services/ExercisesService";
 
-export default function ExerciciosShow() {
+export default function ExercisesShow() {
   const navigate = useNavigate();
   const { id } = useParams();
-  const [exercicio, setExercicio] = useState(null);
+  const [exercise, setExercise] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const carregarExercicio = async () => {
+    const loadExercise = async () => {
       try {
         setLoading(true);
-        const { data } = await api.get(`/trainer/exercicios/${id}`);
-        setExercicio(data);
+        const data = await exercisesService.getById(id);
+        setExercise(data);
       } catch (error) {
         toast.error("Não foi possível carregar o exercício.");
       } finally {
@@ -40,7 +41,7 @@ export default function ExerciciosShow() {
       }
     };
 
-    carregarExercicio();
+    loadExercise();
   }, [id]);
 
   return (
@@ -55,7 +56,7 @@ export default function ExerciciosShow() {
         <Button
           variant="outline"
           className="w-full md:w-auto"
-          onClick={() => navigate("/trainer/exercicios")}
+          onClick={() => navigate("/trainer/exercises")}
         >
           <ArrowLeft className="h-4 w-4" />
           Voltar à lista
@@ -65,7 +66,7 @@ export default function ExerciciosShow() {
       <Card className="border-border/80 bg-card/90">
         <CardHeader className="border-b border-border/80 px-6 py-6 sm:px-8">
           <CardTitle className="text-2xl">
-            {exercicio?.nome || "Exercício"}
+            {exercise?.name || "Exercício"}
           </CardTitle>
           <CardDescription>
             Informações completas registradas no cadastro.
@@ -74,15 +75,13 @@ export default function ExerciciosShow() {
 
         <CardContent className="px-6 py-6 sm:px-8">
           {loading ? (
-            <div className="py-8 text-center text-sm text-muted-foreground">
-              Carregando exercício...
-            </div>
-          ) : !exercicio ? (
-            <div className="py-8 text-center text-sm text-muted-foreground">
+            <PageLoader label="Carregando exercício..." />
+          ) : !exercise ? (
+            <div className="py-8 text-center text-sm text-muted-foreground animate-in fade-in duration-300">
               Exercício não encontrado.
             </div>
           ) : (
-            <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
+            <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr] animate-in fade-in slide-in-from-bottom-2 duration-300">
               <div className="space-y-5">
                 <div className="rounded-2xl border border-border/80 bg-background/60 p-5">
                   <div className="flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.22em] text-muted-foreground">
@@ -90,7 +89,7 @@ export default function ExerciciosShow() {
                     Descrição
                   </div>
                   <p className="mt-3 text-sm leading-6 text-foreground">
-                    {exercicio.descricao || "Nenhuma descrição cadastrada."}
+                    {exercise.description || "Nenhuma descrição cadastrada."}
                   </p>
                 </div>
 
@@ -100,7 +99,7 @@ export default function ExerciciosShow() {
                     Equipamento
                   </div>
                   <p className="mt-3 text-sm leading-6 text-foreground">
-                    {exercicio.equipamento || "Nenhum equipamento informado."}
+                    {exercise.equipment || "Nenhum equipamento informado."}
                   </p>
                 </div>
               </div>
@@ -112,7 +111,7 @@ export default function ExerciciosShow() {
                     Grupo muscular
                   </div>
                   <p className="mt-3 text-sm font-medium text-foreground">
-                    {exercicio.grupoMuscular?.nome || "—"}
+                    {exercise.muscleGroup?.name || "—"}
                   </p>
                 </div>
 
@@ -122,14 +121,14 @@ export default function ExerciciosShow() {
                     Vídeo
                   </div>
                   <p className="mt-3 text-sm text-foreground">
-                    {exercicio.video_url ? (
+                    {exercise.video_url ? (
                       <a
-                        href={exercicio.video_url}
+                        href={exercise.video_url}
                         target="_blank"
                         rel="noreferrer"
                         className="text-primary underline-offset-4 hover:underline"
                       >
-                        {exercicio.video_url}
+                        {exercise.video_url}
                       </a>
                     ) : (
                       "Nenhuma URL de vídeo cadastrada."

@@ -10,42 +10,42 @@ import PageTitle from "../../../components/common/PageTitle";
 import Spinner from "../../../components/common/Spinner";
 import { Button } from "../../../components/ui/button";
 import { Card, CardContent } from "../../../components/ui/card";
-import exercisesService from "../../../services/ExercisesService";
+import workoutsService from "../../../services/WorkoutsService";
 
-export default function ExercisesIndex() {
+export default function WorkoutsIndex() {
   const navigate = useNavigate();
-  const [exercises, setExercises] = useState([]);
+  const [workouts, setWorkouts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [deletingId, setDeletingId] = useState(null);
 
-  const loadExercises = async () => {
+  const loadWorkouts = async () => {
     try {
       setLoading(true);
-      const data = await exercisesService.getAll();
-      setExercises(data || []);
+      const data = await workoutsService.getAll();
+      setWorkouts(data || []);
     } catch (error) {
-      toast.error("Não foi possível carregar os exercícios.");
+      toast.error("Não foi possível carregar os treinos.");
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    loadExercises();
+    loadWorkouts();
   }, []);
 
   const handleDelete = async (id) => {
-    if (!window.confirm("Deseja realmente excluir este exercício?")) {
+    if (!window.confirm("Deseja realmente excluir este treino?")) {
       return;
     }
 
     try {
       setDeletingId(id);
-      await crudToast(exercisesService.remove(id), {
+      await crudToast(workoutsService.remove(id), {
         action: "delete",
-        entity: "Exercício",
+        entity: "Treino",
       });
-      await loadExercises();
+      await loadWorkouts();
     } catch {
       // erro já exibido pelo crudToast
     } finally {
@@ -57,44 +57,44 @@ export default function ExercisesIndex() {
     <PageContainer>
       <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <PageTitle
-          eyebrow="Catálogo"
-          title="Exercícios"
-          description="Mantenha sua base de exercícios organizada e fácil de consultar."
+          eyebrow="Planejamento"
+          title="Treinos"
+          description="Monte e gerencie os treinos dos alunos."
         />
 
         <Button
           className="w-full md:w-auto"
-          onClick={() => navigate("/trainer/exercises/new")}
+          onClick={() => navigate("/trainer/workouts/new")}
         >
           <Plus className="h-4 w-4" />
-          Novo exercício
+          Novo treino
         </Button>
       </div>
 
       <Card className="mt-4 border-border/80 bg-card/80">
         {loading ? (
           <CardContent className="py-4">
-            <PageLoader label="Carregando exercícios..." />
+            <PageLoader label="Carregando treinos..." />
           </CardContent>
-        ) : exercises.length === 0 ? (
+        ) : workouts.length === 0 ? (
           <CardContent className="flex flex-col items-center justify-center gap-3 py-16 text-center animate-in fade-in duration-300">
-            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-secondary/15 text-secondary">
+            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/15 text-primary">
               <Dumbbell className="h-7 w-7" />
             </div>
             <div>
               <h2 className="text-lg font-semibold">
-                Nenhum exercício cadastrado
+                Nenhum treino cadastrado
               </h2>
               <p className="mt-1 text-sm text-muted-foreground">
-                Adicione exercícios para montar treinos mais completos.
+                Cadastre um novo treino para começar a organizar as rotinas.
               </p>
             </div>
             <Button
               variant="outline"
-              onClick={() => navigate("/trainer/exercises/new")}
+              onClick={() => navigate("/trainer/workouts/new")}
             >
               <Plus className="h-4 w-4" />
-              Cadastrar exercício
+              Cadastrar treino
             </Button>
           </CardContent>
         ) : (
@@ -106,10 +106,13 @@ export default function ExercisesIndex() {
                     Nome
                   </th>
                   <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">
-                    Grupo muscular
+                    Aluno
                   </th>
                   <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">
-                    Equipamento
+                    Exercícios
+                  </th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">
+                    Status
                   </th>
                   <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">
                     Ações
@@ -117,19 +120,22 @@ export default function ExercisesIndex() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/60 bg-card/70">
-                {exercises.map((exercise) => (
+                {workouts.map((workout) => (
                   <tr
-                    key={exercise.id}
+                    key={workout.id}
                     className="transition-colors hover:bg-muted/10"
                   >
                     <td className="px-4 py-3 text-sm font-medium text-foreground">
-                      {exercise.name}
+                      {workout.name}
                     </td>
                     <td className="px-4 py-3 text-sm text-muted-foreground">
-                      {exercise.muscle_group?.name || "—"}
+                      {workout.student_profile?.user?.name || "—"}
                     </td>
                     <td className="px-4 py-3 text-sm text-muted-foreground">
-                      {exercise.equipment || "—"}
+                      {workout.workout_exercises?.length || 0}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-muted-foreground">
+                      {workout.active ? "Ativo" : "Inativo"}
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex flex-wrap items-center gap-2">
@@ -137,7 +143,7 @@ export default function ExercisesIndex() {
                           variant="outline"
                           size="sm"
                           onClick={() =>
-                            navigate(`/trainer/exercises/${exercise.id}`)
+                            navigate(`/trainer/workouts/${workout.id}`)
                           }
                         >
                           <Eye className="h-4 w-4" />
@@ -147,7 +153,7 @@ export default function ExercisesIndex() {
                           variant="outline"
                           size="sm"
                           onClick={() =>
-                            navigate(`/trainer/exercises/${exercise.id}/edit`)
+                            navigate(`/trainer/workouts/${workout.id}/edit`)
                           }
                         >
                           <Pencil className="h-4 w-4" />
@@ -156,15 +162,15 @@ export default function ExercisesIndex() {
                         <Button
                           variant="destructive"
                           size="sm"
-                          onClick={() => handleDelete(exercise.id)}
-                          disabled={deletingId === exercise.id}
+                          onClick={() => handleDelete(workout.id)}
+                          disabled={deletingId === workout.id}
                         >
-                          {deletingId === exercise.id ? (
+                          {deletingId === workout.id ? (
                             <Spinner className="h-4 w-4" />
                           ) : (
                             <Trash2 className="h-4 w-4" />
                           )}
-                          {deletingId === exercise.id
+                          {deletingId === workout.id
                             ? "Excluindo..."
                             : "Excluir"}
                         </Button>
