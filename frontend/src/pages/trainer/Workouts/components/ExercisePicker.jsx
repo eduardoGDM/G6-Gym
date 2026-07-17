@@ -1,35 +1,28 @@
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { Plus, Search } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import { Button } from "../../../../components/ui/button";
 import { Input } from "../../../../components/ui/input";
 import Spinner from "../../../../components/common/Spinner";
+import { useDebouncedValue } from "../../../../hooks/useDebouncedValue";
 import exercisesService from "../../../../services/ExercisesService";
 
 const PER_PAGE = 8;
 
 export default function ExercisePicker({ muscleGroups = [], addedIds = [], onAdd }) {
   const [search, setSearch] = useState("");
-  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [page, setPage] = useState(1);
 
-  const muscleGroupsKey = [...muscleGroups].sort().join(",");
-  const [lastMuscleGroupsKey, setLastMuscleGroupsKey] = useState(muscleGroupsKey);
+  const debouncedSearch = useDebouncedValue(search, 500);
 
-  if (muscleGroupsKey !== lastMuscleGroupsKey) {
-    setLastMuscleGroupsKey(muscleGroupsKey);
+  const filtersKey = `${debouncedSearch}|${[...muscleGroups].sort().join(",")}`;
+  const [lastFiltersKey, setLastFiltersKey] = useState(filtersKey);
+
+  if (filtersKey !== lastFiltersKey) {
+    setLastFiltersKey(filtersKey);
     setPage(1);
   }
-
-  useEffect(() => {
-    const timeout = setTimeout(() => {
-      setDebouncedSearch(search);
-      setPage(1);
-    }, 500);
-
-    return () => clearTimeout(timeout);
-  }, [search]);
 
   const { data, isLoading, isFetching, isError } = useQuery({
     queryKey: [

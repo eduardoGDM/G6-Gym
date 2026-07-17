@@ -13,6 +13,7 @@ import { Button } from "../../../components/ui/button";
 import { Card, CardContent } from "../../../components/ui/card";
 import { Input } from "../../../components/ui/input";
 import { Select } from "../../../components/ui/select";
+import { useDebouncedValue } from "../../../hooks/useDebouncedValue";
 import exercisesService from "../../../services/ExercisesService";
 
 const PER_PAGE_OPTIONS = [10, 25, 50];
@@ -22,19 +23,17 @@ export default function ExercisesIndex() {
   const queryClient = useQueryClient();
 
   const [search, setSearch] = useState("");
-  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(10);
   const [deletingId, setDeletingId] = useState(null);
 
-  useEffect(() => {
-    const timeout = setTimeout(() => {
-      setDebouncedSearch(search);
-      setPage(1);
-    }, 500);
+  const debouncedSearch = useDebouncedValue(search, 500);
 
-    return () => clearTimeout(timeout);
-  }, [search]);
+  const [lastDebouncedSearch, setLastDebouncedSearch] = useState(debouncedSearch);
+  if (debouncedSearch !== lastDebouncedSearch) {
+    setLastDebouncedSearch(debouncedSearch);
+    setPage(1);
+  }
 
   const { data, isLoading, isFetching, isError } = useQuery({
     queryKey: ["exercises", { page, search: debouncedSearch, perPage }],

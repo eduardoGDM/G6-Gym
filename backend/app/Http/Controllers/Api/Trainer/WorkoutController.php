@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Trainer;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use App\Http\Resources\WorkoutResource;
 use App\Models\Workout;
 use App\Models\WorkoutExercise;
 use App\Models\WorkoutExerciseSeries;
@@ -38,11 +39,35 @@ class WorkoutController extends Controller
 		'exercises.*.series.*.notes' => 'nullable|string',
 	];
 
-	public function index()
+	public function index(Request $request)
 	{
-		return response()->json(
-			Workout::with(self::WORKOUT_RELATIONS)->get()
-		);
+		$request->validate([
+			'student_search' => 'nullable|string|max:255',
+			'status' => 'nullable|in:all,active,inactive',
+			'per_page' => 'nullable|integer|min:1|max:100',
+		]);
+
+		$studentSearch = $request->input('student_search');
+		$status = $request->input('status', 'all');
+		$perPage = (int) $request->input('per_page', 10);
+
+		$workouts = Workout::with(['studentProfile.user', 'muscleGroups'])
+			->withCount('workoutExercises')
+			->when($studentSearch, function ($query) use ($studentSearch) {
+				$query->whereHas('studentProfile.user', function ($query) use ($studentSearch) {
+					$query->where('name', 'like', "%{$studentSearch}%");
+				});
+			})
+			->when($status === 'active', function ($query) {
+				$query->where('active', true);
+			})
+			->when($status === 'inactive', function ($query) {
+				$query->where('active', false);
+			})
+			->orderBy('created_at', 'desc')
+			->paginate($perPage);
+
+		return WorkoutResource::collection($workouts);
 	}
 
 	public function store(Request $request)

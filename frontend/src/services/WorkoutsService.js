@@ -1,8 +1,20 @@
 import { sanctumRequest } from "../sanctumRequest";
 
 const workoutsService = {
-  async getAll() {
-    const { data } = await sanctumRequest("get", "/trainer/workouts");
+  async search({ page = 1, perPage = 10, studentSearch = "", status = "all" } = {}) {
+    const { data } = await sanctumRequest(
+      "get",
+      "/trainer/workouts",
+      {},
+      {
+        params: {
+          page,
+          per_page: perPage,
+          student_search: studentSearch || undefined,
+          status: status && status !== "all" ? status : undefined,
+        },
+      },
+    );
     return data;
   },
 
