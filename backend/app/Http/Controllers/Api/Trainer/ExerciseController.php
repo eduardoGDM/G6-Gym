@@ -4,15 +4,27 @@ namespace App\Http\Controllers\Api\Trainer;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use App\Http\Resources\ExerciseResource;
 use App\Models\Exercise;
 
 class ExerciseController extends Controller
 {
-	public function index()
+	public function index(Request $request)
 	{
-		return response()->json(
-			Exercise::with('muscleGroup')->get()
-		);
+		$search = $request->input('search');
+		$perPage = (int) $request->input('per_page', 10);
+
+		$exercises = Exercise::with('muscleGroup')
+			->when($search, function ($query) use ($search) {
+				$query->where('name', 'like', "%{$search}%")
+					->orWhereHas('muscleGroup', function ($query) use ($search) {
+						$query->where('name', 'like', "%{$search}%");
+					});
+			})
+			->orderBy('name')
+			->paginate($perPage);
+
+		return ExerciseResource::collection($exercises);
 	}
 
 	public function store(Request $request)

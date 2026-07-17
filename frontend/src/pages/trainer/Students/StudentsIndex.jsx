@@ -3,8 +3,8 @@ import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 
-import PageContainer from "../../../components/common/PageContainer";
 import { crudToast } from "../../../components/common/crudToast";
+import PageContainer from "../../../components/common/PageContainer";
 import PageLoader from "../../../components/common/PageLoader";
 import PageTitle from "../../../components/common/PageTitle";
 import Spinner from "../../../components/common/Spinner";
@@ -82,9 +82,7 @@ export default function StudentsIndex() {
               <UserRound className="h-7 w-7" />
             </div>
             <div>
-              <h2 className="text-lg font-semibold">
-                Nenhum student cadastrado
-              </h2>
+              <h2 className="text-lg font-semibold">Nenhum aluno cadastrado</h2>
               <p className="mt-1 text-sm text-muted-foreground">
                 Cadastre novos alunos para acompanhar o desenvolvimento.
               </p>
@@ -94,7 +92,7 @@ export default function StudentsIndex() {
               onClick={() => navigate("/trainer/students/new")}
             >
               <Plus className="h-4 w-4" />
-              Cadastrar student
+              Cadastrar Aluno
             </Button>
           </CardContent>
         ) : (

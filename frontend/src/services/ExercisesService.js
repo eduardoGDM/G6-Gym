@@ -2,7 +2,28 @@ import { sanctumRequest } from "../sanctumRequest";
 
 const exercisesService = {
   async getAll() {
-    const { data } = await sanctumRequest("get", "/trainer/exercises");
+    const { data } = await sanctumRequest(
+      "get",
+      "/trainer/exercises",
+      {},
+      { params: { per_page: 1000 } },
+    );
+    return data.data;
+  },
+
+  async search({ page = 1, perPage = 10, search = "" } = {}) {
+    const { data } = await sanctumRequest(
+      "get",
+      "/trainer/exercises",
+      {},
+      {
+        params: {
+          page,
+          per_page: perPage,
+          search: search || undefined,
+        },
+      },
+    );
     return data;
   },
 

@@ -1,4 +1,5 @@
-import { Dumbbell, Eye, Pencil, Plus, Trash2 } from "lucide-react";
+import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Dumbbell, Eye, Pencil, Plus, Search, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
@@ -10,29 +11,50 @@ import PageTitle from "../../../components/common/PageTitle";
 import Spinner from "../../../components/common/Spinner";
 import { Button } from "../../../components/ui/button";
 import { Card, CardContent } from "../../../components/ui/card";
+import { Input } from "../../../components/ui/input";
+import { Select } from "../../../components/ui/select";
 import exercisesService from "../../../services/ExercisesService";
+
+const PER_PAGE_OPTIONS = [10, 25, 50];
 
 export default function ExercisesIndex() {
   const navigate = useNavigate();
-  const [exercises, setExercises] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
+
+  const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const [perPage, setPerPage] = useState(10);
   const [deletingId, setDeletingId] = useState(null);
 
-  const loadExercises = async () => {
-    try {
-      setLoading(true);
-      const data = await exercisesService.getAll();
-      setExercises(data || []);
-    } catch (error) {
-      toast.error("Não foi possível carregar os exercícios.");
-    } finally {
-      setLoading(false);
-    }
-  };
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      setDebouncedSearch(search);
+      setPage(1);
+    }, 500);
+
+    return () => clearTimeout(timeout);
+  }, [search]);
+
+  const { data, isLoading, isFetching, isError } = useQuery({
+    queryKey: ["exercises", { page, search: debouncedSearch, perPage }],
+    queryFn: () =>
+      exercisesService.search({ page, perPage, search: debouncedSearch }),
+    placeholderData: keepPreviousData,
+  });
 
   useEffect(() => {
-    loadExercises();
-  }, []);
+    if (isError) {
+      toast.error("Não foi possível carregar os exercícios.");
+    }
+  }, [isError]);
+
+  const exercises = data?.data || [];
+  const meta = data?.meta;
+  const total = meta?.total || 0;
+  const lastPage = meta?.last_page || 1;
+  const from = total === 0 ? 0 : (page - 1) * perPage + 1;
+  const to = Math.min(page * perPage, total);
 
   const handleDelete = async (id) => {
     if (!window.confirm("Deseja realmente excluir este exercício?")) {
@@ -45,12 +67,17 @@ export default function ExercisesIndex() {
         action: "delete",
         entity: "Exercício",
       });
-      await loadExercises();
+      await queryClient.invalidateQueries({ queryKey: ["exercises"] });
     } catch {
       // erro já exibido pelo crudToast
     } finally {
       setDeletingId(null);
     }
+  };
+
+  const handlePerPageChange = (event) => {
+    setPerPage(Number(event.target.value));
+    setPage(1);
   };
 
   return (
@@ -71,8 +98,18 @@ export default function ExercisesIndex() {
         </Button>
       </div>
 
+      <div className="relative mt-4 max-w-sm">
+        <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <Input
+          value={search}
+          onChange={(event) => setSearch(event.target.value)}
+          placeholder="Buscar exercício..."
+          className="pl-10"
+        />
+      </div>
+
       <Card className="mt-4 border-border/80 bg-card/80">
-        {loading ? (
+        {isLoading ? (
           <CardContent className="py-4">
             <PageLoader label="Carregando exercícios..." />
           </CardContent>
@@ -83,98 +120,154 @@ export default function ExercisesIndex() {
             </div>
             <div>
               <h2 className="text-lg font-semibold">
-                Nenhum exercício cadastrado
+                {debouncedSearch
+                  ? "Nenhum exercício encontrado"
+                  : "Nenhum exercício cadastrado"}
               </h2>
               <p className="mt-1 text-sm text-muted-foreground">
-                Adicione exercícios para montar treinos mais completos.
+                {debouncedSearch
+                  ? "Tente buscar por outro nome ou grupo muscular."
+                  : "Adicione exercícios para montar treinos mais completos."}
               </p>
             </div>
-            <Button
-              variant="outline"
-              onClick={() => navigate("/trainer/exercises/new")}
-            >
-              <Plus className="h-4 w-4" />
-              Cadastrar exercício
-            </Button>
+            {!debouncedSearch ? (
+              <Button
+                variant="outline"
+                onClick={() => navigate("/trainer/exercises/new")}
+              >
+                <Plus className="h-4 w-4" />
+                Cadastrar exercício
+              </Button>
+            ) : null}
           </CardContent>
         ) : (
-          <CardContent className="animate-in fade-in duration-300 overflow-x-auto p-0">
-            <table className="min-w-full divide-y divide-border/70">
-              <thead className="bg-muted/30">
-                <tr>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">
-                    Nome
-                  </th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">
-                    Grupo muscular
-                  </th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">
-                    Equipamento
-                  </th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">
-                    Ações
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border/60 bg-card/70">
-                {exercises.map((exercise) => (
-                  <tr
-                    key={exercise.id}
-                    className="transition-colors hover:bg-muted/10"
-                  >
-                    <td className="px-4 py-3 text-sm font-medium text-foreground">
-                      {exercise.name}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-muted-foreground">
-                      {exercise.muscle_group?.name || "—"}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-muted-foreground">
-                      {exercise.equipment || "—"}
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() =>
-                            navigate(`/trainer/exercises/${exercise.id}`)
-                          }
-                        >
-                          <Eye className="h-4 w-4" />
-                          Visualizar
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() =>
-                            navigate(`/trainer/exercises/${exercise.id}/edit`)
-                          }
-                        >
-                          <Pencil className="h-4 w-4" />
-                          Editar
-                        </Button>
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          onClick={() => handleDelete(exercise.id)}
-                          disabled={deletingId === exercise.id}
-                        >
-                          {deletingId === exercise.id ? (
-                            <Spinner className="h-4 w-4" />
-                          ) : (
-                            <Trash2 className="h-4 w-4" />
-                          )}
-                          {deletingId === exercise.id
-                            ? "Excluindo..."
-                            : "Excluir"}
-                        </Button>
-                      </div>
-                    </td>
+          <>
+            <CardContent
+              className={`animate-in fade-in duration-300 overflow-x-auto p-0 transition-opacity ${
+                isFetching ? "opacity-60" : ""
+              }`}
+            >
+              <table className="min-w-full divide-y divide-border/70">
+                <thead className="bg-muted/30">
+                  <tr>
+                    <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">
+                      Nome
+                    </th>
+                    <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">
+                      Grupo muscular
+                    </th>
+                    <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">
+                      Equipamento
+                    </th>
+                    <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">
+                      Ações
+                    </th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </CardContent>
+                </thead>
+                <tbody className="divide-y divide-border/60 bg-card/70">
+                  {exercises.map((exercise) => (
+                    <tr
+                      key={exercise.id}
+                      className="transition-colors hover:bg-muted/10"
+                    >
+                      <td className="px-4 py-3 text-sm font-medium text-foreground">
+                        {exercise.name}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-muted-foreground">
+                        {exercise.muscle_group?.name || "—"}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-muted-foreground">
+                        {exercise.equipment || "—"}
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() =>
+                              navigate(`/trainer/exercises/${exercise.id}`)
+                            }
+                          >
+                            <Eye className="h-4 w-4" />
+                            Visualizar
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() =>
+                              navigate(`/trainer/exercises/${exercise.id}/edit`)
+                            }
+                          >
+                            <Pencil className="h-4 w-4" />
+                            Editar
+                          </Button>
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => handleDelete(exercise.id)}
+                            disabled={deletingId === exercise.id}
+                          >
+                            {deletingId === exercise.id ? (
+                              <Spinner className="h-4 w-4" />
+                            ) : (
+                              <Trash2 className="h-4 w-4" />
+                            )}
+                            {deletingId === exercise.id
+                              ? "Excluindo..."
+                              : "Excluir"}
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </CardContent>
+
+            <div className="flex flex-col gap-3 border-t border-border/80 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <span>Exibir</span>
+                <Select
+                  className="!h-9 w-20"
+                  value={perPage}
+                  onChange={handlePerPageChange}
+                >
+                  {PER_PAGE_OPTIONS.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))}
+                </Select>
+                <span>
+                  {from}–{to} de {total}
+                </span>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={page <= 1}
+                  onClick={() => setPage((current) => Math.max(1, current - 1))}
+                >
+                  Anterior
+                </Button>
+                <span className="text-sm text-muted-foreground">
+                  Página {page} de {lastPage}
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={page >= lastPage}
+                  onClick={() =>
+                    setPage((current) => Math.min(lastPage, current + 1))
+                  }
+                >
+                  Próxima
+                </Button>
+              </div>
+            </div>
+          </>
         )}
       </Card>
     </PageContainer>
