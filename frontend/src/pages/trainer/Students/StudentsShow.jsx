@@ -4,6 +4,7 @@ import toast from "react-hot-toast";
 import { useNavigate, useParams } from "react-router-dom";
 
 import PageContainer from "../../../components/common/PageContainer";
+import PageLoader from "../../../components/common/PageLoader";
 import PageTitle from "../../../components/common/PageTitle";
 import { Button } from "../../../components/ui/button";
 import {
@@ -68,15 +69,13 @@ export default function StudentsShow() {
 
         <CardContent className="px-6 py-6 sm:px-8">
           {loading ? (
-            <div className="py-8 text-center text-sm text-muted-foreground">
-              Carregando student...
-            </div>
+            <PageLoader label="Carregando student..." />
           ) : !student ? (
-            <div className="py-8 text-center text-sm text-muted-foreground">
+            <div className="py-8 text-center text-sm text-muted-foreground animate-in fade-in duration-300">
               Aluno não encontrado.
             </div>
           ) : (
-            <div className="grid gap-6 md:grid-cols-2">
+            <div className="grid gap-6 md:grid-cols-2 animate-in fade-in slide-in-from-bottom-2 duration-300">
               <div className="space-y-4 rounded-2xl border border-border/80 bg-background/60 p-5">
                 <div className="flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.22em] text-muted-foreground">
                   <UserRound className="h-4 w-4" />

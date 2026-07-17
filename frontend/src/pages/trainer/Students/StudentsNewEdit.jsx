@@ -4,10 +4,11 @@ import { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
 import { useNavigate, useParams } from "react-router-dom";
-import * as yup from "yup";
 
 import PageContainer from "../../../components/common/PageContainer";
+import PageLoader from "../../../components/common/PageLoader";
 import PageTitle from "../../../components/common/PageTitle";
+import Spinner from "../../../components/common/Spinner";
 import { Button } from "../../../components/ui/button";
 import {
   Card,
@@ -20,63 +21,15 @@ import { Input } from "../../../components/ui/input";
 import { Label } from "../../../components/ui/label";
 import { Select } from "../../../components/ui/select";
 import { Textarea } from "../../../components/ui/textarea";
+import { crudToast } from "../../../components/common/crudToast";
 import studentsService from "../../../services/StudentsService";
-
-const schema = yup.object({
-  name: yup
-    .string()
-    .trim()
-    .required("O nome é obrigatório")
-    .max(255, "O nome deve ter no máximo 255 caracteres"),
-  email: yup
-    .string()
-    .trim()
-    .required("O e-mail é obrigatório")
-    .email("Digite um e-mail válido"),
-  password: yup
-    .string()
-    .trim()
-    .nullable()
-    .notRequired()
-    .when([], {
-      is: () => !Boolean(window.location.pathname.includes("/editar")),
-      then: (schema) => schema.required("A senha é obrigatória"),
-      otherwise: (schema) => schema.notRequired(),
-    }),
-  cpf: yup
-    .string()
-    .trim()
-    .required("O CPF é obrigatório")
-    .length(14, "O CPF deve ter 14 caracteres"),
-  phone: yup
-    .string()
-    .trim()
-    .nullable()
-    .notRequired()
-    .max(20, "O telefone deve ter no máximo 20 caracteres"),
-  birth_date: yup.string().trim().nullable().notRequired(),
-  gender: yup
-    .string()
-    .trim()
-    .nullable()
-    .notRequired()
-    .oneOf(["Masculino", "Feminino", "Outro"], "Selecione um sexo válido"),
-  height: yup
-    .number()
-    .transform((value, originalValue) => (originalValue === "" ? null : value))
-    .nullable()
-    .notRequired()
-    .min(0, "A altura deve ser maior ou igual a 0")
-    .max(3, "A altura deve ser menor ou igual a 3"),
-  current_weight: yup
-    .number()
-    .transform((value, originalValue) => (originalValue === "" ? null : value))
-    .nullable()
-    .notRequired()
-    .min(0, "O peso deve ser maior ou igual a 0")
-    .max(500, "O peso deve ser menor ou igual a 500"),
-  observations: yup.string().trim().nullable().notRequired(),
-});
+import {
+  formatCpf,
+  formatDecimal,
+  formatPhone,
+  getTodayISO,
+  studentSchema,
+} from "./utils";
 
 const GENDER_OPTIONS = [
   { value: "Masculino", label: "Masculino" },
@@ -95,22 +48,30 @@ export default function StudentsNewEdit() {
     register,
     handleSubmit,
     reset,
+    setError,
     formState: { errors, isSubmitting },
   } = useForm({
-    resolver: yupResolver(schema),
+    resolver: yupResolver(studentSchema),
+    context: { isEdit },
     defaultValues: {
       name: "",
       email: "",
       password: "",
       cpf: "",
-      phone: "", // Alterado de telefone para phone
-      birth_date: "", // Alterado de data_nascimento para birth_date
+      phone: "",
+      birth_date: "",
       gender: "",
       height: "",
       current_weight: "",
-      observations: "", // Alterado de observacoes para observations
+      observations: "",
     },
   });
+
+  const cpfField = register("cpf");
+  const phoneField = register("phone");
+  const heightField = register("height");
+  const weightField = register("current_weight");
+  const todayISO = getTodayISO();
 
   const pageTitle = useMemo(
     () => ({
@@ -157,26 +118,45 @@ export default function StudentsNewEdit() {
   const onSubmit = async (data) => {
     try {
       setLoading(true);
+      const emptyToNull = (value) => (value === "" ? null : value);
+
       const payload = {
-        ...data,
-        height: data.height === "" ? null : Number(data.height),
-        current_weight:
-          data.current_weight === "" ? null : Number(data.current_weight),
+        name: data.name,
+        email: data.email,
+        cpf: data.cpf,
+        phone: emptyToNull(data.phone),
+        birth_date: emptyToNull(data.birth_date),
+        gender: emptyToNull(data.gender),
+        height: data.height,
+        current_weight: data.current_weight,
+        observations: emptyToNull(data.observations),
       };
 
-      if (isEdit) {
-        await studentsService.update(id, payload);
-        toast.success("Aluno atualizado com sucesso");
-      } else {
-        await studentsService.create(payload);
-        toast.success("Aluno criado com sucesso");
+      if (!isEdit || data.password) {
+        payload.password = data.password;
       }
 
+      const request = isEdit
+        ? studentsService.update(id, payload)
+        : studentsService.create(payload);
+
+      await crudToast(request, {
+        action: isEdit ? "update" : "create",
+        entity: "Aluno",
+        onError: (error) => {
+          const validationErrors = error.response?.data?.errors;
+
+          if (validationErrors) {
+            Object.entries(validationErrors).forEach(([field, messages]) => {
+              setError(field, { type: "server", message: messages[0] });
+            });
+          }
+        },
+      });
+
       navigate("/trainer/students");
-    } catch (error) {
-      const message =
-        error.response?.data?.message || "Erro ao salvar o student";
-      toast.error(message);
+    } catch {
+      // erro já exibido pelo crudToast
     } finally {
       setLoading(false);
     }
@@ -211,11 +191,12 @@ export default function StudentsNewEdit() {
 
         <CardContent className="px-6 py-6 sm:px-8">
           {initialLoading ? (
-            <div className="py-8 text-center text-sm text-muted-foreground">
-              Carregando formulário...
-            </div>
+            <PageLoader label="Carregando formulário..." />
           ) : (
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+            <form
+              onSubmit={handleSubmit(onSubmit)}
+              className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300"
+            >
               <div className="grid gap-6 md:grid-cols-2">
                 <div className="space-y-2">
                   <Label htmlFor="name">Nome</Label>
@@ -272,7 +253,12 @@ export default function StudentsNewEdit() {
                   <Input
                     id="cpf"
                     placeholder="000.000.000-00"
-                    {...register("cpf")}
+                    maxLength={14}
+                    {...cpfField}
+                    onChange={(event) => {
+                      event.target.value = formatCpf(event.target.value);
+                      cpfField.onChange(event);
+                    }}
                   />
                   {errors.cpf ? (
                     <p className="text-sm text-red-400">{errors.cpf.message}</p>
@@ -286,7 +272,12 @@ export default function StudentsNewEdit() {
                   <Input
                     id="phone"
                     placeholder="(00) 00000-0000"
-                    {...register("phone")}
+                    maxLength={15}
+                    {...phoneField}
+                    onChange={(event) => {
+                      event.target.value = formatPhone(event.target.value);
+                      phoneField.onChange(event);
+                    }}
                   />
                   {errors.phone ? (
                     <p className="text-sm text-red-400">
@@ -300,6 +291,7 @@ export default function StudentsNewEdit() {
                   <Input
                     id="birth_date"
                     type="date"
+                    max={todayISO}
                     {...register("birth_date")}
                   />
                   {errors.birth_date ? (
@@ -329,13 +321,20 @@ export default function StudentsNewEdit() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="height">Altura</Label>
+                  <Label htmlFor="height">Altura (m)</Label>
                   <Input
                     id="height"
                     type="number"
+                    inputMode="decimal"
                     step="0.01"
+                    min="0"
+                    max="3"
                     placeholder="1.75"
-                    {...register("height")}
+                    {...heightField}
+                    onBlur={(event) => {
+                      event.target.value = formatDecimal(event.target.value);
+                      heightField.onBlur(event);
+                    }}
                   />
                   {errors.height ? (
                     <p className="text-sm text-red-400">
@@ -347,13 +346,20 @@ export default function StudentsNewEdit() {
 
               <div className="grid gap-6 md:grid-cols-2">
                 <div className="space-y-2">
-                  <Label htmlFor="current_weight">Peso atual</Label>
+                  <Label htmlFor="current_weight">Peso atual (kg)</Label>
                   <Input
                     id="current_weight"
                     type="number"
+                    inputMode="decimal"
                     step="0.01"
+                    min="0"
+                    max="500"
                     placeholder="72.5"
-                    {...register("current_weight")}
+                    {...weightField}
+                    onBlur={(event) => {
+                      event.target.value = formatDecimal(event.target.value);
+                      weightField.onBlur(event);
+                    }}
                   />
                   {errors.current_weight ? (
                     <p className="text-sm text-red-400">
@@ -386,7 +392,11 @@ export default function StudentsNewEdit() {
                   Cancelar
                 </Button>
                 <Button type="submit" disabled={loading || isSubmitting}>
-                  <Save className="h-4 w-4" />
+                  {loading || isSubmitting ? (
+                    <Spinner className="h-4 w-4" />
+                  ) : (
+                    <Save className="h-4 w-4" />
+                  )}
                   {loading || isSubmitting
                     ? "Salvando..."
                     : isEdit

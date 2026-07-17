@@ -4,7 +4,10 @@ import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 
 import PageContainer from "../../../components/common/PageContainer";
+import { crudToast } from "../../../components/common/crudToast";
+import PageLoader from "../../../components/common/PageLoader";
 import PageTitle from "../../../components/common/PageTitle";
+import Spinner from "../../../components/common/Spinner";
 import { Button } from "../../../components/ui/button";
 import { Card, CardContent } from "../../../components/ui/card";
 import studentsService from "../../../services/StudentsService";
@@ -38,13 +41,13 @@ export default function StudentsIndex() {
 
     try {
       setDeletingId(id);
-      await studentsService.remove(id);
-      toast.success("Aluno removido com sucesso");
+      await crudToast(studentsService.remove(id), {
+        action: "delete",
+        entity: "Aluno",
+      });
       await loadStudents();
-    } catch (error) {
-      const message =
-        error.response?.data?.message || "Erro ao excluir o student";
-      toast.error(message);
+    } catch {
+      // erro já exibido pelo crudToast
     } finally {
       setDeletingId(null);
     }
@@ -70,11 +73,11 @@ export default function StudentsIndex() {
 
       <Card className="mt-4 border-border/80 bg-card/80">
         {loading ? (
-          <CardContent className="flex items-center justify-center py-16 text-sm text-muted-foreground">
-            Carregando alunos...
+          <CardContent className="py-4">
+            <PageLoader label="Carregando alunos..." />
           </CardContent>
         ) : students.length === 0 ? (
-          <CardContent className="flex flex-col items-center justify-center gap-3 py-16 text-center">
+          <CardContent className="flex flex-col items-center justify-center gap-3 py-16 text-center animate-in fade-in duration-300">
             <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/15 text-primary">
               <UserRound className="h-7 w-7" />
             </div>
@@ -95,7 +98,7 @@ export default function StudentsIndex() {
             </Button>
           </CardContent>
         ) : (
-          <CardContent className="overflow-x-auto p-0">
+          <CardContent className="animate-in fade-in duration-300 overflow-x-auto p-0">
             <table className="min-w-full divide-y divide-border/70">
               <thead className="bg-muted/30">
                 <tr>
@@ -156,7 +159,11 @@ export default function StudentsIndex() {
                           onClick={() => handleDelete(student.id)}
                           disabled={deletingId === student.id}
                         >
-                          <Trash2 className="h-4 w-4" />
+                          {deletingId === student.id ? (
+                            <Spinner className="h-4 w-4" />
+                          ) : (
+                            <Trash2 className="h-4 w-4" />
+                          )}
                           {deletingId === student.id
                             ? "Excluindo..."
                             : "Excluir"}
