@@ -39,6 +39,16 @@ const studentsService = {
     );
     return data;
   },
+
+  async generateWorkoutSheet(id) {
+    const response = await sanctumRequest(
+      "get",
+      `/trainer/students/${id}/workout-sheet`,
+      {},
+      { responseType: "blob" },
+    );
+    return response.data;
+  },
 };
 
 export default studentsService;

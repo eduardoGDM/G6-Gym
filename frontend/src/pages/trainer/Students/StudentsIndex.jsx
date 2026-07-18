@@ -1,13 +1,13 @@
-import { Eye, Pencil, Plus, Trash2, UserRound } from "lucide-react";
+import { Eye, FileText, Pencil, Plus, Trash2, UserRound } from "lucide-react";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 
+import ActionIconButton from "../../../components/common/ActionIconButton";
 import { crudToast } from "../../../components/common/crudToast";
 import PageContainer from "../../../components/common/PageContainer";
 import PageLoader from "../../../components/common/PageLoader";
 import PageTitle from "../../../components/common/PageTitle";
-import Spinner from "../../../components/common/Spinner";
 import { Button } from "../../../components/ui/button";
 import { Card, CardContent } from "../../../components/ui/card";
 import studentsService from "../../../services/StudentsService";
@@ -17,6 +17,7 @@ export default function StudentsIndex() {
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [deletingId, setDeletingId] = useState(null);
+  const [generatingSheetId, setGeneratingSheetId] = useState(null);
 
   const loadStudents = async () => {
     try {
@@ -50,6 +51,32 @@ export default function StudentsIndex() {
       // erro já exibido pelo crudToast
     } finally {
       setDeletingId(null);
+    }
+  };
+
+  const handleGenerateSheet = async (student) => {
+    try {
+      setGeneratingSheetId(student.id);
+      const pdfBlob = await studentsService.generateWorkoutSheet(student.id);
+
+      const url = window.URL.createObjectURL(pdfBlob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `ficha-treino-${student.user?.name || student.id}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      if (error.response?.status === 403) {
+        toast.error("Este aluno não possui treinos vinculados a você.");
+      } else if (error.response?.status === 404) {
+        toast.error("Aluno não encontrado.");
+      } else {
+        toast.error("Não foi possível gerar a ficha de treino.");
+      }
+    } finally {
+      setGeneratingSheetId(null);
     }
   };
 
@@ -131,41 +158,33 @@ export default function StudentsIndex() {
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex flex-wrap items-center gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
+                        <ActionIconButton
+                          icon={Eye}
+                          tooltip="Visualizar"
                           onClick={() =>
                             navigate(`/trainer/students/${student.id}`)
                           }
-                        >
-                          <Eye className="h-4 w-4" />
-                          Visualizar
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
+                        />
+                        <ActionIconButton
+                          icon={Pencil}
+                          tooltip="Editar"
                           onClick={() =>
                             navigate(`/trainer/students/${student.id}/editar`)
                           }
-                        >
-                          <Pencil className="h-4 w-4" />
-                          Editar
-                        </Button>
-                        <Button
-                          variant="destructive"
-                          size="sm"
+                        />
+                        <ActionIconButton
+                          icon={FileText}
+                          tooltip="Gerar ficha"
+                          onClick={() => handleGenerateSheet(student)}
+                          loading={generatingSheetId === student.id}
+                        />
+                        <ActionIconButton
+                          icon={Trash2}
+                          tooltip="Excluir"
+                          color="destructive"
                           onClick={() => handleDelete(student.id)}
-                          disabled={deletingId === student.id}
-                        >
-                          {deletingId === student.id ? (
-                            <Spinner className="h-4 w-4" />
-                          ) : (
-                            <Trash2 className="h-4 w-4" />
-                          )}
-                          {deletingId === student.id
-                            ? "Excluindo..."
-                            : "Excluir"}
-                        </Button>
+                          loading={deletingId === student.id}
+                        />
                       </div>
                     </td>
                   </tr>

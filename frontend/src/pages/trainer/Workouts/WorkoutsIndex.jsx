@@ -1,14 +1,23 @@
 import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Dumbbell, Eye, Pencil, Plus, Power, Search, Trash2 } from "lucide-react";
+import {
+  Dumbbell,
+  Eye,
+  Pause,
+  Pencil,
+  Play,
+  Plus,
+  Search,
+  Trash2,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 
+import ActionIconButton from "../../../components/common/ActionIconButton";
 import { crudToast } from "../../../components/common/crudToast";
 import PageContainer from "../../../components/common/PageContainer";
 import PageLoader from "../../../components/common/PageLoader";
 import PageTitle from "../../../components/common/PageTitle";
-import Spinner from "../../../components/common/Spinner";
 import { Badge } from "../../../components/ui/badge";
 import { Button } from "../../../components/ui/button";
 import { Card, CardContent } from "../../../components/ui/card";
@@ -259,54 +268,35 @@ export default function WorkoutsIndex() {
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex flex-wrap items-center gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
+                          <ActionIconButton
+                            icon={Eye}
+                            tooltip="Visualizar"
                             onClick={() =>
                               navigate(`/trainer/workouts/${workout.id}`)
                             }
-                          >
-                            <Eye className="h-4 w-4" />
-                            Visualizar
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
+                          />
+                          <ActionIconButton
+                            icon={Pencil}
+                            tooltip="Editar"
                             onClick={() =>
                               navigate(`/trainer/workouts/${workout.id}/edit`)
                             }
-                          >
-                            <Pencil className="h-4 w-4" />
-                            Editar
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
+                          />
+                          <ActionIconButton
+                            icon={workout.active ? Pause : Play}
+                            tooltip={
+                              workout.active ? "Inativar treino" : "Ativar treino"
+                            }
                             onClick={() => handleToggleStatus(workout)}
-                            disabled={togglingId === workout.id}
-                          >
-                            {togglingId === workout.id ? (
-                              <Spinner className="h-4 w-4" />
-                            ) : (
-                              <Power className="h-4 w-4" />
-                            )}
-                            {workout.active ? "Inativar treino" : "Ativar treino"}
-                          </Button>
-                          <Button
-                            variant="destructive"
-                            size="sm"
+                            loading={togglingId === workout.id}
+                          />
+                          <ActionIconButton
+                            icon={Trash2}
+                            tooltip="Excluir"
+                            color="destructive"
                             onClick={() => handleDelete(workout.id)}
-                            disabled={deletingId === workout.id}
-                          >
-                            {deletingId === workout.id ? (
-                              <Spinner className="h-4 w-4" />
-                            ) : (
-                              <Trash2 className="h-4 w-4" />
-                            )}
-                            {deletingId === workout.id
-                              ? "Excluindo..."
-                              : "Excluir"}
-                          </Button>
+                            loading={deletingId === workout.id}
+                          />
                         </div>
                       </td>
                     </tr>

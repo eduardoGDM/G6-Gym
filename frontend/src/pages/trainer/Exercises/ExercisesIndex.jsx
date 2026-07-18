@@ -4,11 +4,11 @@ import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 
+import ActionIconButton from "../../../components/common/ActionIconButton";
 import { crudToast } from "../../../components/common/crudToast";
 import PageContainer from "../../../components/common/PageContainer";
 import PageLoader from "../../../components/common/PageLoader";
 import PageTitle from "../../../components/common/PageTitle";
-import Spinner from "../../../components/common/Spinner";
 import { Button } from "../../../components/ui/button";
 import { Card, CardContent } from "../../../components/ui/card";
 import { Input } from "../../../components/ui/input";
@@ -180,41 +180,27 @@ export default function ExercisesIndex() {
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex flex-wrap items-center gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
+                          <ActionIconButton
+                            icon={Eye}
+                            tooltip="Visualizar"
                             onClick={() =>
                               navigate(`/trainer/exercises/${exercise.id}`)
                             }
-                          >
-                            <Eye className="h-4 w-4" />
-                            Visualizar
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
+                          />
+                          <ActionIconButton
+                            icon={Pencil}
+                            tooltip="Editar"
                             onClick={() =>
                               navigate(`/trainer/exercises/${exercise.id}/edit`)
                             }
-                          >
-                            <Pencil className="h-4 w-4" />
-                            Editar
-                          </Button>
-                          <Button
-                            variant="destructive"
-                            size="sm"
+                          />
+                          <ActionIconButton
+                            icon={Trash2}
+                            tooltip="Excluir"
+                            color="destructive"
                             onClick={() => handleDelete(exercise.id)}
-                            disabled={deletingId === exercise.id}
-                          >
-                            {deletingId === exercise.id ? (
-                              <Spinner className="h-4 w-4" />
-                            ) : (
-                              <Trash2 className="h-4 w-4" />
-                            )}
-                            {deletingId === exercise.id
-                              ? "Excluindo..."
-                              : "Excluir"}
-                          </Button>
+                            loading={deletingId === exercise.id}
+                          />
                         </div>
                       </td>
                     </tr>

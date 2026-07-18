@@ -43,7 +43,7 @@ export default function StudentsShow() {
       <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
         <PageTitle
           eyebrow="Visualização"
-          title="Detalhes do student"
+          title="Detalhes do aluno"
           description="Consulte todos os dados cadastrados para este student."
         />
 
@@ -69,7 +69,7 @@ export default function StudentsShow() {
 
         <CardContent className="px-6 py-6 sm:px-8">
           {loading ? (
-            <PageLoader label="Carregando student..." />
+            <PageLoader label="Carregando aluno..." />
           ) : !student ? (
             <div className="py-8 text-center text-sm text-muted-foreground animate-in fade-in duration-300">
               Aluno não encontrado.
