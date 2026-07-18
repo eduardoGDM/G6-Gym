@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\Trainer\WorkoutExerciseController;
 use App\Http\Controllers\Api\Trainer\MuscleGroupController;
 use App\Http\Controllers\Api\Trainer\StudentWorkoutSheetController;
 use App\Http\Controllers\Api\Student\WorkoutController as StudentWorkoutController;
+use App\Http\Controllers\Api\Student\WorkoutCheckinController;
 use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
 
 Route::prefix('auth')->group(function () {
@@ -39,5 +40,11 @@ Route::middleware('auth:sanctum')->group(function () {
 		->group(function () {
 			Route::get('/my-workouts', [StudentWorkoutController::class, 'index']);
 			Route::get('/workout/{id}', [StudentWorkoutController::class, 'show']);
+
+			Route::get('/checkins', [WorkoutCheckinController::class, 'index']);
+			Route::get('/checkins/by-date', [WorkoutCheckinController::class, 'byDate']);
+			Route::get('/checkins/{id}', [WorkoutCheckinController::class, 'show']);
+			Route::post('/checkins', [WorkoutCheckinController::class, 'store']);
+			Route::put('/checkins/{id}', [WorkoutCheckinController::class, 'update']);
 		});
 });

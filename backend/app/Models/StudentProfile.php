@@ -45,4 +45,9 @@ class StudentProfile extends Model
 	{
 		return $this->hasMany(PhysicalAssessment::class);
 	}
+
+	public function workoutCheckins(): HasMany
+	{
+		return $this->hasMany(WorkoutCheckin::class);
+	}
 }

@@ -6,6 +6,7 @@ export default function Topbar({
   title = "G6 Academia",
   subtitle = "Painel administrativo",
   isDesktop,
+  roleLabel = "Personal",
 }) {
   return (
     <header className="sticky top-0 z-30 border-b border-border bg-background/80 backdrop-blur-xl">
@@ -61,7 +62,7 @@ export default function Topbar({
 
             <div className="hidden leading-tight sm:block">
               <p className="text-sm font-semibold text-foreground">Usuario</p>
-              <p className="text-xs text-muted-foreground">Personal</p>
+              <p className="text-xs text-muted-foreground">{roleLabel}</p>
             </div>
           </div>
         </div>

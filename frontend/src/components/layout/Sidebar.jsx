@@ -13,6 +13,7 @@ export default function Sidebar({
   mobileOpen,
   onClose,
   isDesktop,
+  roleLabel = "Personal",
 }) {
   const navigate = useNavigate();
   const { logout } = useAuthStore();
@@ -68,7 +69,7 @@ export default function Sidebar({
           <Logo />
 
           <span className="rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-primary">
-            Personal
+            {roleLabel}
           </span>
         </div>
 

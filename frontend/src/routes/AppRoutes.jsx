@@ -11,6 +11,8 @@ import TrainerLayout from "../layouts/TrainerLayout";
 import Login from "../pages/auth/Login";
 
 import DashboardStudent from "../pages/student/Dashboard";
+import History from "../pages/student/History";
+import HistoryDetail from "../pages/student/HistoryDetail";
 import MyWorkouts from "../pages/student/MyWorkouts";
 import Workout from "../pages/student/Workout";
 
@@ -110,6 +112,8 @@ export default function AppRoutes() {
 
           <Route path="my-workouts" element={<MyWorkouts />} />
           <Route path="workout/:id" element={<Workout />} />
+          <Route path="history" element={<History />} />
+          <Route path="history/:id" element={<HistoryDetail />} />
         </Route>
 
         <Route path="/logout" element={<LogoutPage />} />
