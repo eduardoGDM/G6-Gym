@@ -18,6 +18,19 @@ class WorkoutCheckinResource extends JsonResource
 				return [
 					'id' => $this->workout->id,
 					'name' => $this->workout->name,
+					'trainer' => $this->workout->relationLoaded('trainer') ? [
+						'id' => $this->workout->trainer?->id,
+						'name' => $this->workout->trainer?->name,
+					] : null,
+				];
+			}),
+			'student_profile' => $this->whenLoaded('studentProfile', function () {
+				return [
+					'id' => $this->studentProfile->id,
+					'user' => $this->studentProfile->relationLoaded('user') ? [
+						'id' => $this->studentProfile->user?->id,
+						'name' => $this->studentProfile->user?->name,
+					] : null,
 				];
 			}),
 			'exercises' => WorkoutCheckinExerciseResource::collection($this->whenLoaded('exercises')),

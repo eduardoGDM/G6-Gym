@@ -1,4 +1,10 @@
-import { BarChart3, Dumbbell, LayoutDashboard, Users } from "lucide-react";
+import {
+  BarChart3,
+  CalendarCheck,
+  Dumbbell,
+  LayoutDashboard,
+  Users,
+} from "lucide-react";
 import RoleLayout from "../components/layout/RoleLayout";
 
 const menuItems = [
@@ -6,6 +12,7 @@ const menuItems = [
   { label: "Alunos", path: "/trainer/students", icon: Users },
   { label: "Treinos", path: "/trainer/workouts", icon: Dumbbell },
   { label: "Exercícios", path: "/trainer/exercises", icon: BarChart3 },
+  { label: "Check-ins", path: "/trainer/checkins", icon: CalendarCheck },
 ];
 
 export default function PersonalLayout() {

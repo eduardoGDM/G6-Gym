@@ -17,6 +17,8 @@ import MyWorkouts from "../pages/student/MyWorkouts";
 import Workout from "../pages/student/Workout";
 
 import LogoutPage from "../pages/auth/LogoutPage";
+import CheckinsIndex from "../pages/trainer/Checkins/CheckinsIndex";
+import CheckinsShow from "../pages/trainer/Checkins/CheckinsShow";
 import DashboardTrainer from "../pages/trainer/Dashboard";
 import ExercisesIndex from "../pages/trainer/Exercises/ExercisesIndex";
 import ExercisesNewEdit from "../pages/trainer/Exercises/ExercisesNewEdit";
@@ -96,6 +98,9 @@ export default function AppRoutes() {
           <Route path="exercises/new" element={<ExercisesNewEdit />} />
           <Route path="exercises/:id" element={<ExercisesShow />} />
           <Route path="exercises/:id/edit" element={<ExercisesNewEdit />} />
+
+          <Route path="checkins" element={<CheckinsIndex />} />
+          <Route path="checkins/:id" element={<CheckinsShow />} />
         </Route>
 
         <Route
