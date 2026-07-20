@@ -1,5 +1,6 @@
 import {
   BarChart3,
+  BedDouble,
   CalendarCheck,
   Dumbbell,
   LayoutDashboard,
@@ -12,7 +13,22 @@ const menuItems = [
   { label: "Alunos", path: "/trainer/students", icon: Users },
   { label: "Treinos", path: "/trainer/workouts", icon: Dumbbell },
   { label: "Exercícios", path: "/trainer/exercises", icon: BarChart3 },
-  { label: "Check-ins", path: "/trainer/checkins", icon: CalendarCheck },
+  {
+    label: "Check-ins",
+    icon: CalendarCheck,
+    children: [
+      {
+        label: "Check-ins de Treino",
+        path: "/trainer/checkins/workouts",
+        icon: Dumbbell,
+      },
+      {
+        label: "Check-ins de Dieta e Sono",
+        path: "/trainer/checkins/daily",
+        icon: BedDouble,
+      },
+    ],
+  },
 ];
 
 export default function PersonalLayout() {

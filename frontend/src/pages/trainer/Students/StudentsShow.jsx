@@ -15,6 +15,7 @@ import {
   CardTitle,
 } from "../../../components/ui/card";
 import studentsService from "../../../services/StudentsService";
+import ExerciseEvolutionSection from "./components/ExerciseEvolutionSection";
 
 export default function StudentsShow() {
   const navigate = useNavigate();
@@ -148,6 +149,8 @@ export default function StudentsShow() {
           )}
         </CardContent>
       </Card>
+
+      {!loading && student ? <ExerciseEvolutionSection studentId={id} /> : null}
     </PageContainer>
   );
 }

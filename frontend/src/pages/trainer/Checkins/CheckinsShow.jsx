@@ -49,7 +49,7 @@ export default function CheckinsShow() {
         <Button
           variant="outline"
           className="w-full md:w-auto"
-          onClick={() => navigate("/trainer/checkins")}
+          onClick={() => navigate("/trainer/checkins/workouts")}
         >
           <ArrowLeft className="h-4 w-4" />
           Voltar à lista

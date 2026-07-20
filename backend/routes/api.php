@@ -9,9 +9,12 @@ use App\Http\Controllers\Api\Trainer\ExerciseController;
 use App\Http\Controllers\Api\Trainer\WorkoutExerciseController;
 use App\Http\Controllers\Api\Trainer\MuscleGroupController;
 use App\Http\Controllers\Api\Trainer\StudentWorkoutSheetController;
+use App\Http\Controllers\Api\Trainer\StudentExerciseEvolutionController;
 use App\Http\Controllers\Api\Trainer\WorkoutCheckinController as TrainerWorkoutCheckinController;
+use App\Http\Controllers\Api\Trainer\DailyCheckinController as TrainerDailyCheckinController;
 use App\Http\Controllers\Api\Student\WorkoutController as StudentWorkoutController;
 use App\Http\Controllers\Api\Student\WorkoutCheckinController;
+use App\Http\Controllers\Api\Student\DailyCheckinController;
 use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
 
 Route::prefix('auth')->group(function () {
@@ -34,10 +37,16 @@ Route::middleware('auth:sanctum')->group(function () {
 			Route::apiResource('workout-exercises', WorkoutExerciseController::class);
 			Route::get('muscle-groups', [MuscleGroupController::class, 'index']);
 			Route::get('students/{student}/workout-sheet', [StudentWorkoutSheetController::class, 'show']);
+			Route::get('students/{student}/checkins/muscle-groups', [StudentExerciseEvolutionController::class, 'muscleGroups']);
+			Route::get('students/{student}/checkins/exercises', [StudentExerciseEvolutionController::class, 'exercises']);
+			Route::get('students/{student}/exercises/{exercise}/evolution', [StudentExerciseEvolutionController::class, 'show']);
 
 			Route::get('checkins/students', [TrainerWorkoutCheckinController::class, 'students']);
 			Route::get('checkins/{id}', [TrainerWorkoutCheckinController::class, 'show']);
 			Route::get('checkins', [TrainerWorkoutCheckinController::class, 'index']);
+
+			Route::get('daily-checkins/{id}', [TrainerDailyCheckinController::class, 'show']);
+			Route::get('daily-checkins', [TrainerDailyCheckinController::class, 'index']);
 		});
 
 	Route::prefix('student')
@@ -51,5 +60,9 @@ Route::middleware('auth:sanctum')->group(function () {
 			Route::get('/checkins/{id}', [WorkoutCheckinController::class, 'show']);
 			Route::post('/checkins', [WorkoutCheckinController::class, 'store']);
 			Route::put('/checkins/{id}', [WorkoutCheckinController::class, 'update']);
+
+			Route::get('/daily-checkins', [DailyCheckinController::class, 'index']);
+			Route::post('/daily-checkins', [DailyCheckinController::class, 'store']);
+			Route::put('/daily-checkins/{id}', [DailyCheckinController::class, 'update']);
 		});
 });

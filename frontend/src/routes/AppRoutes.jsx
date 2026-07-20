@@ -11,6 +11,7 @@ import TrainerLayout from "../layouts/TrainerLayout";
 import Login from "../pages/auth/Login";
 
 import DashboardStudent from "../pages/student/Dashboard";
+import DailyCheckinsIndex from "../pages/student/DailyCheckins/DailyCheckinsIndex";
 import History from "../pages/student/History";
 import HistoryDetail from "../pages/student/HistoryDetail";
 import MyWorkouts from "../pages/student/MyWorkouts";
@@ -20,6 +21,8 @@ import LogoutPage from "../pages/auth/LogoutPage";
 import CheckinsIndex from "../pages/trainer/Checkins/CheckinsIndex";
 import CheckinsShow from "../pages/trainer/Checkins/CheckinsShow";
 import DashboardTrainer from "../pages/trainer/Dashboard";
+import TrainerDailyCheckinsIndex from "../pages/trainer/DailyCheckins/DailyCheckinsIndex";
+import TrainerDailyCheckinsShow from "../pages/trainer/DailyCheckins/DailyCheckinsShow";
 import ExercisesIndex from "../pages/trainer/Exercises/ExercisesIndex";
 import ExercisesNewEdit from "../pages/trainer/Exercises/ExercisesNewEdit";
 import ExercisesShow from "../pages/trainer/Exercises/ExercisesShow";
@@ -99,8 +102,11 @@ export default function AppRoutes() {
           <Route path="exercises/:id" element={<ExercisesShow />} />
           <Route path="exercises/:id/edit" element={<ExercisesNewEdit />} />
 
-          <Route path="checkins" element={<CheckinsIndex />} />
-          <Route path="checkins/:id" element={<CheckinsShow />} />
+          <Route path="checkins/workouts" element={<CheckinsIndex />} />
+          <Route path="checkins/workouts/:id" element={<CheckinsShow />} />
+
+          <Route path="checkins/daily" element={<TrainerDailyCheckinsIndex />} />
+          <Route path="checkins/daily/:id" element={<TrainerDailyCheckinsShow />} />
         </Route>
 
         <Route
@@ -119,6 +125,7 @@ export default function AppRoutes() {
           <Route path="workout/:id" element={<Workout />} />
           <Route path="history" element={<History />} />
           <Route path="history/:id" element={<HistoryDetail />} />
+          <Route path="daily-checkins" element={<DailyCheckinsIndex />} />
         </Route>
 
         <Route path="/logout" element={<LogoutPage />} />
