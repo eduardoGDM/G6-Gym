@@ -3,6 +3,7 @@ import { useState } from "react";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 
+import Spinner from "../../components/common/Spinner";
 import { Button } from "../../components/ui/button";
 import { Card, CardContent } from "../../components/ui/card";
 import { Input } from "../../components/ui/input";
@@ -223,7 +224,11 @@ export default function Login() {
                 disabled={loading}
               >
                 {loading ? "Entrando..." : "Entrar"}
-                {!loading && <ArrowRight className="h-4 w-4" />}
+                {loading ? (
+                  <Spinner className="h-4 w-4" />
+                ) : (
+                  <ArrowRight className="h-4 w-4" />
+                )}
               </Button>
 
               {/* DEV INFO */}

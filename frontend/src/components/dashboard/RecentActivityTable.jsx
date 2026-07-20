@@ -1,6 +1,6 @@
 import { Eye } from "lucide-react";
 import ActionIconButton from "../common/ActionIconButton";
-import PageLoader from "../common/PageLoader";
+import TableSkeleton from "../loading/TableSkeleton";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 
 export default function RecentActivityTable({
@@ -26,8 +26,12 @@ export default function RecentActivityTable({
       </CardHeader>
 
       {loading ? (
-        <CardContent className="pt-0">
-          <PageLoader label="Carregando..." />
+        <CardContent className="overflow-x-auto p-0 pt-0">
+          <TableSkeleton
+            columns={columns.map((column) => column.label)}
+            actionsCount={onAction ? 1 : 0}
+            rows={4}
+          />
         </CardContent>
       ) : rows.length === 0 ? (
         <CardContent className="flex flex-col items-center justify-center gap-3 py-10 text-center pt-0 animate-in fade-in duration-300">

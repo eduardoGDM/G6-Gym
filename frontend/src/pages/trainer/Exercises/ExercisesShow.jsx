@@ -10,8 +10,9 @@ import toast from "react-hot-toast";
 import { useNavigate, useParams } from "react-router-dom";
 
 import PageContainer from "../../../components/common/PageContainer";
-import PageLoader from "../../../components/common/PageLoader";
 import PageTitle from "../../../components/common/PageTitle";
+import DetailsSkeleton from "../../../components/loading/DetailsSkeleton";
+import ErrorState from "../../../components/loading/ErrorState";
 import { Button } from "../../../components/ui/button";
 import {
   Card,
@@ -27,20 +28,23 @@ export default function ExercisesShow() {
   const { id } = useParams();
   const [exercise, setExercise] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+
+  const loadExercise = async () => {
+    try {
+      setLoading(true);
+      setError(false);
+      const data = await exercisesService.getById(id);
+      setExercise(data);
+    } catch {
+      setError(true);
+      toast.error("Não foi possível carregar o exercício.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const loadExercise = async () => {
-      try {
-        setLoading(true);
-        const data = await exercisesService.getById(id);
-        setExercise(data);
-      } catch (error) {
-        toast.error("Não foi possível carregar o exercício.");
-      } finally {
-        setLoading(false);
-      }
-    };
-
     loadExercise();
   }, [id]);
 
@@ -75,7 +79,9 @@ export default function ExercisesShow() {
 
         <CardContent className="px-6 py-6 sm:px-8">
           {loading ? (
-            <PageLoader label="Carregando exercício..." />
+            <DetailsSkeleton blocks={4} linesPerBlock={2} />
+          ) : error ? (
+            <ErrorState onRetry={loadExercise} />
           ) : !exercise ? (
             <div className="py-8 text-center text-sm text-muted-foreground animate-in fade-in duration-300">
               Exercício não encontrado.

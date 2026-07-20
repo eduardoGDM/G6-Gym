@@ -16,8 +16,9 @@ import { useNavigate } from "react-router-dom";
 import ActionIconButton from "../../../components/common/ActionIconButton";
 import { crudToast } from "../../../components/common/crudToast";
 import PageContainer from "../../../components/common/PageContainer";
-import PageLoader from "../../../components/common/PageLoader";
 import PageTitle from "../../../components/common/PageTitle";
+import ErrorState from "../../../components/loading/ErrorState";
+import TableSkeleton from "../../../components/loading/TableSkeleton";
 import { Badge } from "../../../components/ui/badge";
 import { Button } from "../../../components/ui/button";
 import { Card, CardContent } from "../../../components/ui/card";
@@ -59,7 +60,7 @@ export default function WorkoutsIndex() {
     setPage(1);
   }
 
-  const { data, isLoading, isFetching, isError } = useQuery({
+  const { data, isLoading, isFetching, isError, refetch } = useQuery({
     queryKey: [
       "workouts",
       { page, searchStudent: debouncedSearch, status, perPage },
@@ -175,8 +176,16 @@ export default function WorkoutsIndex() {
 
       <Card className="mt-4 border-border/80 bg-card/80">
         {isLoading ? (
-          <CardContent className="py-4">
-            <PageLoader label="Carregando treinos..." />
+          <CardContent className="overflow-x-auto p-0">
+            <TableSkeleton
+              columns={["Nome", "Aluno", "Exercícios", "Data início", "Status"]}
+              actionsCount={4}
+              rows={6}
+            />
+          </CardContent>
+        ) : isError ? (
+          <CardContent>
+            <ErrorState onRetry={refetch} />
           </CardContent>
         ) : workouts.length === 0 ? (
           <CardContent className="flex flex-col items-center justify-center gap-3 py-16 text-center animate-in fade-in duration-300">

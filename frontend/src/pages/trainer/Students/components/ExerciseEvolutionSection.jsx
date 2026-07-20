@@ -13,7 +13,7 @@ import {
   YAxis,
 } from "recharts";
 
-import PageLoader from "../../../../components/common/PageLoader";
+import Skeleton from "../../../../components/loading/Skeleton";
 import { Input } from "../../../../components/ui/input";
 import { Select } from "../../../../components/ui/select";
 import studentExerciseEvolutionService from "../../../../services/StudentExerciseEvolutionService";
@@ -160,7 +160,17 @@ export default function ExerciseEvolutionSection({ studentId }) {
 
       <div className="px-6 py-6 sm:px-8">
         {loadingMuscleGroups ? (
-          <PageLoader label="Carregando histórico..." />
+          <div className="space-y-6">
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              {Array.from({ length: 4 }).map((_, index) => (
+                <div key={index} className="space-y-1.5">
+                  <Skeleton className="h-3.5 w-32" />
+                  <Skeleton className="h-11 w-full rounded-lg" />
+                </div>
+              ))}
+            </div>
+            <Skeleton className="h-80 w-full rounded-2xl" />
+          </div>
         ) : !hasHistory ? (
           <EmptyState message="Este aluno ainda não possui histórico de treinos suficiente para gerar gráficos de evolução." />
         ) : (
@@ -248,7 +258,14 @@ export default function ExerciseEvolutionSection({ studentId }) {
             {!exerciseId ? (
               <EmptyState message="Selecione um grupo muscular e um exercício para visualizar a evolução." />
             ) : loadingEvolution ? (
-              <PageLoader label="Carregando evolução..." />
+              <div className="space-y-6">
+                <Skeleton className="h-80 w-full rounded-2xl" />
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                  {Array.from({ length: 6 }).map((_, index) => (
+                    <Skeleton key={index} className="h-16 w-full rounded-2xl" />
+                  ))}
+                </div>
+              </div>
             ) : points.length === 0 ? (
               <EmptyState message="Este exercício ainda não possui histórico de execução." />
             ) : (

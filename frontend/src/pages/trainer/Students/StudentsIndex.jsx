@@ -6,8 +6,9 @@ import { useNavigate } from "react-router-dom";
 import ActionIconButton from "../../../components/common/ActionIconButton";
 import { crudToast } from "../../../components/common/crudToast";
 import PageContainer from "../../../components/common/PageContainer";
-import PageLoader from "../../../components/common/PageLoader";
 import PageTitle from "../../../components/common/PageTitle";
+import ErrorState from "../../../components/loading/ErrorState";
+import TableSkeleton from "../../../components/loading/TableSkeleton";
 import { Button } from "../../../components/ui/button";
 import { Card, CardContent } from "../../../components/ui/card";
 import studentsService from "../../../services/StudentsService";
@@ -16,15 +17,18 @@ export default function StudentsIndex() {
   const navigate = useNavigate();
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
   const [deletingId, setDeletingId] = useState(null);
   const [generatingSheetId, setGeneratingSheetId] = useState(null);
 
   const loadStudents = async () => {
     try {
       setLoading(true);
+      setError(false);
       const data = await studentsService.getAll();
       setStudents(data || []);
-    } catch (error) {
+    } catch {
+      setError(true);
       toast.error("Não foi possível carregar os alunos.");
     } finally {
       setLoading(false);
@@ -100,8 +104,16 @@ export default function StudentsIndex() {
 
       <Card className="mt-4 border-border/80 bg-card/80">
         {loading ? (
-          <CardContent className="py-4">
-            <PageLoader label="Carregando alunos..." />
+          <CardContent className="overflow-x-auto p-0">
+            <TableSkeleton
+              columns={["Nome", "E-mail", "CPF"]}
+              actionsCount={4}
+              rows={6}
+            />
+          </CardContent>
+        ) : error ? (
+          <CardContent>
+            <ErrorState onRetry={loadStudents} />
           </CardContent>
         ) : students.length === 0 ? (
           <CardContent className="flex flex-col items-center justify-center gap-3 py-16 text-center animate-in fade-in duration-300">

@@ -5,8 +5,9 @@ import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 
 import PageContainer from "../../components/common/PageContainer";
-import PageLoader from "../../components/common/PageLoader";
 import PageTitle from "../../components/common/PageTitle";
+import ErrorState from "../../components/loading/ErrorState";
+import ListSkeleton from "../../components/loading/ListSkeleton";
 import { Badge } from "../../components/ui/badge";
 import { Button } from "../../components/ui/button";
 import { Card, CardContent } from "../../components/ui/card";
@@ -35,7 +36,7 @@ export default function History() {
     setPage(1);
   }
 
-  const { data, isLoading, isFetching, isError } = useQuery({
+  const { data, isLoading, isFetching, isError, refetch } = useQuery({
     queryKey: ["student-history", { page, search: debouncedSearch, perPage }],
     queryFn: () =>
       workoutCheckinsService.history({
@@ -77,9 +78,13 @@ export default function History() {
       </div>
 
       {isLoading ? (
+        <div className="mt-4">
+          <ListSkeleton count={6} columns="md:grid-cols-2 xl:grid-cols-3" lines={2} />
+        </div>
+      ) : isError ? (
         <Card className="mt-4 border-border/80 bg-card/80">
-          <CardContent className="py-4">
-            <PageLoader label="Carregando histórico..." />
+          <CardContent>
+            <ErrorState onRetry={refetch} />
           </CardContent>
         </Card>
       ) : checkins.length === 0 ? (
