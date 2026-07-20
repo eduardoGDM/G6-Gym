@@ -1,110 +1,169 @@
-import { Activity, ArrowUpRight, CalendarCheck2, Users } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import {
+  CalendarCheck2,
+  ClipboardList,
+  Moon,
+  UserRoundX,
+  Users,
+} from "lucide-react";
+import { useNavigate } from "react-router-dom";
+
 import PageContainer from "../../components/common/PageContainer";
 import PageTitle from "../../components/common/PageTitle";
-import { Badge } from "../../components/ui/badge";
-import { Card, CardContent } from "../../components/ui/card";
+import RecentActivityTable from "../../components/dashboard/RecentActivityTable";
+import StatCard from "../../components/dashboard/StatCard";
+import trainerDashboardService from "../../services/TrainerDashboardService";
+import useAuthStore from "../../store/authStore";
+import { getGreeting } from "../../utils/greeting";
 
-const stats = [
-  {
-    label: "Alunos ativos",
-    value: "128",
-    icon: Users,
-    tone: "from-primary/30 to-primary/10",
-  },
-  {
-    label: "Treinos hoje",
-    value: "24",
-    icon: CalendarCheck2,
-    tone: "from-secondary/30 to-secondary/10",
-  },
-  {
-    label: "Taxa de presença",
-    value: "92%",
-    icon: Activity,
-    tone: "from-emerald-500/25 to-emerald-500/10",
-  },
-];
+const formatDate = (value) => {
+  if (!value) return "—";
+  const [year, month, day] = value.slice(0, 10).split("-");
+  return `${day}/${month}/${year}`;
+};
 
 export default function Dashboard() {
+  const navigate = useNavigate();
+  const { user } = useAuthStore();
+
+  const { data: summary, isLoading: isLoadingSummary } = useQuery({
+    queryKey: ["trainer-dashboard-summary"],
+    queryFn: trainerDashboardService.summary,
+  });
+
+  const { data: recentWorkoutCheckins, isLoading: isLoadingWorkoutCheckins } =
+    useQuery({
+      queryKey: ["trainer-dashboard-recent-workout-checkins"],
+      queryFn: trainerDashboardService.recentWorkoutCheckins,
+    });
+
+  const { data: recentDailyCheckins, isLoading: isLoadingDailyCheckins } =
+    useQuery({
+      queryKey: ["trainer-dashboard-recent-daily-checkins"],
+      queryFn: trainerDashboardService.recentDailyCheckins,
+    });
+
+  const { data: pendingDailyCheckins, isLoading: isLoadingPending } = useQuery(
+    {
+      queryKey: ["trainer-dashboard-pending-daily-checkins"],
+      queryFn: trainerDashboardService.pendingDailyCheckins,
+    },
+  );
+
+  const stats = [
+    {
+      label: "Alunos ativos",
+      value: summary?.active_students ?? 0,
+      icon: Users,
+      tone: "from-primary/30 to-primary/10",
+    },
+    {
+      label: "Treinos ativos",
+      value: summary?.active_workouts ?? 0,
+      icon: ClipboardList,
+      tone: "from-secondary/30 to-secondary/10",
+    },
+    {
+      label: "Check-ins de treino hoje",
+      value: summary?.workout_checkins_today ?? 0,
+      icon: CalendarCheck2,
+      tone: "from-emerald-500/25 to-emerald-500/10",
+    },
+    {
+      label: "Check-ins diários hoje",
+      value: summary?.daily_checkins_today ?? 0,
+      icon: Moon,
+      tone: "from-indigo-500/25 to-indigo-500/10",
+    },
+  ];
+
   return (
     <PageContainer>
       <PageTitle
-        eyebrow="Visão geral"
-        title="Dashboard do Personal"
-        description="Acompanhe os principais indicadores da academia em um painel mais limpo e objetivo."
+        eyebrow={`${getGreeting()}, ${user?.name?.split(" ")[0] || ""} 👋`}
+        title="Bem-vindo novamente ao G6"
+        description="Abaixo está um resumo da sua academia hoje."
       />
 
-      <div className="grid gap-4 md:grid-cols-3">
-        {stats.map((stat) => {
-          const Icon = stat.icon;
-          return (
-            <Card key={stat.label} className="border-border/80 bg-card/80">
-              <CardContent className="p-5">
-                <div
-                  className={`flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br ${stat.tone}`}
-                >
-                  <Icon className="h-5 w-5 text-primary" />
-                </div>
-                <div className="mt-4 flex items-end justify-between gap-4">
-                  <div>
-                    <p className="text-sm text-muted-foreground">
-                      {stat.label}
-                    </p>
-                    <p className="mt-1 text-3xl font-semibold tracking-tight text-foreground">
-                      {stat.value}
-                    </p>
-                  </div>
-                  <Badge
-                    variant="outline"
-                    className="gap-1 border-primary/20 text-primary"
-                  >
-                    +8%
-                    <ArrowUpRight className="h-3.5 w-3.5" />
-                  </Badge>
-                </div>
-              </CardContent>
-            </Card>
-          );
-        })}
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {stats.map((stat, index) => (
+          <StatCard
+            key={stat.label}
+            icon={stat.icon}
+            label={stat.label}
+            value={stat.value}
+            tone={stat.tone}
+            loading={isLoadingSummary}
+            delay={index * 60}
+          />
+        ))}
       </div>
 
-      <div className="mt-6 grid gap-4 lg:grid-cols-[1.6fr_1fr]">
-        <Card className="border-border/80 bg-card/80">
-          <CardContent className="p-6">
-            <p className="text-sm font-medium text-muted-foreground">
-              Resumo da semana
-            </p>
-            <h2 className="mt-1 text-2xl font-semibold tracking-tight">
-              Rotina organizada e acompanhamento constante
-            </h2>
-            <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground">
-              Use este espaço para destacar evolução, metas e qualquer indicador
-              que ajude o trainer a tomar decisões rápidas.
-            </p>
-          </CardContent>
-        </Card>
+      <div className="mt-6 grid gap-4 xl:grid-cols-2">
+        <RecentActivityTable
+          title="Últimos check-ins de treino"
+          loading={isLoadingWorkoutCheckins}
+          rows={recentWorkoutCheckins || []}
+          emptyIcon={ClipboardList}
+          emptyTitle="Nenhum check-in de treino registrado ainda."
+          emptyDescription="Assim que os alunos registrarem treinos, eles aparecerão aqui."
+          columns={[
+            { key: "student_name", label: "Aluno" },
+            { key: "workout_name", label: "Treino" },
+            {
+              key: "date",
+              label: "Data",
+              render: (row) => formatDate(row.date),
+            },
+            { key: "time", label: "Horário" },
+          ]}
+          onAction={(row) => navigate(`/trainer/checkins/workouts/${row.id}`)}
+          delay={120}
+        />
 
-        <Card className="border-border/80 bg-card/80">
-          <CardContent className="p-6">
-            <p className="text-sm font-medium text-muted-foreground">
-              Acesso rápido
-            </p>
-            <div className="mt-4 space-y-3 text-sm">
-              <div className="flex items-center justify-between rounded-2xl border border-border bg-background/60 px-4 py-3">
-                <span>Alunos</span>
-                <span className="text-primary">Gerenciar</span>
-              </div>
-              <div className="flex items-center justify-between rounded-2xl border border-border bg-background/60 px-4 py-3">
-                <span>Treinos</span>
-                <span className="text-primary">Criar</span>
-              </div>
-              <div className="flex items-center justify-between rounded-2xl border border-border bg-background/60 px-4 py-3">
-                <span>Exercícios</span>
-                <span className="text-primary">Cadastrar</span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        <RecentActivityTable
+          title="Últimos check-ins diários"
+          loading={isLoadingDailyCheckins}
+          rows={recentDailyCheckins || []}
+          emptyIcon={Moon}
+          emptyTitle="Nenhum Check-in Diário registrado ainda."
+          emptyDescription="Assim que os alunos registrarem o dia, eles aparecerão aqui."
+          columns={[
+            { key: "student_name", label: "Aluno" },
+            { key: "sleep_rating", label: "Nota Sono" },
+            { key: "diet_rating", label: "Nota Dieta" },
+            {
+              key: "date",
+              label: "Data",
+              render: (row) => formatDate(row.date),
+            },
+          ]}
+          onAction={(row) => navigate(`/trainer/checkins/daily/${row.id}`)}
+          delay={160}
+        />
+      </div>
+
+      <div className="mt-4">
+        <RecentActivityTable
+          title="Alunos com Check-in Diário pendente (ontem)"
+          loading={isLoadingPending}
+          rows={pendingDailyCheckins || []}
+          emptyIcon={UserRoundX}
+          emptyTitle="Todo mundo em dia!"
+          emptyDescription="Nenhum aluno com pendência de Check-in Diário."
+          columns={[
+            { key: "name", label: "Aluno" },
+            { key: "phone", label: "Telefone" },
+            {
+              key: "last_daily_checkin",
+              label: "Último Check-in Diário",
+              render: (row) => formatDate(row.last_daily_checkin),
+            },
+          ]}
+          onAction={(row) => navigate(`/trainer/students/${row.id}`)}
+          actionTooltip="Visualizar aluno"
+          delay={200}
+        />
       </div>
     </PageContainer>
   );

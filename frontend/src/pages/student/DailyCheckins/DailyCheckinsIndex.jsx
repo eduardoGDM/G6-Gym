@@ -159,6 +159,9 @@ export default function DailyCheckinsIndex() {
       await queryClient.invalidateQueries({
         queryKey: ["student-daily-checkins"],
       });
+      await queryClient.invalidateQueries({
+        queryKey: ["student-daily-checkin-reminder"],
+      });
 
       setEditingCheckin(null);
       reset(defaultFormValues);

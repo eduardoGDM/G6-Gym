@@ -84,6 +84,28 @@ class DailyCheckinController extends Controller
 			->setStatusCode(201);
 	}
 
+	public function reminder(Request $request)
+	{
+		$profile = $this->resolveProfile($request);
+
+		if (!$profile) {
+			return response()->json([
+				'message' => 'Perfil de student não encontrado'
+			], 404);
+		}
+
+		$expectedDate = now()->subDay()->toDateString();
+
+		$exists = DailyCheckin::where('student_profile_id', $profile->id)
+			->whereDate('date', $expectedDate)
+			->exists();
+
+		return response()->json([
+			'pending' => !$exists,
+			'expected_date' => $expectedDate,
+		]);
+	}
+
 	public function update(Request $request, $id)
 	{
 		$profile = $this->resolveProfile($request);

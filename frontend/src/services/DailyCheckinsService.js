@@ -34,6 +34,14 @@ const dailyCheckinsService = {
     );
     return data.data;
   },
+
+  async reminder() {
+    const { data } = await sanctumRequest(
+      "get",
+      "/student/daily-checkins/reminder",
+    );
+    return data;
+  },
 };
 
 export default dailyCheckinsService;

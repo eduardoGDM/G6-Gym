@@ -5,7 +5,7 @@ import Topbar from "./TopBar";
 
 const DRAWER_WIDTH = 280;
 
-export default function RoleLayout({ menuItems, title, roleLabel }) {
+export default function RoleLayout({ menuItems, title, roleLabel, banner }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [isDesktop, setIsDesktop] = useState(() =>
     typeof window !== "undefined" ? window.innerWidth >= 900 : true,
@@ -43,6 +43,7 @@ export default function RoleLayout({ menuItems, title, roleLabel }) {
         />
 
         <main className="px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+          {banner}
           <Outlet />
         </main>
       </div>

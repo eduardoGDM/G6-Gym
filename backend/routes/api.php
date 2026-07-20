@@ -12,9 +12,11 @@ use App\Http\Controllers\Api\Trainer\StudentWorkoutSheetController;
 use App\Http\Controllers\Api\Trainer\StudentExerciseEvolutionController;
 use App\Http\Controllers\Api\Trainer\WorkoutCheckinController as TrainerWorkoutCheckinController;
 use App\Http\Controllers\Api\Trainer\DailyCheckinController as TrainerDailyCheckinController;
+use App\Http\Controllers\Api\Trainer\DashboardController as TrainerDashboardController;
 use App\Http\Controllers\Api\Student\WorkoutController as StudentWorkoutController;
 use App\Http\Controllers\Api\Student\WorkoutCheckinController;
 use App\Http\Controllers\Api\Student\DailyCheckinController;
+use App\Http\Controllers\Api\Student\DashboardController as StudentDashboardController;
 use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
 
 Route::prefix('auth')->group(function () {
@@ -31,6 +33,11 @@ Route::middleware('auth:sanctum')->group(function () {
 	Route::prefix('trainer')
 		->middleware('role:trainer')
 		->group(function () {
+			Route::get('dashboard/summary', [TrainerDashboardController::class, 'summary']);
+			Route::get('dashboard/recent-workout-checkins', [TrainerDashboardController::class, 'recentWorkoutCheckins']);
+			Route::get('dashboard/recent-daily-checkins', [TrainerDashboardController::class, 'recentDailyCheckins']);
+			Route::get('dashboard/pending-daily-checkins', [TrainerDashboardController::class, 'pendingDailyCheckins']);
+
 			Route::apiResource('student-profiles', StudentProfileController::class);
 			Route::apiResource('workouts', WorkoutController::class);
 			Route::apiResource('exercises', ExerciseController::class);
@@ -52,6 +59,10 @@ Route::middleware('auth:sanctum')->group(function () {
 	Route::prefix('student')
 		->middleware('role:student')
 		->group(function () {
+			Route::get('/dashboard/summary', [StudentDashboardController::class, 'summary']);
+			Route::get('/dashboard/recent-workouts', [StudentDashboardController::class, 'recentWorkouts']);
+			Route::get('/dashboard/evolution', [StudentDashboardController::class, 'evolution']);
+
 			Route::get('/my-workouts', [StudentWorkoutController::class, 'index']);
 			Route::get('/workout/{id}', [StudentWorkoutController::class, 'show']);
 
@@ -61,6 +72,7 @@ Route::middleware('auth:sanctum')->group(function () {
 			Route::post('/checkins', [WorkoutCheckinController::class, 'store']);
 			Route::put('/checkins/{id}', [WorkoutCheckinController::class, 'update']);
 
+			Route::get('/daily-checkins/reminder', [DailyCheckinController::class, 'reminder']);
 			Route::get('/daily-checkins', [DailyCheckinController::class, 'index']);
 			Route::post('/daily-checkins', [DailyCheckinController::class, 'store']);
 			Route::put('/daily-checkins/{id}', [DailyCheckinController::class, 'update']);
