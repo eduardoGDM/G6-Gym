@@ -10,9 +10,11 @@ import { Controller, useForm } from "react-hook-form";
 import toast from "react-hot-toast";
 
 import PageContainer from "../../../components/common/PageContainer";
-import PageLoader from "../../../components/common/PageLoader";
 import PageTitle from "../../../components/common/PageTitle";
 import { crudToast } from "../../../components/common/crudToast";
+import ErrorState from "../../../components/loading/ErrorState";
+import TableSkeleton from "../../../components/loading/TableSkeleton";
+import Spinner from "../../../components/common/Spinner";
 import { Button } from "../../../components/ui/button";
 import {
   Card,
@@ -83,7 +85,7 @@ export default function DailyCheckinsIndex() {
     defaultValues: defaultFormValues,
   });
 
-  const { data, isLoading, isFetching, isError } = useQuery({
+  const { data, isLoading, isFetching, isError, refetch } = useQuery({
     queryKey: [
       "student-daily-checkins",
       { page, date: debouncedFilterDate, perPage: PER_PAGE },
@@ -281,6 +283,7 @@ export default function DailyCheckinsIndex() {
                 </Button>
               ) : null}
               <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? <Spinner className="h-4 w-4" /> : null}
                 {isSubmitting
                   ? "Salvando..."
                   : isEdit
@@ -314,8 +317,16 @@ export default function DailyCheckinsIndex() {
 
       <Card className="border-border/80 bg-card/80">
         {isLoading ? (
-          <CardContent className="py-4">
-            <PageLoader label="Carregando histórico..." />
+          <CardContent className="overflow-x-auto p-0">
+            <TableSkeleton
+              columns={["Data", "Sono", "Dieta", "Resumo das observações"]}
+              actionsCount={1}
+              rows={6}
+            />
+          </CardContent>
+        ) : isError ? (
+          <CardContent>
+            <ErrorState onRetry={refetch} />
           </CardContent>
         ) : checkins.length === 0 ? (
           <CardContent className="flex flex-col items-center justify-center gap-3 py-16 text-center animate-in fade-in duration-300">

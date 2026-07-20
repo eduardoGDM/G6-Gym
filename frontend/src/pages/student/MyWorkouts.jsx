@@ -5,8 +5,9 @@ import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 
 import PageContainer from "../../components/common/PageContainer";
-import PageLoader from "../../components/common/PageLoader";
 import PageTitle from "../../components/common/PageTitle";
+import ErrorState from "../../components/loading/ErrorState";
+import ListSkeleton from "../../components/loading/ListSkeleton";
 import { Badge } from "../../components/ui/badge";
 import { Button } from "../../components/ui/button";
 import { Card, CardContent } from "../../components/ui/card";
@@ -23,7 +24,7 @@ function getMuscleGroups(workout) {
 export default function MyWorkouts() {
   const navigate = useNavigate();
 
-  const { data, isLoading, isError } = useQuery({
+  const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["student-workouts"],
     queryFn: () => workoutsService.getMyWorkouts(),
   });
@@ -45,9 +46,11 @@ export default function MyWorkouts() {
       />
 
       {isLoading ? (
+        <ListSkeleton count={6} columns="md:grid-cols-2 xl:grid-cols-3" lines={3} />
+      ) : isError ? (
         <Card className="border-border/80 bg-card/80">
-          <CardContent className="py-4">
-            <PageLoader label="Carregando treinos..." />
+          <CardContent>
+            <ErrorState onRetry={refetch} />
           </CardContent>
         </Card>
       ) : workouts.length === 0 ? (

@@ -5,8 +5,9 @@ import toast from "react-hot-toast";
 import { useNavigate, useParams } from "react-router-dom";
 
 import PageContainer from "../../../components/common/PageContainer";
-import PageLoader from "../../../components/common/PageLoader";
 import PageTitle from "../../../components/common/PageTitle";
+import DetailsSkeleton from "../../../components/loading/DetailsSkeleton";
+import ErrorState from "../../../components/loading/ErrorState";
 import { Badge } from "../../../components/ui/badge";
 import { Button } from "../../../components/ui/button";
 import { Card, CardContent } from "../../../components/ui/card";
@@ -24,7 +25,7 @@ export default function CheckinsShow() {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  const { data: checkin, isLoading, isError } = useQuery({
+  const { data: checkin, isLoading, isError, refetch } = useQuery({
     queryKey: ["trainer-checkin", id],
     queryFn: () => trainerCheckinsService.getById(id),
   });
@@ -58,8 +59,14 @@ export default function CheckinsShow() {
 
       {isLoading ? (
         <Card className="border-border/80 bg-card/80">
-          <CardContent className="py-4">
-            <PageLoader label="Carregando check-in..." />
+          <CardContent className="p-6">
+            <DetailsSkeleton blocks={4} linesPerBlock={1} />
+          </CardContent>
+        </Card>
+      ) : isError ? (
+        <Card className="border-border/80 bg-card/80">
+          <CardContent>
+            <ErrorState onRetry={refetch} />
           </CardContent>
         </Card>
       ) : !checkin ? (

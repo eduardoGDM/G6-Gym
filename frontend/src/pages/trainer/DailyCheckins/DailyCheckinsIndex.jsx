@@ -6,8 +6,9 @@ import { useNavigate } from "react-router-dom";
 
 import ActionIconButton from "../../../components/common/ActionIconButton";
 import PageContainer from "../../../components/common/PageContainer";
-import PageLoader from "../../../components/common/PageLoader";
 import PageTitle from "../../../components/common/PageTitle";
+import ErrorState from "../../../components/loading/ErrorState";
+import TableSkeleton from "../../../components/loading/TableSkeleton";
 import { Badge } from "../../../components/ui/badge";
 import { Button } from "../../../components/ui/button";
 import { Card, CardContent } from "../../../components/ui/card";
@@ -69,7 +70,7 @@ export default function DailyCheckinsIndex() {
     setPage(1);
   }
 
-  const { data, isLoading, isFetching, isError } = useQuery({
+  const { data, isLoading, isFetching, isError, refetch } = useQuery({
     queryKey: [
       "trainer-daily-checkins",
       { page, student: debouncedStudent, dateFrom, dateTo, perPage: PER_PAGE },
@@ -135,8 +136,23 @@ export default function DailyCheckinsIndex() {
 
       <Card className="mt-4 border-border/80 bg-card/80">
         {isLoading ? (
-          <CardContent className="py-4">
-            <PageLoader label="Carregando check-ins..." />
+          <CardContent className="overflow-x-auto p-0">
+            <TableSkeleton
+              columns={[
+                "Aluno",
+                "Data avaliada",
+                "Nota do sono",
+                "Nota da dieta",
+                "Resumo das observações",
+                "Data de criação",
+              ]}
+              actionsCount={1}
+              rows={6}
+            />
+          </CardContent>
+        ) : isError ? (
+          <CardContent>
+            <ErrorState onRetry={refetch} />
           </CardContent>
         ) : checkins.length === 0 ? (
           <CardContent className="flex flex-col items-center justify-center gap-3 py-16 text-center animate-in fade-in duration-300">

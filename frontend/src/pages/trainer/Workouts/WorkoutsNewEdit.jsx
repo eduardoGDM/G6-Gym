@@ -7,9 +7,9 @@ import { useNavigate, useParams } from "react-router-dom";
 
 import PageContainer from "../../../components/common/PageContainer";
 import { crudToast } from "../../../components/common/crudToast";
-import PageLoader from "../../../components/common/PageLoader";
 import PageTitle from "../../../components/common/PageTitle";
 import Spinner from "../../../components/common/Spinner";
+import FormSkeleton from "../../../components/loading/FormSkeleton";
 import { Button } from "../../../components/ui/button";
 import {
   Card,
@@ -249,7 +249,7 @@ export default function WorkoutsNewEdit() {
 
         <CardContent className="px-6 py-6 sm:px-8">
           {initialLoading ? (
-            <PageLoader label="Carregando formulário..." />
+            <FormSkeleton fields={6} columns={2} />
           ) : (
             <form
               onSubmit={handleSubmit(onSubmit)}

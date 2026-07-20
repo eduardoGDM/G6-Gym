@@ -7,9 +7,10 @@ import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 
 import { crudToast } from "../../components/common/crudToast";
 import PageContainer from "../../components/common/PageContainer";
-import PageLoader from "../../components/common/PageLoader";
 import PageTitle from "../../components/common/PageTitle";
 import Spinner from "../../components/common/Spinner";
+import FormSkeleton from "../../components/loading/FormSkeleton";
+import ListSkeleton from "../../components/loading/ListSkeleton";
 import { Badge } from "../../components/ui/badge";
 import { Button } from "../../components/ui/button";
 import {
@@ -249,9 +250,10 @@ export default function Workout() {
       </div>
 
       {loading ? (
-        <Card className="border-border/80 bg-card/80">
-          <CardContent className="py-4">
-            <PageLoader label="Carregando treino..." />
+        <Card className="border-border/80 bg-card/90">
+          <CardContent className="space-y-8 px-6 py-6 sm:px-8">
+            <FormSkeleton fields={1} columns={1} footer={false} />
+            <ListSkeleton count={3} columns="" lines={4} />
           </CardContent>
         </Card>
       ) : notFound ? (

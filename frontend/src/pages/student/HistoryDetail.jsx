@@ -4,8 +4,9 @@ import toast from "react-hot-toast";
 import { useNavigate, useParams } from "react-router-dom";
 
 import PageContainer from "../../components/common/PageContainer";
-import PageLoader from "../../components/common/PageLoader";
 import PageTitle from "../../components/common/PageTitle";
+import ErrorState from "../../components/loading/ErrorState";
+import ListSkeleton from "../../components/loading/ListSkeleton";
 import { Badge } from "../../components/ui/badge";
 import { Button } from "../../components/ui/button";
 import { Card, CardContent } from "../../components/ui/card";
@@ -22,9 +23,13 @@ export default function HistoryDetail() {
   const navigate = useNavigate();
   const [checkin, setCheckin] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
-  useEffect(() => {
+  const loadCheckin = () => {
     let active = true;
+
+    setLoading(true);
+    setError(false);
 
     workoutCheckinsService
       .getById(id)
@@ -32,7 +37,10 @@ export default function HistoryDetail() {
         if (active) setCheckin(data);
       })
       .catch(() => {
-        if (active) toast.error("Não foi possível carregar o check-in.");
+        if (active) {
+          setError(true);
+          toast.error("Não foi possível carregar o check-in.");
+        }
       })
       .finally(() => {
         if (active) setLoading(false);
@@ -41,7 +49,9 @@ export default function HistoryDetail() {
     return () => {
       active = false;
     };
-  }, [id]);
+  };
+
+  useEffect(() => loadCheckin(), [id]);
 
   return (
     <PageContainer>
@@ -79,9 +89,11 @@ export default function HistoryDetail() {
       </div>
 
       {loading ? (
+        <ListSkeleton count={4} columns="md:grid-cols-2" lines={4} />
+      ) : error ? (
         <Card className="border-border/80 bg-card/80">
-          <CardContent className="py-4">
-            <PageLoader label="Carregando check-in..." />
+          <CardContent>
+            <ErrorState onRetry={loadCheckin} />
           </CardContent>
         </Card>
       ) : !checkin ? (
