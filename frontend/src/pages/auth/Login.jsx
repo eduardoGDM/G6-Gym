@@ -65,7 +65,11 @@ export default function Login() {
       toast.success("Login realizado com sucesso!");
 
       const redirectPath =
-        userData.role === "trainer" ? "/trainer" : "/student";
+        userData.role === "trainer"
+          ? "/trainer"
+          : userData.role === "admin"
+            ? "/admin"
+            : "/student";
 
       navigate(redirectPath);
     } catch (error) {

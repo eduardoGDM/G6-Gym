@@ -4,11 +4,14 @@ import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import authService from "../services/authService";
 import useAuthStore from "../store/authStore";
 
+import AdminLayout from "../layouts/AdminLayout";
 import AuthLayout from "../layouts/AuthLayout";
 import StudentLayout from "../layouts/StudentLayout";
 import TrainerLayout from "../layouts/TrainerLayout";
 
 import Login from "../pages/auth/Login";
+
+import DashboardAdmin from "../pages/admin/Dashboard";
 
 import DashboardStudent from "../pages/student/Dashboard";
 import DailyCheckinsIndex from "../pages/student/DailyCheckins/DailyCheckinsIndex";
@@ -64,7 +67,13 @@ export default function AppRoutes() {
             element={
               user ? (
                 <Navigate
-                  to={user.role === "trainer" ? "/trainer" : "/student"}
+                  to={
+                    user.role === "trainer"
+                      ? "/trainer"
+                      : user.role === "admin"
+                        ? "/admin"
+                        : "/student"
+                  }
                   replace
                 />
               ) : (
@@ -126,6 +135,15 @@ export default function AppRoutes() {
           <Route path="history" element={<History />} />
           <Route path="history/:id" element={<HistoryDetail />} />
           <Route path="daily-checkins" element={<DailyCheckinsIndex />} />
+        </Route>
+
+        <Route
+          path="/admin/*"
+          element={
+            user?.role === "admin" ? <AdminLayout /> : <Navigate to="/" replace />
+          }
+        >
+          <Route index element={<DashboardAdmin />} />
         </Route>
 
         <Route path="/logout" element={<LogoutPage />} />

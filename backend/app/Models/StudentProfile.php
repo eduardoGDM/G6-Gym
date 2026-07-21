@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class StudentProfile extends Model
 {
@@ -39,6 +40,11 @@ class StudentProfile extends Model
 	public function workouts(): HasMany
 	{
 		return $this->hasMany(Workout::class);
+	}
+
+	public function latestWorkout(): HasOne
+	{
+		return $this->hasOne(Workout::class)->latestOfMany();
 	}
 
 	public function physicalAssessments(): HasMany

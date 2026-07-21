@@ -17,6 +17,9 @@ use App\Http\Controllers\Api\Student\WorkoutController as StudentWorkoutControll
 use App\Http\Controllers\Api\Student\WorkoutCheckinController;
 use App\Http\Controllers\Api\Student\DailyCheckinController;
 use App\Http\Controllers\Api\Student\DashboardController as StudentDashboardController;
+use App\Http\Controllers\Api\Admin\DashboardController as AdminDashboardController;
+use App\Http\Controllers\Api\Admin\TrainerController as AdminTrainerController;
+use App\Http\Controllers\Api\Admin\StudentController as AdminStudentController;
 use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
 
 Route::prefix('auth')->group(function () {
@@ -76,5 +79,17 @@ Route::middleware('auth:sanctum')->group(function () {
 			Route::get('/daily-checkins', [DailyCheckinController::class, 'index']);
 			Route::post('/daily-checkins', [DailyCheckinController::class, 'store']);
 			Route::put('/daily-checkins/{id}', [DailyCheckinController::class, 'update']);
+		});
+
+	Route::prefix('admin')
+		->middleware('role:admin')
+		->group(function () {
+			Route::get('dashboard/summary', [AdminDashboardController::class, 'summary']);
+
+			Route::get('trainers', [AdminTrainerController::class, 'index']);
+			Route::patch('trainers/{id}/status', [AdminTrainerController::class, 'updateStatus']);
+
+			Route::get('students', [AdminStudentController::class, 'index']);
+			Route::patch('students/{id}/status', [AdminStudentController::class, 'updateStatus']);
 		});
 });
