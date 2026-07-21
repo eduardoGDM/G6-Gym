@@ -34,6 +34,21 @@
   --shadow-card: 0 2px 6px 0 rgba(0, 0, 0, 0.28), 0 1px 2px 0 rgba(0, 0, 0, 0.16);
   --shadow-popover: 0 6px 16px 0 rgba(0, 0, 0, 0.32);
   --shadow-modal: 0 12px 28px 0 rgba(0, 0, 0, 0.4);
+
+  /* Glow lento e sutil — usado no fundo da tela de login. */
+  --animate-glow: glow 7s ease-in-out infinite;
+}
+
+@keyframes glow {
+  0%,
+  100% {
+    opacity: 0.45;
+    transform: translate(-50%, 0) scale(1);
+  }
+  50% {
+    opacity: 0.75;
+    transform: translate(-50%, 0) scale(1.06);
+  }
 }
 
 @layer base {

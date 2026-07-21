@@ -1,21 +1,44 @@
-import { ArrowRight, Dumbbell, Lock, Mail } from "lucide-react";
+import {
+  ArrowRight,
+  ClipboardCheck,
+  Dumbbell,
+  Eye,
+  EyeOff,
+  Lock,
+  Mail,
+  TrendingUp,
+  Users,
+} from "lucide-react";
 import { useState } from "react";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 
-import Spinner from "../../components/common/Spinner";
-import { Button } from "../../components/ui/button";
 import { Field } from "../../components/forms/Field";
-import { Card, CardContent } from "../../components/ui/card";
+import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import authService from "../../services/authService";
 import useAuthStore from "../../store/authStore";
+
+const FEATURES = [
+  { icon: Users, label: "Gestão completa de alunos" },
+  { icon: Dumbbell, label: "Criação de treinos personalizados" },
+  { icon: ClipboardCheck, label: "Check-ins de treino, sono e dieta" },
+  { icon: TrendingUp, label: "Acompanhamento da evolução" },
+];
+
+// Destaques enxutos para o hero compacto no mobile.
+const MOBILE_FEATURES = [
+  { icon: Users, label: "Alunos" },
+  { icon: Dumbbell, label: "Treinos" },
+  { icon: TrendingUp, label: "Evolução" },
+];
 
 export default function Login() {
   const navigate = useNavigate();
   const { login } = useAuthStore();
 
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const [formData, setFormData] = useState({
     email: "",
@@ -87,156 +110,200 @@ export default function Login() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center px-4 py-10">
-      <div className="grid w-full max-w-6xl gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-        {/* LADO ESQUERDO */}
-        <div className="flex flex-col justify-between rounded-[2rem] border border-border bg-card/80 p-8 shadow-card backdrop-blur-xl lg:p-10">
-          <div>
-            <div className="flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-subtle">
-                <Dumbbell className="h-5 w-5" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold tracking-tight">G6Fit</p>
-                <p className="text-sm text-muted-foreground">
-                  Gestão moderna para academia
-                </p>
-              </div>
-            </div>
+    <div className="flex min-h-screen lg:h-screen lg:overflow-hidden">
+      {/* ---------- HERO (esquerda) ---------- */}
+      <section className="relative hidden w-1/2 flex-col justify-between overflow-hidden border-r border-border/60 bg-gradient-to-br from-primary/10 via-card to-background p-10 lg:flex xl:p-14 2xl:p-16">
+        {/* Fundo decorativo: glow + grid técnico + shapes borrados. */}
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0"
+        >
+          <div className="absolute left-1/4 top-[-10%] h-[34rem] w-[34rem] -translate-x-1/2 rounded-full bg-primary/25 blur-[130px] animate-glow" />
+          <div className="absolute bottom-[-15%] right-[-10%] h-[24rem] w-[24rem] rounded-full bg-secondary/15 blur-[120px]" />
+          <div className="absolute inset-0 opacity-[0.14] [background-image:linear-gradient(to_right,var(--color-border)_1px,transparent_1px),linear-gradient(to_bottom,var(--color-border)_1px,transparent_1px)] [background-size:56px_56px] [mask-image:radial-gradient(ellipse_at_center,black,transparent_75%)]" />
+          <div className="absolute right-16 top-24 h-40 w-40 rounded-3xl border border-border/40 [mask-image:linear-gradient(to_bottom,black,transparent)]" />
+        </div>
 
-            <div className="mt-12 max-w-xl space-y-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.3em] text-primary/80">
-                Bem-vindo de volta
-              </p>
-
-              <h1 className="text-4xl font-semibold tracking-tight text-foreground sm:text-5xl">
-                Controle seus alunos, treinos e resultados com mais clareza.
-              </h1>
-
-              <p className="max-w-lg text-sm leading-6 text-muted-foreground sm:text-base">
-                Interface mais limpa, organizada e profissional para o dia a dia
-                do trainer.
-              </p>
-            </div>
+        {/* Marca */}
+        <div className="relative flex items-center gap-3 duration-700 animate-in fade-in slide-in-from-top-2">
+          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-secondary text-primary-foreground shadow-lg shadow-primary/30">
+            <Dumbbell className="h-5 w-5" />
           </div>
-
-          <div className="mt-10 grid gap-4 sm:grid-cols-3">
-            {[
-              "Cadastro rápido",
-              "Acesso responsivo",
-              "Fluxo mais intuitivo",
-            ].map((item) => (
-              <div
-                key={item}
-                className="rounded-2xl border border-border bg-background/60 px-4 py-4 text-sm text-muted-foreground"
-              >
-                {item}
-              </div>
-            ))}
+          <div className="leading-tight">
+            <p className="text-lg font-bold tracking-tight text-foreground">
+              G6Fit
+            </p>
+            <p className="text-xs text-muted-foreground">
+              Plataforma para academias e personal trainers
+            </p>
           </div>
         </div>
 
-        {/* FORM */}
-        <Card className="border-border/80 bg-card/90">
-          <CardContent className="p-8 lg:p-10">
-            <div className="mb-8">
-              <p className="text-xs font-semibold uppercase tracking-[0.28em] text-primary/80">
-                Acesso
-              </p>
-              <h2 className="mt-2 text-2xl font-semibold tracking-tight">
-                Entrar na plataforma
-              </h2>
-              <p className="mt-2 text-sm text-muted-foreground">
-                Use suas credenciais para acessar o painel.
-              </p>
+        {/* Conteúdo central */}
+        <div className="relative max-w-lg">
+          <h1 className="text-4xl font-semibold leading-tight tracking-tight text-foreground duration-700 animate-in fade-in slide-in-from-bottom-3 xl:text-5xl">
+            A plataforma completa para academias e personal trainers.
+          </h1>
+
+          <p
+            className="fill-mode-both mt-5 text-base leading-relaxed text-muted-foreground duration-700 animate-in fade-in slide-in-from-bottom-3"
+            style={{ animationDelay: "120ms" }}
+          >
+            Organize treinos, acompanhe seus alunos, registre evoluções e
+            centralize toda a gestão em uma única plataforma.
+          </p>
+
+          <ul className="mt-10 space-y-3">
+            {FEATURES.map((feature, index) => (
+              <li
+                key={feature.label}
+                style={{ animationDelay: `${260 + index * 80}ms` }}
+                className="group fill-mode-both flex items-center gap-3.5 rounded-xl border border-border/50 bg-card/40 px-4 py-3.5 backdrop-blur-sm transition-all duration-300 animate-in fade-in slide-in-from-bottom-2 hover:translate-x-0.5 hover:border-primary/40 hover:bg-card"
+              >
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/15 text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
+                  <feature.icon className="h-[1.1rem] w-[1.1rem]" />
+                </span>
+                <span className="text-sm text-foreground/90">
+                  {feature.label}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        {/* Rodapé */}
+        <p
+          className="fill-mode-both relative text-xs text-muted-foreground/70 duration-1000 animate-in fade-in"
+          style={{ animationDelay: "700ms" }}
+        >
+          © {new Date().getFullYear()} G6Fit · Gestão moderna para academia
+        </p>
+      </section>
+
+      {/* ---------- FORMULÁRIO (direita) ---------- */}
+      <section className="relative flex w-full flex-col justify-center px-6 py-12 sm:px-10 sm:py-10 lg:w-1/2 lg:overflow-hidden lg:px-16 xl:px-24">
+        {/* Glow sutil também no lado do formulário (aparece no mobile). */}
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 -z-10 overflow-hidden lg:hidden"
+        >
+          <div className="absolute left-1/2 top-[-15%] h-[26rem] w-[26rem] -translate-x-1/2 rounded-full bg-primary/15 blur-[120px]" />
+        </div>
+
+        <div className="mx-auto w-full max-w-sm duration-700 animate-in fade-in slide-in-from-bottom-4">
+          {/* Hero compacto — Mobile/Tablet: identidade do G6 sem ocupar espaço. */}
+          <div className="mb-8 flex flex-col items-center text-center lg:hidden">
+            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-secondary text-primary-foreground shadow-lg shadow-primary/30">
+              <Dumbbell className="h-7 w-7" />
             </div>
+            <p className="mt-4 text-xl font-bold tracking-tight text-foreground">
+              G6Fit
+            </p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Plataforma para academias e personal trainers
+            </p>
 
-            <form onSubmit={handleSubmit} className="space-y-5">
-              {/* EMAIL */}
-              <Field label="E-mail" htmlFor="email" error={errors.email}>
-                <div className="relative">
-                  <Mail className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <div className="mt-5 flex flex-wrap justify-center gap-2">
+              {MOBILE_FEATURES.map((feature, index) => (
+                <span
+                  key={feature.label}
+                  style={{ animationDelay: `${150 + index * 70}ms` }}
+                  className="fill-mode-both inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-card/60 px-3 py-1.5 text-xs font-medium text-muted-foreground backdrop-blur-sm duration-500 animate-in fade-in slide-in-from-bottom-2"
+                >
+                  <feature.icon className="h-3.5 w-3.5 text-primary" />
+                  {feature.label}
+                </span>
+              ))}
+            </div>
+          </div>
 
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="usuario@email.com"
-                    className="pl-10"
-                    aria-invalid={errors.email ? true : undefined}
-                    value={formData.email}
-                    onChange={handleChange}
-                    disabled={loading}
-                    autoComplete="email"
-                  />
-                </div>
-              </Field>
+          <div className="mb-8 text-center lg:text-left">
+            <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">
+              Bem-vindo de volta
+            </h2>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Entre com suas credenciais para acessar o painel.
+            </p>
+          </div>
 
-              {/* PASSWORD */}
-              <Field label="Senha" htmlFor="password" error={errors.password}>
-                <div className="relative">
-                  <Lock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <Field label="E-mail" htmlFor="email" error={errors.email}>
+              <div className="relative">
+                <Mail className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
 
-                  <Input
-                    id="password"
-                    type="password"
-                    placeholder="Sua senha"
-                    className="pl-10"
-                    aria-invalid={errors.password ? true : undefined}
-                    value={formData.password}
-                    onChange={handleChange}
-                    disabled={loading}
-                    autoComplete="current-password"
-                  />
-                </div>
-              </Field>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="usuario@email.com"
+                  className="pl-10"
+                  aria-invalid={errors.email ? true : undefined}
+                  value={formData.email}
+                  onChange={handleChange}
+                  disabled={loading}
+                  autoComplete="email"
+                />
+              </div>
+            </Field>
 
-              {/* REMEMBER */}
-              <div className="flex items-center justify-between text-sm">
-                <label className="flex items-center gap-2 text-muted-foreground cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={rememberMe}
-                    onChange={(e) => setRememberMe(e.target.checked)}
-                  />
-                  Lembrar-me
-                </label>
+            <Field label="Senha" htmlFor="password" error={errors.password}>
+              <div className="relative">
+                <Lock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+
+                <Input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Sua senha"
+                  className="pl-10 pr-10"
+                  aria-invalid={errors.password ? true : undefined}
+                  value={formData.password}
+                  onChange={handleChange}
+                  disabled={loading}
+                  autoComplete="current-password"
+                />
 
                 <button
                   type="button"
-                  className="text-primary hover:underline"
-                  onClick={() => toast("Função em desenvolvimento")}
+                  onClick={() => setShowPassword((prev) => !prev)}
+                  tabIndex={-1}
+                  aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground focus-visible:text-foreground focus-visible:outline-none"
                 >
-                  Esqueci minha senha
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
                 </button>
               </div>
+            </Field>
 
-              {/* SUBMIT */}
-              <Button
-                className="w-full"
-                size="lg"
-                type="submit"
-                disabled={loading}
-              >
-                {loading ? "Entrando..." : "Entrar"}
-                {loading ? (
-                  <Spinner className="h-4 w-4" />
-                ) : (
-                  <ArrowRight className="h-4 w-4" />
-                )}
-              </Button>
+            {/* REMEMBER */}
+            <div className="flex items-center justify-between text-sm">
+              <label className="flex cursor-pointer items-center gap-2 text-muted-foreground transition-colors hover:text-foreground">
+                <input
+                  type="checkbox"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                  className="h-4 w-4 rounded border-border accent-primary"
+                />
+                Lembrar-me
+              </label>
+            </div>
 
-              {/* DEV INFO */}
-              {import.meta.env.DEV && (
-                <div className="mt-4 rounded-lg bg-muted p-3 text-xs text-muted-foreground">
-                  <p className="font-semibold">Credenciais de teste:</p>
-                  <p>Email: admin@email.com</p>
-                  <p>Senha: passwords</p>
-                </div>
+            <Button
+              className="group w-full transition-transform active:scale-[0.98]"
+              size="lg"
+              type="submit"
+              loading={loading}
+            >
+              {loading ? "Entrando..." : "Entrar"}
+              {!loading && (
+                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
               )}
-            </form>
-          </CardContent>
-        </Card>
-      </div>
+            </Button>
+          </form>
+        </div>
+      </section>
     </div>
   );
 }
