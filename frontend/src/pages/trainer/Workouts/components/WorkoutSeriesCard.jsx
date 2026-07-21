@@ -1,7 +1,7 @@
 import { Trash2 } from "lucide-react";
 
+import { Field } from "../../../../components/forms/Field";
 import { Input } from "../../../../components/ui/input";
-import { Label } from "../../../../components/ui/label";
 import { Button } from "../../../../components/ui/button";
 import { Textarea } from "../../../../components/ui/textarea";
 
@@ -29,8 +29,11 @@ export default function WorkoutSeriesCard({
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <div className="space-y-1.5">
-          <Label htmlFor={`${namePrefix}.repetitions`}>Repetições</Label>
+        <Field
+          label="Repetições"
+          htmlFor={`${namePrefix}.repetitions`}
+          error={errors?.repetitions?.message}
+        >
           <Input
             id={`${namePrefix}.repetitions`}
             type="number"
@@ -38,15 +41,13 @@ export default function WorkoutSeriesCard({
             placeholder="Ex: 12"
             {...register(`${namePrefix}.repetitions`)}
           />
-          {errors?.repetitions ? (
-            <p className="text-sm text-red-400">
-              {errors.repetitions.message}
-            </p>
-          ) : null}
-        </div>
+        </Field>
 
-        <div className="space-y-1.5">
-          <Label htmlFor={`${namePrefix}.weight`}>Carga (kg)</Label>
+        <Field
+          label="Carga (kg)"
+          htmlFor={`${namePrefix}.weight`}
+          error={errors?.weight?.message}
+        >
           <Input
             id={`${namePrefix}.weight`}
             type="number"
@@ -55,13 +56,13 @@ export default function WorkoutSeriesCard({
             placeholder="Ex: 20"
             {...register(`${namePrefix}.weight`)}
           />
-          {errors?.weight ? (
-            <p className="text-sm text-red-400">{errors.weight.message}</p>
-          ) : null}
-        </div>
+        </Field>
 
-        <div className="space-y-1.5">
-          <Label htmlFor={`${namePrefix}.rest_time`}>Descanso (s)</Label>
+        <Field
+          label="Descanso (s)"
+          htmlFor={`${namePrefix}.rest_time`}
+          error={errors?.rest_time?.message}
+        >
           <Input
             id={`${namePrefix}.rest_time`}
             type="number"
@@ -69,15 +70,13 @@ export default function WorkoutSeriesCard({
             placeholder="Ex: 60"
             {...register(`${namePrefix}.rest_time`)}
           />
-          {errors?.rest_time ? (
-            <p className="text-sm text-red-400">
-              {errors.rest_time.message}
-            </p>
-          ) : null}
-        </div>
+        </Field>
 
-        <div className="space-y-1.5">
-          <Label htmlFor={`${namePrefix}.rir`}>RIR</Label>
+        <Field
+          label="RIR"
+          htmlFor={`${namePrefix}.rir`}
+          error={errors?.rir?.message}
+        >
           <Input
             id={`${namePrefix}.rir`}
             type="number"
@@ -86,37 +85,37 @@ export default function WorkoutSeriesCard({
             placeholder="Ex: 2"
             {...register(`${namePrefix}.rir`)}
           />
-          {errors?.rir ? (
-            <p className="text-sm text-red-400">{errors.rir.message}</p>
-          ) : null}
-        </div>
+        </Field>
 
-        <div className="space-y-1.5">
-          <Label htmlFor={`${namePrefix}.tempo`}>Tempo</Label>
+        <Field
+          label="Tempo"
+          htmlFor={`${namePrefix}.tempo`}
+          error={errors?.tempo?.message}
+        >
           <Input
             id={`${namePrefix}.tempo`}
             placeholder="Ex: 3-1-1"
             {...register(`${namePrefix}.tempo`)}
           />
-          {errors?.tempo ? (
-            <p className="text-sm text-red-400">{errors.tempo.message}</p>
-          ) : null}
-        </div>
+        </Field>
 
-        <div className="space-y-1.5">
-          <Label htmlFor={`${namePrefix}.cadence`}>Cadência</Label>
+        <Field
+          label="Cadência"
+          htmlFor={`${namePrefix}.cadence`}
+          error={errors?.cadence?.message}
+        >
           <Input
             id={`${namePrefix}.cadence`}
             placeholder="Ex: lenta"
             {...register(`${namePrefix}.cadence`)}
           />
-          {errors?.cadence ? (
-            <p className="text-sm text-red-400">{errors.cadence.message}</p>
-          ) : null}
-        </div>
+        </Field>
 
-        <div className="space-y-1.5">
-          <Label htmlFor={`${namePrefix}.duration`}>Duração (s)</Label>
+        <Field
+          label="Duração (s)"
+          htmlFor={`${namePrefix}.duration`}
+          error={errors?.duration?.message}
+        >
           <Input
             id={`${namePrefix}.duration`}
             type="number"
@@ -124,14 +123,10 @@ export default function WorkoutSeriesCard({
             placeholder="Ex: 30"
             {...register(`${namePrefix}.duration`)}
           />
-          {errors?.duration ? (
-            <p className="text-sm text-red-400">{errors.duration.message}</p>
-          ) : null}
-        </div>
+        </Field>
       </div>
 
-      <div className="space-y-1.5">
-        <Label htmlFor={`${namePrefix}.notes`}>Observação da série</Label>
+      <Field label="Observação da série" htmlFor={`${namePrefix}.notes`}>
         <Textarea
           id={`${namePrefix}.notes`}
           rows={1}
@@ -139,7 +134,7 @@ export default function WorkoutSeriesCard({
           placeholder="Observação desta série (opcional)"
           {...register(`${namePrefix}.notes`)}
         />
-      </div>
+      </Field>
     </div>
   );
 }

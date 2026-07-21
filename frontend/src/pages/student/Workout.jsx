@@ -34,6 +34,8 @@ import {
   CardHeader,
   CardTitle,
 } from "../../components/ui/card";
+import { Field } from "../../components/forms/Field";
+import { FormSection } from "../../components/forms/FormSection";
 import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
 import { Textarea } from "../../components/ui/textarea";
@@ -409,47 +411,37 @@ export default function Workout() {
           <CardContent className="px-6 py-6 sm:px-8">
             <form
               onSubmit={handleSubmit(onSubmit)}
-              className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-300"
+              className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300"
             >
               <div className="grid gap-6 md:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="performed_at">Data do treino</Label>
+                <Field
+                  label="Data do treino"
+                  htmlFor="performed_at"
+                  error={errors.performed_at?.message}
+                >
                   <Input
                     id="performed_at"
                     type="date"
                     max={getTodayISO()}
                     {...register("performed_at")}
                   />
-                  {errors.performed_at ? (
-                    <p className="text-sm text-red-400">
-                      {errors.performed_at.message}
-                    </p>
-                  ) : null}
-                </div>
+                </Field>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="notes">Observações gerais</Label>
+              <Field label="Observações gerais" htmlFor="notes">
                 <Textarea
                   id="notes"
                   placeholder="Como foi o treino? (opcional)"
                   {...register("notes")}
                 />
-              </div>
+              </Field>
 
-              <div className="space-y-4 border-t border-border/80 pt-6">
-                <div>
-                  <h3 className="text-lg font-semibold text-foreground">
-                    Exercícios
-                  </h3>
-                  <p className="text-sm text-muted-foreground">
-                    Informe a carga e repetições que você realizou em cada
-                    exercício.
-                  </p>
-                </div>
-
+              <FormSection
+                title="Exercícios"
+                description="Informe a carga e repetições que você realizou em cada exercício."
+              >
                 {errors.exercises?.message ? (
-                  <p className="text-sm text-red-400">
+                  <p className="text-sm text-destructive">
                     {errors.exercises.message}
                   </p>
                 ) : null}
@@ -497,7 +489,7 @@ export default function Workout() {
                               </p>
 
                               <div className="grid gap-4 sm:grid-cols-3">
-                                <div className="space-y-2">
+                                <div className="space-y-4">
                                   <Label
                                     htmlFor={`exercises.${index}.sets.${setIndex}.performed_weight`}
                                   >
@@ -519,7 +511,7 @@ export default function Workout() {
                                   />
                                 </div>
 
-                                <div className="space-y-2">
+                                <div className="space-y-4">
                                   <Label
                                     htmlFor={`exercises.${index}.sets.${setIndex}.performed_repetitions`}
                                   >
@@ -540,7 +532,7 @@ export default function Workout() {
                                   />
                                 </div>
 
-                                <div className="space-y-2">
+                                <div className="space-y-4">
                                   <Label
                                     htmlFor={`exercises.${index}.sets.${setIndex}.performed_rest_time`}
                                   >
@@ -562,7 +554,7 @@ export default function Workout() {
                                 </div>
                               </div>
 
-                              <div className="space-y-2">
+                              <div className="space-y-4">
                                 <Label
                                   htmlFor={`exercises.${index}.sets.${setIndex}.notes`}
                                 >
@@ -580,21 +572,21 @@ export default function Workout() {
                           ))}
                         </div>
 
-                        <div className="space-y-2">
-                          <Label htmlFor={`exercises.${index}.notes`}>
-                            Observação geral do exercício
-                          </Label>
+                        <Field
+                          label="Observação geral do exercício"
+                          htmlFor={`exercises.${index}.notes`}
+                        >
                           <Textarea
                             id={`exercises.${index}.notes`}
                             placeholder="Observação geral sobre o exercício (opcional)"
                             {...register(`exercises.${index}.notes`)}
                           />
-                        </div>
+                        </Field>
                       </CardContent>
                     </Card>
                   ))}
                 </div>
-              </div>
+              </FormSection>
 
               <div className="flex flex-col gap-3 border-t border-border/80 pt-6 md:flex-row md:items-center md:justify-between">
                 <p className="text-sm text-muted-foreground">

@@ -76,4 +76,9 @@
     background: #7c3aed;
     border-radius: 999px;
   }
+
+  input[type="date"]::-webkit-calendar-picker-indicator {
+    display: none;
+    -webkit-appearance: none;
+  }
 }

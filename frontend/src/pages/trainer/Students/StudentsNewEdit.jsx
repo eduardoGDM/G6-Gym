@@ -9,6 +9,7 @@ import { crudToast } from "../../../components/common/crudToast";
 import PageContainer from "../../../components/common/PageContainer";
 import PageTitle from "../../../components/common/PageTitle";
 import Spinner from "../../../components/common/Spinner";
+import { Field } from "../../../components/forms/Field";
 import FormSkeleton from "../../../components/loading/FormSkeleton";
 import { Button } from "../../../components/ui/button";
 import {
@@ -19,7 +20,6 @@ import {
   CardTitle,
 } from "../../../components/ui/card";
 import { Input } from "../../../components/ui/input";
-import { Label } from "../../../components/ui/label";
 import { Select } from "../../../components/ui/select";
 import { Textarea } from "../../../components/ui/textarea";
 import studentsService from "../../../services/StudentsService";
@@ -199,39 +199,34 @@ export default function StudentsNewEdit() {
               className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300"
             >
               <div className="grid gap-6 md:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="name">Nome</Label>
+                <Field label="Nome" htmlFor="name" error={errors.name?.message}>
                   <Input
                     id="name"
                     placeholder="Nome completo"
                     {...register("name")}
                   />
-                  {errors.name ? (
-                    <p className="text-sm text-red-400">
-                      {errors.name.message}
-                    </p>
-                  ) : null}
-                </div>
+                </Field>
 
-                <div className="space-y-2">
-                  <Label htmlFor="email">E-mail</Label>
+                <Field
+                  label="E-mail"
+                  htmlFor="email"
+                  error={errors.email?.message}
+                >
                   <Input
                     id="email"
                     type="email"
                     placeholder="usuario@email.com"
                     {...register("email")}
                   />
-                  {errors.email ? (
-                    <p className="text-sm text-red-400">
-                      {errors.email.message}
-                    </p>
-                  ) : null}
-                </div>
+                </Field>
               </div>
 
               <div className="grid gap-6 md:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="password">Senha</Label>
+                <Field
+                  label="Senha"
+                  htmlFor="password"
+                  error={errors.password?.message}
+                >
                   <Input
                     id="password"
                     type="password"
@@ -242,15 +237,9 @@ export default function StudentsNewEdit() {
                     }
                     {...register("password")}
                   />
-                  {errors.password ? (
-                    <p className="text-sm text-red-400">
-                      {errors.password.message}
-                    </p>
-                  ) : null}
-                </div>
+                </Field>
 
-                <div className="space-y-2">
-                  <Label htmlFor="cpf">CPF</Label>
+                <Field label="CPF" htmlFor="cpf" error={errors.cpf?.message}>
                   <Input
                     id="cpf"
                     placeholder="000.000.000-00"
@@ -261,15 +250,15 @@ export default function StudentsNewEdit() {
                       cpfField.onChange(event);
                     }}
                   />
-                  {errors.cpf ? (
-                    <p className="text-sm text-red-400">{errors.cpf.message}</p>
-                  ) : null}
-                </div>
+                </Field>
               </div>
 
               <div className="grid gap-6 md:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="phone">Telefone</Label>
+                <Field
+                  label="Telefone"
+                  htmlFor="phone"
+                  error={errors.phone?.message}
+                >
                   <Input
                     id="phone"
                     placeholder="(00) 00000-0000"
@@ -280,32 +269,28 @@ export default function StudentsNewEdit() {
                       phoneField.onChange(event);
                     }}
                   />
-                  {errors.phone ? (
-                    <p className="text-sm text-red-400">
-                      {errors.phone.message}
-                    </p>
-                  ) : null}
-                </div>
+                </Field>
 
-                <div className="space-y-2">
-                  <Label htmlFor="birth_date">Data de nascimento</Label>
+                <Field
+                  label="Data de nascimento"
+                  htmlFor="birth_date"
+                  error={errors.birth_date?.message}
+                >
                   <Input
                     id="birth_date"
                     type="date"
                     max={todayISO}
                     {...register("birth_date")}
                   />
-                  {errors.birth_date ? (
-                    <p className="text-sm text-red-400">
-                      {errors.birth_date.message}
-                    </p>
-                  ) : null}
-                </div>
+                </Field>
               </div>
 
               <div className="grid gap-6 md:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="gender">Sexo</Label>
+                <Field
+                  label="Sexo"
+                  htmlFor="gender"
+                  error={errors.gender?.message}
+                >
                   <Select id="gender" {...register("gender")}>
                     <option value="">Selecione</option>
                     {GENDER_OPTIONS.map((option) => (
@@ -314,15 +299,13 @@ export default function StudentsNewEdit() {
                       </option>
                     ))}
                   </Select>
-                  {errors.gender ? (
-                    <p className="text-sm text-red-400">
-                      {errors.gender.message}
-                    </p>
-                  ) : null}
-                </div>
+                </Field>
 
-                <div className="space-y-2">
-                  <Label htmlFor="height">Altura (m)</Label>
+                <Field
+                  label="Altura (m)"
+                  htmlFor="height"
+                  error={errors.height?.message}
+                >
                   <Input
                     id="height"
                     type="number"
@@ -337,17 +320,15 @@ export default function StudentsNewEdit() {
                       heightField.onBlur(event);
                     }}
                   />
-                  {errors.height ? (
-                    <p className="text-sm text-red-400">
-                      {errors.height.message}
-                    </p>
-                  ) : null}
-                </div>
+                </Field>
               </div>
 
               <div className="grid gap-6 md:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="current_weight">Peso atual (kg)</Label>
+                <Field
+                  label="Peso atual (kg)"
+                  htmlFor="current_weight"
+                  error={errors.current_weight?.message}
+                >
                   <Input
                     id="current_weight"
                     type="number"
@@ -362,26 +343,19 @@ export default function StudentsNewEdit() {
                       weightField.onBlur(event);
                     }}
                   />
-                  {errors.current_weight ? (
-                    <p className="text-sm text-red-400">
-                      {errors.current_weight.message}
-                    </p>
-                  ) : null}
-                </div>
+                </Field>
 
-                <div className="space-y-2">
-                  <Label htmlFor="observations">Observações</Label>
+                <Field
+                  label="Observações"
+                  htmlFor="observations"
+                  error={errors.observations?.message}
+                >
                   <Textarea
                     id="observations"
                     placeholder="Observações do aluno"
                     {...register("observations")}
                   />
-                  {errors.observations ? (
-                    <p className="text-sm text-red-400">
-                      {errors.observations.message}
-                    </p>
-                  ) : null}
-                </div>
+                </Field>
               </div>
 
               <div className="flex flex-col gap-3 border-t border-border/80 pt-6 md:flex-row md:justify-end">

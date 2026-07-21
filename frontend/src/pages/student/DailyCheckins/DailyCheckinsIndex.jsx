@@ -23,8 +23,10 @@ import {
   CardHeader,
   CardTitle,
 } from "../../../components/ui/card";
+import { Field } from "../../../components/forms/Field";
+import { FilterField } from "../../../components/forms/FilterField";
+import { SectionLabel } from "../../../components/forms/SectionLabel";
 import { Input } from "../../../components/ui/input";
-import { Label } from "../../../components/ui/label";
 import { Textarea } from "../../../components/ui/textarea";
 import { useDebouncedValue } from "../../../hooks/useDebouncedValue";
 import dailyCheckinsService from "../../../services/DailyCheckinsService";
@@ -254,19 +256,18 @@ export default function DailyCheckinsIndex() {
             onSubmit={handleSubmit(onSubmit)}
             className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300"
           >
-            <div className="max-w-xs space-y-2">
-              <Label htmlFor="date">Data</Label>
+            <Field
+              label="Data"
+              htmlFor="date"
+              error={errors.date?.message}
+              className="max-w-xs"
+            >
               <Input id="date" type="date" {...register("date")} />
-              {errors.date ? (
-                <p className="text-sm text-red-400">{errors.date.message}</p>
-              ) : null}
-            </div>
+            </Field>
 
             <div className="grid gap-6 md:grid-cols-2">
               <div className="space-y-4 rounded-2xl border border-border/80 bg-background/60 p-5">
-                <h3 className="text-sm font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-                  Sono
-                </h3>
+                <SectionLabel>Sono</SectionLabel>
 
                 <Controller
                   control={control}
@@ -281,25 +282,22 @@ export default function DailyCheckinsIndex() {
                   )}
                 />
                 {errors.sleep_rating ? (
-                  <p className="text-sm text-red-400">
+                  <p className="text-sm text-destructive">
                     {errors.sleep_rating.message}
                   </p>
                 ) : null}
 
-                <div className="space-y-2">
-                  <Label htmlFor="sleep_notes">Observação (opcional)</Label>
+                <Field label="Observação (opcional)" htmlFor="sleep_notes">
                   <Textarea
                     id="sleep_notes"
                     placeholder="Como foi seu sono?"
                     {...register("sleep_notes")}
                   />
-                </div>
+                </Field>
               </div>
 
               <div className="space-y-4 rounded-2xl border border-border/80 bg-background/60 p-5">
-                <h3 className="text-sm font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-                  Dieta
-                </h3>
+                <SectionLabel>Dieta</SectionLabel>
 
                 <Controller
                   control={control}
@@ -314,19 +312,18 @@ export default function DailyCheckinsIndex() {
                   )}
                 />
                 {errors.diet_rating ? (
-                  <p className="text-sm text-red-400">
+                  <p className="text-sm text-destructive">
                     {errors.diet_rating.message}
                   </p>
                 ) : null}
 
-                <div className="space-y-2">
-                  <Label htmlFor="diet_notes">Observação (opcional)</Label>
+                <Field label="Observação (opcional)" htmlFor="diet_notes">
                   <Textarea
                     id="diet_notes"
                     placeholder="Como foi sua dieta?"
                     {...register("diet_notes")}
                   />
-                </div>
+                </Field>
               </div>
             </div>
 
@@ -357,17 +354,14 @@ export default function DailyCheckinsIndex() {
           description="Consulte e edite seus registros anteriores."
         />
 
-        <div className="sm:w-56">
-          <Label htmlFor="filter_date" className="mb-1.5 block text-xs uppercase tracking-wide text-muted-foreground">
-            Filtrar por data
-          </Label>
+        <FilterField label="Filtrar por data" htmlFor="filter_date" className="sm:w-56">
           <Input
             id="filter_date"
             type="date"
             value={filterDate}
             onChange={(event) => setFilterDate(event.target.value)}
           />
-        </div>
+        </FilterField>
       </div>
 
       <DataTable

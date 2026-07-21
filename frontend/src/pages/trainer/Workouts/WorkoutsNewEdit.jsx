@@ -18,8 +18,9 @@ import {
   CardHeader,
   CardTitle,
 } from "../../../components/ui/card";
+import { Field } from "../../../components/forms/Field";
+import { FormSection } from "../../../components/forms/FormSection";
 import { Input } from "../../../components/ui/input";
-import { Label } from "../../../components/ui/label";
 import { Select } from "../../../components/ui/select";
 import { Textarea } from "../../../components/ui/textarea";
 import muscleGroupsService from "../../../services/MuscleGroupsService";
@@ -253,11 +254,14 @@ export default function WorkoutsNewEdit() {
           ) : (
             <form
               onSubmit={handleSubmit(onSubmit)}
-              className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-300"
+              className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300"
             >
               <div className="grid gap-6 md:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="student_profile_id">Aluno</Label>
+                <Field
+                  label="Aluno"
+                  htmlFor="student_profile_id"
+                  error={errors.student_profile_id?.message}
+                >
                   <Select
                     id="student_profile_id"
                     {...register("student_profile_id")}
@@ -269,76 +273,61 @@ export default function WorkoutsNewEdit() {
                       </option>
                     ))}
                   </Select>
-                  {errors.student_profile_id ? (
-                    <p className="text-sm text-red-400">
-                      {errors.student_profile_id.message}
-                    </p>
-                  ) : null}
-                </div>
+                </Field>
 
-                <div className="space-y-2">
-                  <Label htmlFor="name">Nome do treino</Label>
+                <Field
+                  label="Nome do treino"
+                  htmlFor="name"
+                  error={errors.name?.message}
+                >
                   <Input
                     id="name"
                     placeholder="Ex: Treino A - Peito e tríceps"
                     {...register("name")}
                   />
-                  {errors.name ? (
-                    <p className="text-sm text-red-400">
-                      {errors.name.message}
-                    </p>
-                  ) : null}
-                </div>
+                </Field>
               </div>
 
               <div className="grid gap-6 md:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="start_date">Data de início</Label>
+                <Field
+                  label="Data de início"
+                  htmlFor="start_date"
+                  error={errors.start_date?.message}
+                >
                   <Input
                     id="start_date"
                     type="date"
                     {...register("start_date")}
                   />
-                  {errors.start_date ? (
-                    <p className="text-sm text-red-400">
-                      {errors.start_date.message}
-                    </p>
-                  ) : null}
-                </div>
+                </Field>
 
-                <div className="space-y-2">
-                  <Label htmlFor="end_date">Data de término</Label>
+                <Field
+                  label="Data de término"
+                  htmlFor="end_date"
+                  error={errors.end_date?.message}
+                >
                   <Input id="end_date" type="date" {...register("end_date")} />
-                  {errors.end_date ? (
-                    <p className="text-sm text-red-400">
-                      {errors.end_date.message}
-                    </p>
-                  ) : null}
-                </div>
+                </Field>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="description">Descrição</Label>
+              <Field
+                label="Descrição"
+                htmlFor="description"
+                error={errors.description?.message}
+              >
                 <Textarea
                   id="description"
                   placeholder="Observações gerais sobre o treino (opcional)"
                   {...register("description")}
                 />
-                {errors.description ? (
-                  <p className="text-sm text-red-400">
-                    {errors.description.message}
-                  </p>
-                ) : null}
-              </div>
+              </Field>
 
-              <div className="space-y-2 border-t border-border/80 pt-6">
-                <Label htmlFor="muscle_groups">
-                  Grupos musculares do treino
-                </Label>
-                <p className="text-sm text-muted-foreground">
-                  Selecione os grupos trabalhados para filtrar a lista de
-                  exercícios abaixo. Deixe em branco para ver todos.
-                </p>
+              <Field
+                label="Grupos musculares do treino"
+                htmlFor="muscle_groups"
+                hint="Selecione os grupos trabalhados para filtrar a lista de exercícios abaixo. Deixe em branco para ver todos."
+                className="border-t border-border/80 pt-6"
+              >
                 <Controller
                   control={control}
                   name="muscle_groups"
@@ -351,19 +340,12 @@ export default function WorkoutsNewEdit() {
                     />
                   )}
                 />
-              </div>
+              </Field>
 
-              <div className="space-y-4 border-t border-border/80 pt-6">
-                <div>
-                  <h3 className="text-lg font-semibold text-foreground">
-                    Exercícios do treino
-                  </h3>
-                  <p className="text-sm text-muted-foreground">
-                    Busque e adicione os exercícios, monte as séries de cada um
-                    e use as setas para reordenar.
-                  </p>
-                </div>
-
+              <FormSection
+                title="Exercícios do treino"
+                description="Busque e adicione os exercícios, monte as séries de cada um e use as setas para reordenar."
+              >
                 <ExercisePicker
                   muscleGroups={watchedMuscleGroups}
                   addedIds={fields.map((field) => field.exercise_id)}
@@ -371,7 +353,7 @@ export default function WorkoutsNewEdit() {
                 />
 
                 {errors.exercises?.message ? (
-                  <p className="text-sm text-red-400">
+                  <p className="text-sm text-destructive">
                     {errors.exercises.message}
                   </p>
                 ) : null}
@@ -397,7 +379,7 @@ export default function WorkoutsNewEdit() {
                     );
                   })}
                 </div>
-              </div>
+              </FormSection>
 
               <div className="flex flex-col gap-3 border-t border-border/80 pt-6 md:flex-row md:justify-end">
                 <Button

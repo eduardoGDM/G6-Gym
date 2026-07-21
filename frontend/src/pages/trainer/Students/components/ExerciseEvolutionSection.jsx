@@ -13,6 +13,7 @@ import {
   YAxis,
 } from "recharts";
 
+import { FilterField } from "../../../../components/forms/FilterField";
 import Skeleton from "../../../../components/loading/Skeleton";
 import { Input } from "../../../../components/ui/input";
 import { Select } from "../../../../components/ui/select";
@@ -176,10 +177,7 @@ export default function ExerciseEvolutionSection({ studentId }) {
         ) : (
           <div className="space-y-6">
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-              <div>
-                <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                  Grupo muscular
-                </label>
+              <FilterField label="Grupo muscular">
                 <Select
                   value={muscleGroupId}
                   onChange={handleMuscleGroupChange}
@@ -192,12 +190,9 @@ export default function ExerciseEvolutionSection({ studentId }) {
                     </option>
                   ))}
                 </Select>
-              </div>
+              </FilterField>
 
-              <div>
-                <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                  Exercício
-                </label>
+              <FilterField label="Exercício">
                 <Select
                   value={exerciseId}
                   onChange={(event) => setExerciseId(event.target.value)}
@@ -214,12 +209,9 @@ export default function ExerciseEvolutionSection({ studentId }) {
                     </option>
                   ))}
                 </Select>
-              </div>
+              </FilterField>
 
-              <div>
-                <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                  Período
-                </label>
+              <FilterField label="Período">
                 <Select value={period} onChange={(event) => setPeriod(event.target.value)}>
                   {PERIOD_OPTIONS.map((option) => (
                     <option key={option.value} value={option.value}>
@@ -227,30 +219,24 @@ export default function ExerciseEvolutionSection({ studentId }) {
                     </option>
                   ))}
                 </Select>
-              </div>
+              </FilterField>
 
               {period === "custom" ? (
                 <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                      Data inicial
-                    </label>
+                  <FilterField label="Data inicial">
                     <Input
                       type="date"
                       value={customStart}
                       onChange={(event) => setCustomStart(event.target.value)}
                     />
-                  </div>
-                  <div>
-                    <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                      Data final
-                    </label>
+                  </FilterField>
+                  <FilterField label="Data final">
                     <Input
                       type="date"
                       value={customEnd}
                       onChange={(event) => setCustomEnd(event.target.value)}
                     />
-                  </div>
+                  </FilterField>
                 </div>
               ) : null}
             </div>

@@ -1,8 +1,8 @@
 import { ArrowDown, ArrowUp, Plus, Trash2 } from "lucide-react";
 import { useFieldArray } from "react-hook-form";
 
+import { Field } from "../../../../components/forms/Field";
 import { Button } from "../../../../components/ui/button";
-import { Label } from "../../../../components/ui/label";
 import { Textarea } from "../../../../components/ui/textarea";
 import WorkoutSeriesCard from "./WorkoutSeriesCard";
 
@@ -80,10 +80,10 @@ export default function WorkoutExerciseCard({
         </div>
       </div>
 
-      <div className="space-y-1.5">
-        <Label htmlFor={`exercises.${index}.notes`}>
-          Observação geral do exercício
-        </Label>
+      <Field
+        label="Observação geral do exercício"
+        htmlFor={`exercises.${index}.notes`}
+      >
         <Textarea
           id={`exercises.${index}.notes`}
           rows={1}
@@ -91,7 +91,7 @@ export default function WorkoutExerciseCard({
           placeholder="Instruções válidas para todas as séries (opcional)"
           {...register(`exercises.${index}.notes`)}
         />
-      </div>
+      </Field>
 
       <div className="space-y-3">
         <div className="flex items-center justify-between">

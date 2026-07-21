@@ -61,7 +61,7 @@ export default function ExercisePicker({ muscleGroups = [], addedIds = [], onAdd
           <Spinner className="h-5 w-5" />
         </div>
       ) : isError ? (
-        <p className="py-4 text-center text-sm text-red-400">
+        <p className="py-4 text-center text-sm text-destructive">
           Não foi possível carregar os exercícios.
         </p>
       ) : exercises.length === 0 ? (

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 
 import ConfirmDialog from "../../../../components/common/ConfirmDialog";
 import { crudToast } from "../../../../components/common/crudToast";
+import { SectionLabel } from "../../../../components/forms/SectionLabel";
 import Spinner from "../../../../components/common/Spinner";
 import Skeleton from "../../../../components/loading/Skeleton";
 import { Button } from "../../../../components/ui/button";
@@ -161,9 +162,7 @@ export default function AnamnesisSection({ studentId, readOnly = false }) {
         ) : (
           <>
             <section className="space-y-3">
-              <h3 className="text-sm font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-                Observações
-              </h3>
+              <SectionLabel>Observações</SectionLabel>
               <Textarea
                 rows={5}
                 placeholder="Histórico médico, lesões, restrições, objetivos, medicamentos e demais informações relevantes."
@@ -194,10 +193,10 @@ export default function AnamnesisSection({ studentId, readOnly = false }) {
 
             <section className="space-y-3">
               <div className="flex items-center justify-between gap-3">
-                <h3 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+                <SectionLabel className="flex items-center gap-2">
                   <Images className="h-4 w-4" />
                   Fotos
-                </h3>
+                </SectionLabel>
                 {!readOnly ? (
                   <ImageUploader onUpload={handleUploadPhoto} uploading={uploadingPhoto} />
                 ) : null}
@@ -212,10 +211,10 @@ export default function AnamnesisSection({ studentId, readOnly = false }) {
 
             <section className="space-y-3">
               <div className="flex items-center justify-between gap-3">
-                <h3 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+                <SectionLabel className="flex items-center gap-2">
                   <VideoIcon className="h-4 w-4" />
                   Vídeos
-                </h3>
+                </SectionLabel>
                 {!readOnly ? (
                   <VideoUploader onUpload={handleUploadVideo} uploading={uploadingVideo} />
                 ) : null}

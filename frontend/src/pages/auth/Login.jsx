@@ -5,9 +5,9 @@ import { useNavigate } from "react-router-dom";
 
 import Spinner from "../../components/common/Spinner";
 import { Button } from "../../components/ui/button";
+import { Field } from "../../components/forms/Field";
 import { Card, CardContent } from "../../components/ui/card";
 import { Input } from "../../components/ui/input";
-import { Label } from "../../components/ui/label";
 import authService from "../../services/authService";
 import useAuthStore from "../../store/authStore";
 
@@ -153,9 +153,7 @@ export default function Login() {
 
             <form onSubmit={handleSubmit} className="space-y-5">
               {/* EMAIL */}
-              <div className="space-y-2">
-                <Label htmlFor="email">E-mail</Label>
-
+              <Field label="E-mail" htmlFor="email" error={errors.email}>
                 <div className="relative">
                   <Mail className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
 
@@ -171,16 +169,10 @@ export default function Login() {
                     autoComplete="email"
                   />
                 </div>
-
-                {errors.email && (
-                  <p className="text-sm text-destructive">{errors.email}</p>
-                )}
-              </div>
+              </Field>
 
               {/* PASSWORD */}
-              <div className="space-y-2">
-                <Label htmlFor="password">Senha</Label>
-
+              <Field label="Senha" htmlFor="password" error={errors.password}>
                 <div className="relative">
                   <Lock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
 
@@ -196,11 +188,7 @@ export default function Login() {
                     autoComplete="current-password"
                   />
                 </div>
-
-                {errors.password && (
-                  <p className="text-sm text-destructive">{errors.password}</p>
-                )}
-              </div>
+              </Field>
 
               {/* REMEMBER */}
               <div className="flex items-center justify-between text-sm">

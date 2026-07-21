@@ -18,8 +18,8 @@ import {
   CardHeader,
   CardTitle,
 } from "../../../components/ui/card";
+import { Field } from "../../../components/forms/Field";
 import { Input } from "../../../components/ui/input";
-import { Label } from "../../../components/ui/label";
 import { Select } from "../../../components/ui/select";
 import { Textarea } from "../../../components/ui/textarea";
 import exercisesService from "../../../services/ExercisesService";
@@ -166,8 +166,11 @@ export default function ExercisesNewEdit() {
               className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300"
             >
               <div className="grid gap-6 md:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="muscle_group_id">Grupo muscular</Label>
+                <Field
+                  label="Grupo muscular"
+                  htmlFor="muscle_group_id"
+                  error={errors.muscle_group_id?.message}
+                >
                   <Select id="muscle_group_id" {...register("muscle_group_id")}>
                     <option value="">Selecione</option>
                     {groups.map((group) => (
@@ -176,71 +179,54 @@ export default function ExercisesNewEdit() {
                       </option>
                     ))}
                   </Select>
-                  {errors.muscle_group_id ? (
-                    <p className="text-sm text-red-400">
-                      {errors.muscle_group_id.message}
-                    </p>
-                  ) : null}
-                </div>
+                </Field>
 
-                <div className="space-y-2">
-                  <Label htmlFor="name">Nome</Label>
+                <Field label="Nome" htmlFor="name" error={errors.name?.message}>
                   <Input
                     id="name"
                     placeholder="Nome do exercício"
                     {...register("name")}
                   />
-                  {errors.name ? (
-                    <p className="text-sm text-red-400">
-                      {errors.name.message}
-                    </p>
-                  ) : null}
-                </div>
+                </Field>
               </div>
 
               <div className="grid gap-6 md:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="equipment">Equipamento</Label>
+                <Field
+                  label="Equipamento"
+                  htmlFor="equipment"
+                  error={errors.equipment?.message}
+                >
                   <Input
                     id="equipment"
                     placeholder="Equipamento utilizado"
                     {...register("equipment")}
                   />
-                  {errors.equipment ? (
-                    <p className="text-sm text-red-400">
-                      {errors.equipment.message}
-                    </p>
-                  ) : null}
-                </div>
+                </Field>
 
-                <div className="space-y-2">
-                  <Label htmlFor="video_url">Video URL</Label>
+                <Field
+                  label="Video URL"
+                  htmlFor="video_url"
+                  error={errors.video_url?.message}
+                >
                   <Input
                     id="video_url"
                     placeholder="https://"
                     {...register("video_url")}
                   />
-                  {errors.video_url ? (
-                    <p className="text-sm text-red-400">
-                      {errors.video_url.message}
-                    </p>
-                  ) : null}
-                </div>
+                </Field>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="description">Descrição</Label>
+              <Field
+                label="Descrição"
+                htmlFor="description"
+                error={errors.description?.message}
+              >
                 <Textarea
                   id="description"
                   placeholder="Descreva o exercício"
                   {...register("description")}
                 />
-                {errors.description ? (
-                  <p className="text-sm text-red-400">
-                    {errors.description.message}
-                  </p>
-                ) : null}
-              </div>
+              </Field>
 
               <div className="flex flex-col gap-3 border-t border-border/80 pt-6 md:flex-row md:justify-end">
                 <Button
