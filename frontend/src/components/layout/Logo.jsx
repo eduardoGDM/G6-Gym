@@ -9,8 +9,8 @@ export default function Logo({ compact = false }) {
 
       {!compact ? (
         <div className="leading-tight">
-          <p className="text-base font-bold text-foreground">G6</p>
-          <p className="text-xs text-muted-foreground">Academia</p>
+          <p className="text-base font-bold text-foreground">G6Fit</p>
+          <p className="text-xs text-muted-foreground">Gestão de treinos</p>
         </div>
       ) : null}
     </div>

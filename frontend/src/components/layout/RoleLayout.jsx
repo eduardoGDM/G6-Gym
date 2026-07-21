@@ -36,7 +36,7 @@ export default function RoleLayout({ menuItems, title, roleLabel, banner }) {
 
       <div className={isDesktop ? "pl-[280px]" : "pl-0"}>
         <Topbar
-          title={title || "G6 Academia"}
+          title={title || "G6Fit"}
           onMenuClick={() => setMobileOpen((prev) => !prev)}
           isDesktop={isDesktop}
           roleLabel={roleLabel}

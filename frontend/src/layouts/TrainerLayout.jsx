@@ -33,6 +33,6 @@ const menuItems = [
 
 export default function PersonalLayout() {
   return (
-    <RoleLayout menuItems={menuItems} title="G6 Academia" roleLabel="Personal" />
+    <RoleLayout menuItems={menuItems} title="G6Fit" roleLabel="Personal" />
   );
 }

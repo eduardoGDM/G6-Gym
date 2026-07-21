@@ -81,7 +81,7 @@ export default function Dashboard() {
     <PageContainer>
       <PageTitle
         eyebrow={`${getGreeting()}, ${user?.name?.split(" ")[0] || ""} 👋`}
-        title="Bem-vindo novamente ao G6"
+        title="Bem-vindo novamente ao G6Fit"
         description="Abaixo está um resumo da sua academia hoje."
       />
 

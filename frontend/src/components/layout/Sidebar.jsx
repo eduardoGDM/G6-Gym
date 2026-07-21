@@ -76,13 +76,6 @@ export default function Sidebar({
         </div>
 
         <div className="flex-1 overflow-y-auto px-4 py-4">
-          <div className="mb-4 rounded-2xl border border-border bg-background/60 px-4 py-3">
-            <p className="text-sm font-semibold text-foreground">Academia G6</p>
-            <p className="mt-1 text-xs leading-5 text-muted-foreground">
-              Gestão organizada para alunos, treinos e exercícios.
-            </p>
-          </div>
-
           <nav className="space-y-2">
             {menuItems.map((item) => (
               <MenuItem

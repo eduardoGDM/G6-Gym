@@ -49,7 +49,7 @@ export default function Dashboard() {
     <PageContainer>
       <PageTitle
         eyebrow={`${getGreeting()}, ${user?.name?.split(" ")[0] || ""} 👋`}
-        title="Bem-vindo ao painel administrativo do G6"
+        title="Bem-vindo ao painel administrativo do G6Fit"
         description="Acompanhe e gerencie personais e alunos de toda a plataforma."
       />
 

@@ -17,7 +17,7 @@ export default function StudentLayout() {
   return (
     <RoleLayout
       menuItems={menuItems}
-      title="G6 Academia"
+      title="G6Fit"
       roleLabel="Aluno"
       banner={<DailyCheckinReminder />}
     />

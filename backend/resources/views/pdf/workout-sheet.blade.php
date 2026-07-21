@@ -360,10 +360,10 @@
         <table style="width: 100%; border: none;">
             <tr>
                 <td style="border: none; width: 55%;">
-                    <span class="brand-mark">G6</span>
+                    <span class="brand-mark">G6Fit</span>
                     <span class="brand-text">
                         <span class="brand-title">Ficha de Treino</span>
-                        <span class="brand-sub">G6 &middot; Gestão de Academia</span>
+                        <span class="brand-sub">G6Fit &middot; Gestão de treinos</span>
                     </span>
                 </td>
                 <td style="border: none; width: 45%;" class="header-right">
@@ -403,7 +403,7 @@
     <footer>
         <table style="width: 100%; border: none;">
             <tr>
-                <td style="border: none; width: 34%;">G6 &middot; Gestão de Academia</td>
+                <td style="border: none; width: 34%;">G6Fit &middot; Gestão de treinos</td>
                 <td style="border: none; width: 32%; text-align: center;">Página <span class="page-num"></span></td>
                 <td style="border: none; width: 34%; text-align: right;">Gerado em {{ $generatedAt->format('d/m/Y H:i') }}</td>
             </tr>

@@ -3,8 +3,8 @@ import { cn } from "../../lib/utils";
 
 export default function Topbar({
   onMenuClick,
-  title = "G6 Academia",
-  subtitle = "Painel administrativo",
+  title = "G6Fit",
+  subtitle = "",
   isDesktop,
   roleLabel = "Personal",
 }) {
