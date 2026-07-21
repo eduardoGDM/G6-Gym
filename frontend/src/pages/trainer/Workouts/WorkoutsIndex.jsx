@@ -178,7 +178,13 @@ export default function WorkoutsIndex() {
         {isLoading ? (
           <CardContent className="overflow-x-auto p-0">
             <TableSkeleton
-              columns={["Nome", "Aluno", "Exercícios", "Data início", "Status"]}
+              columns={[
+                "Nome",
+                { label: "Aluno", className: "hidden sm:table-cell" },
+                { label: "Exercícios", className: "hidden lg:table-cell" },
+                { label: "Data início", className: "hidden md:table-cell" },
+                "Status",
+              ]}
               actionsCount={4}
               rows={6}
             />
@@ -227,13 +233,13 @@ export default function WorkoutsIndex() {
                     <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">
                       Nome
                     </th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">
+                    <th className="hidden px-4 py-3 text-left text-sm font-semibold text-foreground sm:table-cell">
                       Aluno
                     </th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">
+                    <th className="hidden px-4 py-3 text-left text-sm font-semibold text-foreground lg:table-cell">
                       Exercícios
                     </th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">
+                    <th className="hidden px-4 py-3 text-left text-sm font-semibold text-foreground md:table-cell">
                       Data início
                     </th>
                     <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">
@@ -252,14 +258,17 @@ export default function WorkoutsIndex() {
                     >
                       <td className="px-4 py-3 text-sm font-medium text-foreground">
                         {workout.name}
+                        <p className="mt-0.5 text-xs font-normal text-muted-foreground sm:hidden">
+                          {workout.student_profile?.user?.name || "—"}
+                        </p>
                       </td>
-                      <td className="px-4 py-3 text-sm text-muted-foreground">
+                      <td className="hidden px-4 py-3 text-sm text-muted-foreground sm:table-cell">
                         {workout.student_profile?.user?.name || "—"}
                       </td>
-                      <td className="px-4 py-3 text-sm text-muted-foreground">
+                      <td className="hidden px-4 py-3 text-sm text-muted-foreground lg:table-cell">
                         {workout.exercises_count ?? 0}
                       </td>
-                      <td className="px-4 py-3 text-sm text-muted-foreground">
+                      <td className="hidden px-4 py-3 text-sm text-muted-foreground md:table-cell">
                         {formatDateBR(workout.start_date)}
                       </td>
                       <td className="px-4 py-3">

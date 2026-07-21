@@ -109,13 +109,13 @@ export default function Dashboard() {
           emptyDescription="Assim que os alunos registrarem treinos, eles aparecerão aqui."
           columns={[
             { key: "student_name", label: "Aluno" },
-            { key: "workout_name", label: "Treino" },
+            { key: "workout_name", label: "Treino", className: "hidden sm:table-cell" },
             {
               key: "date",
               label: "Data",
               render: (row) => formatDate(row.date),
             },
-            { key: "time", label: "Horário" },
+            { key: "time", label: "Horário", className: "hidden sm:table-cell" },
           ]}
           onAction={(row) => navigate(`/trainer/checkins/workouts/${row.id}`)}
           delay={120}
@@ -153,7 +153,7 @@ export default function Dashboard() {
           emptyDescription="Nenhum aluno com pendência de Check-in Diário."
           columns={[
             { key: "name", label: "Aluno" },
-            { key: "phone", label: "Telefone" },
+            { key: "phone", label: "Telefone", className: "hidden sm:table-cell" },
             {
               key: "last_daily_checkin",
               label: "Último Check-in Diário",

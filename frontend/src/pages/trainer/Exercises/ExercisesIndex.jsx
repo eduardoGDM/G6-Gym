@@ -112,7 +112,11 @@ export default function ExercisesIndex() {
         {isLoading ? (
           <CardContent className="overflow-x-auto p-0">
             <TableSkeleton
-              columns={["Nome", "Grupo muscular", "Equipamento"]}
+              columns={[
+                "Nome",
+                { label: "Grupo muscular", className: "hidden sm:table-cell" },
+                { label: "Equipamento", className: "hidden md:table-cell" },
+              ]}
               actionsCount={3}
               rows={6}
             />
@@ -161,10 +165,10 @@ export default function ExercisesIndex() {
                     <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">
                       Nome
                     </th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">
+                    <th className="hidden px-4 py-3 text-left text-sm font-semibold text-foreground sm:table-cell">
                       Grupo muscular
                     </th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">
+                    <th className="hidden px-4 py-3 text-left text-sm font-semibold text-foreground md:table-cell">
                       Equipamento
                     </th>
                     <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">
@@ -180,11 +184,14 @@ export default function ExercisesIndex() {
                     >
                       <td className="px-4 py-3 text-sm font-medium text-foreground">
                         {exercise.name}
+                        <p className="mt-0.5 text-xs font-normal text-muted-foreground sm:hidden">
+                          {exercise.muscle_group?.name || "—"}
+                        </p>
                       </td>
-                      <td className="px-4 py-3 text-sm text-muted-foreground">
+                      <td className="hidden px-4 py-3 text-sm text-muted-foreground sm:table-cell">
                         {exercise.muscle_group?.name || "—"}
                       </td>
-                      <td className="px-4 py-3 text-sm text-muted-foreground">
+                      <td className="hidden px-4 py-3 text-sm text-muted-foreground md:table-cell">
                         {exercise.equipment || "—"}
                       </td>
                       <td className="px-4 py-3">

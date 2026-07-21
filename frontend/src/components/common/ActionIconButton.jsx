@@ -20,7 +20,7 @@ export default function ActionIconButton({
         aria-label={tooltip}
         disabled={disabled || loading}
         onClick={onClick}
-        className={cn("h-9 w-9 shrink-0 rounded-lg p-0", className)}
+        className={cn("h-10 w-10 shrink-0 rounded-lg p-0", className)}
       >
         {loading ? (
           <Spinner className="h-4 w-4" />

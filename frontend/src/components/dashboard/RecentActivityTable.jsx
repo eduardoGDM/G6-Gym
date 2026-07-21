@@ -2,6 +2,7 @@ import { Eye } from "lucide-react";
 import ActionIconButton from "../common/ActionIconButton";
 import TableSkeleton from "../loading/TableSkeleton";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
+import { cn } from "../../lib/utils";
 
 export default function RecentActivityTable({
   title,
@@ -28,7 +29,10 @@ export default function RecentActivityTable({
       {loading ? (
         <CardContent className="overflow-x-auto p-0 pt-0">
           <TableSkeleton
-            columns={columns.map((column) => column.label)}
+            columns={columns.map((column) => ({
+              label: column.label,
+              className: column.className,
+            }))}
             actionsCount={onAction ? 1 : 0}
             rows={4}
           />
@@ -57,7 +61,10 @@ export default function RecentActivityTable({
                 {columns.map((column) => (
                   <th
                     key={column.key}
-                    className="px-4 py-3 text-left text-sm font-semibold text-foreground"
+                    className={cn(
+                      "px-4 py-3 text-left text-sm font-semibold text-foreground",
+                      column.className,
+                    )}
                   >
                     {column.label}
                   </th>
@@ -78,7 +85,10 @@ export default function RecentActivityTable({
                   {columns.map((column) => (
                     <td
                       key={column.key}
-                      className="px-4 py-3 text-sm text-muted-foreground"
+                      className={cn(
+                        "px-4 py-3 text-sm text-muted-foreground",
+                        column.className,
+                      )}
                     >
                       {column.render ? column.render(row) : row[column.key] ?? "—"}
                     </td>

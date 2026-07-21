@@ -13,14 +13,22 @@ export default function TableSkeleton({
     <table className={cn("min-w-full divide-y divide-border/70", className)}>
       <thead className="bg-muted/30">
         <tr>
-          {columns.map((label, index) => (
-            <th
-              key={index}
-              className="px-4 py-3 text-left text-sm font-semibold text-foreground"
-            >
-              {label}
-            </th>
-          ))}
+          {columns.map((column, index) => {
+            const label = typeof column === "string" ? column : column.label;
+            const colClassName =
+              typeof column === "string" ? "" : column.className;
+            return (
+              <th
+                key={index}
+                className={cn(
+                  "px-4 py-3 text-left text-sm font-semibold text-foreground",
+                  colClassName,
+                )}
+              >
+                {label}
+              </th>
+            );
+          })}
           {actionsCount > 0 ? (
             <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">
               Ações
@@ -31,13 +39,17 @@ export default function TableSkeleton({
       <tbody className="divide-y divide-border/60 bg-card/70">
         {Array.from({ length: rows }).map((_, rowIndex) => (
           <tr key={rowIndex}>
-            {columns.map((_, colIndex) => (
-              <td key={colIndex} className="px-4 py-3">
-                <Skeleton
-                  className={cn("h-4", WIDTHS[(rowIndex + colIndex) % WIDTHS.length])}
-                />
-              </td>
-            ))}
+            {columns.map((column, colIndex) => {
+              const colClassName =
+                typeof column === "string" ? "" : column.className;
+              return (
+                <td key={colIndex} className={cn("px-4 py-3", colClassName)}>
+                  <Skeleton
+                    className={cn("h-4", WIDTHS[(rowIndex + colIndex) % WIDTHS.length])}
+                  />
+                </td>
+              );
+            })}
             {actionsCount > 0 ? (
               <td className="px-4 py-3">
                 <div className="flex flex-wrap items-center gap-2">

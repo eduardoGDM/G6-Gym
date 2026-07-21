@@ -106,7 +106,11 @@ export default function StudentsIndex() {
         {loading ? (
           <CardContent className="overflow-x-auto p-0">
             <TableSkeleton
-              columns={["Nome", "E-mail", "CPF"]}
+              columns={[
+                "Nome",
+                { label: "E-mail", className: "hidden sm:table-cell" },
+                { label: "CPF", className: "hidden md:table-cell" },
+              ]}
               actionsCount={4}
               rows={6}
             />
@@ -142,10 +146,10 @@ export default function StudentsIndex() {
                   <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">
                     Nome
                   </th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">
+                  <th className="hidden px-4 py-3 text-left text-sm font-semibold text-foreground sm:table-cell">
                     E-mail
                   </th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">
+                  <th className="hidden px-4 py-3 text-left text-sm font-semibold text-foreground md:table-cell">
                     CPF
                   </th>
                   <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">
@@ -161,11 +165,14 @@ export default function StudentsIndex() {
                   >
                     <td className="px-4 py-3 text-sm font-medium text-foreground">
                       {student.user?.name || "—"}
+                      <p className="mt-0.5 text-xs font-normal text-muted-foreground sm:hidden">
+                        {student.user?.email || "—"}
+                      </p>
                     </td>
-                    <td className="px-4 py-3 text-sm text-muted-foreground">
+                    <td className="hidden px-4 py-3 text-sm text-muted-foreground sm:table-cell">
                       {student.user?.email || "—"}
                     </td>
-                    <td className="px-4 py-3 text-sm text-muted-foreground">
+                    <td className="hidden px-4 py-3 text-sm text-muted-foreground md:table-cell">
                       {student.cpf || "—"}
                     </td>
                     <td className="px-4 py-3">

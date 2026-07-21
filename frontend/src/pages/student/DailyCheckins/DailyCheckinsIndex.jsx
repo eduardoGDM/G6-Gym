@@ -319,7 +319,12 @@ export default function DailyCheckinsIndex() {
         {isLoading ? (
           <CardContent className="overflow-x-auto p-0">
             <TableSkeleton
-              columns={["Data", "Sono", "Dieta", "Resumo das observações"]}
+              columns={[
+                "Data",
+                "Sono",
+                "Dieta",
+                { label: "Resumo das observações", className: "hidden sm:table-cell" },
+              ]}
               actionsCount={1}
               rows={6}
             />
@@ -365,7 +370,7 @@ export default function DailyCheckinsIndex() {
                     <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">
                       Dieta
                     </th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">
+                    <th className="hidden px-4 py-3 text-left text-sm font-semibold text-foreground sm:table-cell">
                       Resumo das observações
                     </th>
                     <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">
@@ -391,7 +396,7 @@ export default function DailyCheckinsIndex() {
                       <td className="px-4 py-3 text-sm text-muted-foreground">
                         {checkin.diet_rating}/10
                       </td>
-                      <td className="px-4 py-3 text-sm text-muted-foreground">
+                      <td className="hidden px-4 py-3 text-sm text-muted-foreground sm:table-cell">
                         {summarizeNotes(checkin)}
                       </td>
                       <td className="px-4 py-3">

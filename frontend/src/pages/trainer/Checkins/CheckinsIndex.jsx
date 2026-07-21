@@ -127,7 +127,13 @@ export default function CheckinsIndex() {
         {isLoading ? (
           <CardContent className="overflow-x-auto p-0">
             <TableSkeleton
-              columns={["Aluno", "Treino", "Data de execução", "Exercícios", "Registrado em"]}
+              columns={[
+                "Aluno",
+                "Treino",
+                { label: "Data de execução", className: "hidden sm:table-cell" },
+                { label: "Exercícios", className: "hidden md:table-cell" },
+                { label: "Registrado em", className: "hidden lg:table-cell" },
+              ]}
               actionsCount={1}
               rows={6}
             />
@@ -170,13 +176,13 @@ export default function CheckinsIndex() {
                     <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">
                       Treino
                     </th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">
+                    <th className="hidden px-4 py-3 text-left text-sm font-semibold text-foreground sm:table-cell">
                       Data de execução
                     </th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">
+                    <th className="hidden px-4 py-3 text-left text-sm font-semibold text-foreground md:table-cell">
                       Exercícios
                     </th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">
+                    <th className="hidden px-4 py-3 text-left text-sm font-semibold text-foreground lg:table-cell">
                       Registrado em
                     </th>
                     <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">
@@ -192,19 +198,22 @@ export default function CheckinsIndex() {
                     >
                       <td className="px-4 py-3 text-sm font-medium text-foreground">
                         {checkin.student_profile?.user?.name || "—"}
+                        <p className="mt-0.5 text-xs font-normal text-muted-foreground sm:hidden">
+                          {formatDate(checkin.performed_at)}
+                        </p>
                       </td>
                       <td className="px-4 py-3 text-sm text-muted-foreground">
                         {checkin.workout?.name || "Treino removido"}
                       </td>
-                      <td className="px-4 py-3 text-sm text-muted-foreground">
+                      <td className="hidden px-4 py-3 text-sm text-muted-foreground sm:table-cell">
                         {formatDate(checkin.performed_at)}
                       </td>
-                      <td className="px-4 py-3">
+                      <td className="hidden px-4 py-3 md:table-cell">
                         <Badge variant="outline">
                           {checkin.exercises_count ?? 0}
                         </Badge>
                       </td>
-                      <td className="px-4 py-3 text-sm text-muted-foreground">
+                      <td className="hidden px-4 py-3 text-sm text-muted-foreground lg:table-cell">
                         {formatDateTime(checkin.created_at)}
                       </td>
                       <td className="px-4 py-3">

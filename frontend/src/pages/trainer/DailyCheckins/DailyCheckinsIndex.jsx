@@ -140,11 +140,11 @@ export default function DailyCheckinsIndex() {
             <TableSkeleton
               columns={[
                 "Aluno",
-                "Data avaliada",
+                { label: "Data avaliada", className: "hidden sm:table-cell" },
                 "Nota do sono",
                 "Nota da dieta",
-                "Resumo das observações",
-                "Data de criação",
+                { label: "Resumo das observações", className: "hidden md:table-cell" },
+                { label: "Data de criação", className: "hidden lg:table-cell" },
               ]}
               actionsCount={1}
               rows={6}
@@ -185,7 +185,7 @@ export default function DailyCheckinsIndex() {
                     <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">
                       Aluno
                     </th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">
+                    <th className="hidden px-4 py-3 text-left text-sm font-semibold text-foreground sm:table-cell">
                       Data avaliada
                     </th>
                     <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">
@@ -194,10 +194,10 @@ export default function DailyCheckinsIndex() {
                     <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">
                       Nota da dieta
                     </th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">
+                    <th className="hidden px-4 py-3 text-left text-sm font-semibold text-foreground md:table-cell">
                       Resumo das observações
                     </th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">
+                    <th className="hidden px-4 py-3 text-left text-sm font-semibold text-foreground lg:table-cell">
                       Data de criação
                     </th>
                     <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">
@@ -213,8 +213,11 @@ export default function DailyCheckinsIndex() {
                     >
                       <td className="px-4 py-3 text-sm font-medium text-foreground">
                         {checkin.student_profile?.user?.name || "—"}
+                        <p className="mt-0.5 text-xs font-normal text-muted-foreground sm:hidden">
+                          {formatDate(checkin.date)}
+                        </p>
                       </td>
-                      <td className="px-4 py-3 text-sm text-muted-foreground">
+                      <td className="hidden px-4 py-3 text-sm text-muted-foreground sm:table-cell">
                         {formatDate(checkin.date)}
                       </td>
                       <td className="px-4 py-3">
@@ -223,10 +226,10 @@ export default function DailyCheckinsIndex() {
                       <td className="px-4 py-3">
                         <Badge variant="outline">{checkin.diet_rating}</Badge>
                       </td>
-                      <td className="px-4 py-3 text-sm text-muted-foreground">
+                      <td className="hidden px-4 py-3 text-sm text-muted-foreground md:table-cell">
                         {summarizeObservations(checkin)}
                       </td>
-                      <td className="px-4 py-3 text-sm text-muted-foreground">
+                      <td className="hidden px-4 py-3 text-sm text-muted-foreground lg:table-cell">
                         {formatDateTime(checkin.created_at)}
                       </td>
                       <td className="px-4 py-3">
