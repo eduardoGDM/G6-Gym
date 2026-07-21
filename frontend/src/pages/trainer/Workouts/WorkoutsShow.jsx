@@ -22,6 +22,14 @@ import {
   CardHeader,
   CardTitle,
 } from "../../../components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "../../../components/ui/table";
 import workoutsService from "../../../services/WorkoutsService";
 
 export default function WorkoutsShow() {
@@ -189,73 +197,49 @@ export default function WorkoutsShow() {
                               Nenhuma série detalhada para este exercício.
                             </p>
                           ) : (
-                            <div className="mt-3 overflow-x-auto">
-                              <table className="min-w-full divide-y divide-border/70">
-                                <thead>
-                                  <tr>
-                                    <th className="px-3 py-2 text-left text-xs font-semibold uppercase text-muted-foreground">
-                                      Série
-                                    </th>
-                                    <th className="px-3 py-2 text-left text-xs font-semibold uppercase text-muted-foreground">
-                                      Repetições
-                                    </th>
-                                    <th className="px-3 py-2 text-left text-xs font-semibold uppercase text-muted-foreground">
-                                      Carga
-                                    </th>
-                                    <th className="px-3 py-2 text-left text-xs font-semibold uppercase text-muted-foreground">
-                                      Descanso
-                                    </th>
-                                    <th className="px-3 py-2 text-left text-xs font-semibold uppercase text-muted-foreground">
-                                      RIR
-                                    </th>
-                                    <th className="px-3 py-2 text-left text-xs font-semibold uppercase text-muted-foreground">
-                                      Tempo
-                                    </th>
-                                    <th className="px-3 py-2 text-left text-xs font-semibold uppercase text-muted-foreground">
-                                      Cadência
-                                    </th>
-                                    <th className="px-3 py-2 text-left text-xs font-semibold uppercase text-muted-foreground">
-                                      Duração
-                                    </th>
-                                    <th className="px-3 py-2 text-left text-xs font-semibold uppercase text-muted-foreground">
-                                      Observação
-                                    </th>
-                                  </tr>
-                                </thead>
-                                <tbody className="divide-y divide-border/60">
-                                  {series.map((set, setIndex) => (
-                                    <tr key={set.id}>
-                                      <td className="px-3 py-2 text-sm text-muted-foreground">
-                                        {setIndex + 1}
-                                      </td>
-                                      <td className="px-3 py-2 text-sm text-muted-foreground">
-                                        {set.repetitions ?? "—"}
-                                      </td>
-                                      <td className="px-3 py-2 text-sm text-muted-foreground">
-                                        {set.weight ?? "—"}
-                                      </td>
-                                      <td className="px-3 py-2 text-sm text-muted-foreground">
-                                        {set.rest_time ?? "—"}
-                                      </td>
-                                      <td className="px-3 py-2 text-sm text-muted-foreground">
-                                        {set.rir ?? "—"}
-                                      </td>
-                                      <td className="px-3 py-2 text-sm text-muted-foreground">
-                                        {set.tempo || "—"}
-                                      </td>
-                                      <td className="px-3 py-2 text-sm text-muted-foreground">
-                                        {set.cadence || "—"}
-                                      </td>
-                                      <td className="px-3 py-2 text-sm text-muted-foreground">
-                                        {set.duration ?? "—"}
-                                      </td>
-                                      <td className="px-3 py-2 text-sm text-muted-foreground">
-                                        {set.notes || "—"}
-                                      </td>
-                                    </tr>
-                                  ))}
-                                </tbody>
-                              </table>
+                            <div className="mt-3 overflow-hidden rounded-xl border border-border/60">
+                              <div className="overflow-x-auto">
+                                <Table>
+                                  <TableHeader>
+                                    <TableRow hoverable={false}>
+                                      <TableHead className="text-xs uppercase">Série</TableHead>
+                                      <TableHead className="text-xs uppercase">
+                                        Repetições
+                                      </TableHead>
+                                      <TableHead className="text-xs uppercase">Carga</TableHead>
+                                      <TableHead className="text-xs uppercase">
+                                        Descanso
+                                      </TableHead>
+                                      <TableHead className="text-xs uppercase">RIR</TableHead>
+                                      <TableHead className="text-xs uppercase">Tempo</TableHead>
+                                      <TableHead className="text-xs uppercase">
+                                        Cadência
+                                      </TableHead>
+                                      <TableHead className="text-xs uppercase">
+                                        Duração
+                                      </TableHead>
+                                      <TableHead className="text-xs uppercase">
+                                        Observação
+                                      </TableHead>
+                                    </TableRow>
+                                  </TableHeader>
+                                  <TableBody>
+                                    {series.map((set, setIndex) => (
+                                      <TableRow key={set.id} hoverable={false}>
+                                        <TableCell>{setIndex + 1}</TableCell>
+                                        <TableCell>{set.repetitions ?? "—"}</TableCell>
+                                        <TableCell>{set.weight ?? "—"}</TableCell>
+                                        <TableCell>{set.rest_time ?? "—"}</TableCell>
+                                        <TableCell>{set.rir ?? "—"}</TableCell>
+                                        <TableCell>{set.tempo || "—"}</TableCell>
+                                        <TableCell>{set.cadence || "—"}</TableCell>
+                                        <TableCell>{set.duration ?? "—"}</TableCell>
+                                        <TableCell>{set.notes || "—"}</TableCell>
+                                      </TableRow>
+                                    ))}
+                                  </TableBody>
+                                </Table>
+                              </div>
                             </div>
                           )}
                         </div>
