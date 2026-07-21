@@ -1,10 +1,11 @@
 import { yupResolver } from "@hookform/resolvers/yup";
-import { ArrowLeft, Save } from "lucide-react";
+import { ArrowLeft, Save, Video } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useFieldArray, useForm } from "react-hook-form";
 import toast from "react-hot-toast";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 
+import ActionIconButton from "../../components/common/ActionIconButton";
 import { crudToast } from "../../components/common/crudToast";
 import PageContainer from "../../components/common/PageContainer";
 import PageTitle from "../../components/common/PageTitle";
@@ -51,6 +52,7 @@ const buildExerciseDefaults = (workoutExercises = [], checkin = null) => {
         exercise_id: item.exercise_id,
         exercise_name: item.exercise?.name || `Exercício #${item.exercise_id}`,
         muscle_group: item.exercise?.muscle_group?.name || "",
+        video_url: item.exercise?.video_url || null,
         notes: existingExercise?.notes || "",
         sets: series.map((s) => {
           const existingSet = existingSetByNumber.get(s.order);
@@ -344,6 +346,20 @@ export default function Workout() {
                             <Badge variant="outline">
                               {field.muscle_group}
                             </Badge>
+                          ) : null}
+                          {field.video_url ? (
+                            <ActionIconButton
+                              icon={Video}
+                              tooltip="Assistir demonstração do exercício"
+                              onClick={() =>
+                                window.open(
+                                  field.video_url,
+                                  "_blank",
+                                  "noopener,noreferrer",
+                                )
+                              }
+                              className="h-8 w-8"
+                            />
                           ) : null}
                         </div>
 
