@@ -5,8 +5,8 @@ import { Controller, useFieldArray, useForm } from "react-hook-form";
 import toast from "react-hot-toast";
 import { useNavigate, useParams } from "react-router-dom";
 
-import PageContainer from "../../../components/common/PageContainer";
 import { crudToast } from "../../../components/common/crudToast";
+import PageContainer from "../../../components/common/PageContainer";
 import PageTitle from "../../../components/common/PageTitle";
 import Spinner from "../../../components/common/Spinner";
 import FormSkeleton from "../../../components/loading/FormSkeleton";
@@ -242,7 +242,7 @@ export default function WorkoutsNewEdit() {
           </CardTitle>
           <CardDescription>
             {isEdit
-              ? "Atualize as informações do treino conforme as regras do controller."
+              ? "Atualize as informações do treino."
               : "Preencha os campos necessários para montar um novo treino."}
           </CardDescription>
         </CardHeader>
@@ -332,7 +332,9 @@ export default function WorkoutsNewEdit() {
               </div>
 
               <div className="space-y-2 border-t border-border/80 pt-6">
-                <Label htmlFor="muscle_groups">Grupos musculares do treino</Label>
+                <Label htmlFor="muscle_groups">
+                  Grupos musculares do treino
+                </Label>
                 <p className="text-sm text-muted-foreground">
                   Selecione os grupos trabalhados para filtrar a lista de
                   exercícios abaixo. Deixe em branco para ver todos.
@@ -357,8 +359,8 @@ export default function WorkoutsNewEdit() {
                     Exercícios do treino
                   </h3>
                   <p className="text-sm text-muted-foreground">
-                    Busque e adicione os exercícios, monte as séries de cada
-                    um e use as setas para reordenar.
+                    Busque e adicione os exercícios, monte as séries de cada um
+                    e use as setas para reordenar.
                   </p>
                 </div>
 

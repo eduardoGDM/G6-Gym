@@ -38,7 +38,7 @@ export default function StudentsIndex() {
   }, []);
 
   const handleDelete = async (id) => {
-    if (!window.confirm("Deseja realmente excluir este student?")) {
+    if (!window.confirm("Deseja realmente excluir este aluno?")) {
       return;
     }
 

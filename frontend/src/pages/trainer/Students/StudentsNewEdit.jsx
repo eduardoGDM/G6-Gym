@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
 import { useNavigate, useParams } from "react-router-dom";
 
+import { crudToast } from "../../../components/common/crudToast";
 import PageContainer from "../../../components/common/PageContainer";
 import PageTitle from "../../../components/common/PageTitle";
 import Spinner from "../../../components/common/Spinner";
@@ -21,7 +22,6 @@ import { Input } from "../../../components/ui/input";
 import { Label } from "../../../components/ui/label";
 import { Select } from "../../../components/ui/select";
 import { Textarea } from "../../../components/ui/textarea";
-import { crudToast } from "../../../components/common/crudToast";
 import studentsService from "../../../services/StudentsService";
 import AnamnesisSection from "./components/AnamnesisSection";
 import {
@@ -77,10 +77,10 @@ export default function StudentsNewEdit() {
   const pageTitle = useMemo(
     () => ({
       eyebrow: isEdit ? "Edição" : "Cadastro",
-      title: isEdit ? "Editar student" : "Novo student",
+      title: isEdit ? "Editar aluno" : "Novo aluno",
       description: isEdit
-        ? "Atualize os dados do student selecionado."
-        : "Preencha os campos abaixo para criar um novo student.",
+        ? "Atualize os dados do aluno selecionado."
+        : "Preencha os campos abaixo para criar um novo aluno.",
     }),
     [isEdit],
   );
@@ -107,7 +107,7 @@ export default function StudentsNewEdit() {
           observations: data.observations || "",
         });
       } catch (error) {
-        toast.error("Não foi possível carregar os dados do student.");
+        toast.error("Não foi possível carregar os dados do aluno.");
       } finally {
         setInitialLoading(false);
       }
@@ -185,7 +185,7 @@ export default function StudentsNewEdit() {
           </CardTitle>
           <CardDescription>
             {isEdit
-              ? "Atualize as informações do aluno conforme as regras do controller."
+              ? "Atualize as informações do aluno."
               : "Preencha os campos necessários para cadastrar um novo aluno."}
           </CardDescription>
         </CardHeader>
@@ -373,7 +373,7 @@ export default function StudentsNewEdit() {
                   <Label htmlFor="observations">Observações</Label>
                   <Textarea
                     id="observations"
-                    placeholder="Observações do student"
+                    placeholder="Observações do aluno"
                     {...register("observations")}
                   />
                   {errors.observations ? (
@@ -402,7 +402,7 @@ export default function StudentsNewEdit() {
                     ? "Salvando..."
                     : isEdit
                       ? "Salvar alterações"
-                      : "Criar student"}
+                      : "Criar aluno"}
                 </Button>
               </div>
             </form>
@@ -414,8 +414,8 @@ export default function StudentsNewEdit() {
         <AnamnesisSection studentId={id} />
       ) : !isEdit ? (
         <div className="mt-6 rounded-2xl border border-dashed border-border/80 bg-card/60 p-6 text-center text-sm text-muted-foreground">
-          A seção de Anamnese (observações, fotos e vídeos) ficará disponível após a
-          criação do cadastro do aluno.
+          A seção de Anamnese (observações, fotos e vídeos) ficará disponível
+          após a criação do cadastro do aluno.
         </div>
       ) : null}
     </PageContainer>

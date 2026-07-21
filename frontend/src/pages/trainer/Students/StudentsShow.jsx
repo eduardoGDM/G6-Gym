@@ -34,7 +34,7 @@ export default function StudentsShow() {
       setStudent(data);
     } catch {
       setError(true);
-      toast.error("Não foi possível carregar o student.");
+      toast.error("Não foi possível carregar o aluno.");
     } finally {
       setLoading(false);
     }
@@ -50,7 +50,7 @@ export default function StudentsShow() {
         <PageTitle
           eyebrow="Visualização"
           title="Detalhes do aluno"
-          description="Consulte todos os dados cadastrados para este student."
+          description="Consulte todos os dados cadastrados para este aluno."
         />
 
         <Button

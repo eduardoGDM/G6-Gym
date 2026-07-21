@@ -5,8 +5,8 @@ import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
 import { useNavigate, useParams } from "react-router-dom";
 
-import PageContainer from "../../../components/common/PageContainer";
 import { crudToast } from "../../../components/common/crudToast";
+import PageContainer from "../../../components/common/PageContainer";
 import PageTitle from "../../../components/common/PageTitle";
 import Spinner from "../../../components/common/Spinner";
 import FormSkeleton from "../../../components/loading/FormSkeleton";
@@ -152,7 +152,7 @@ export default function ExercisesNewEdit() {
           </CardTitle>
           <CardDescription>
             {isEdit
-              ? "Atualize as informações do exercício conforme as regras do controller."
+              ? "Atualize as informações do exercício."
               : "Preencha os campos necessários para cadastrar um novo exercício."}
           </CardDescription>
         </CardHeader>
