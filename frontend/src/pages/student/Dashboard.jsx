@@ -12,7 +12,10 @@ import PageContainer from "../../components/common/PageContainer";
 import PageTitle from "../../components/common/PageTitle";
 import RecentActivityTable from "../../components/dashboard/RecentActivityTable";
 import StatCard from "../../components/dashboard/StatCard";
+import StreakCard from "../../components/student/StreakCard";
+import WeekConsistency from "../../components/student/WeekConsistency";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
+import gamificationService from "../../services/GamificationService";
 import studentDashboardService from "../../services/StudentDashboardService";
 import useAuthStore from "../../store/authStore";
 import { getGreeting } from "../../utils/greeting";
@@ -40,6 +43,11 @@ export default function Dashboard() {
   const { data: evolution, isLoading: isLoadingEvolution } = useQuery({
     queryKey: ["student-dashboard-evolution"],
     queryFn: studentDashboardService.evolution,
+  });
+
+  const { data: gamification, isLoading: isLoadingGamification } = useQuery({
+    queryKey: ["student-gamification-summary"],
+    queryFn: gamificationService.summary,
   });
 
   const stats = [
@@ -89,6 +97,19 @@ export default function Dashboard() {
         title="Vamos continuar evoluindo hoje"
         description="Acompanhe seus treinos e sua evolução em um único lugar."
       />
+
+      <div className="mb-6 grid gap-4 lg:grid-cols-[minmax(220px,1fr)_2fr]">
+        <StreakCard
+          current={gamification?.streak?.current ?? 0}
+          longest={gamification?.streak?.longest ?? 0}
+          loading={isLoadingGamification}
+        />
+        <WeekConsistency
+          days={gamification?.week || []}
+          sleep={gamification?.sleep}
+          loading={isLoadingGamification}
+        />
+      </div>
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {stats.map((stat, index) => (

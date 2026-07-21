@@ -14,6 +14,7 @@ import PageContainer from "../../../components/common/PageContainer";
 import PageTitle from "../../../components/common/PageTitle";
 import { crudToast } from "../../../components/common/crudToast";
 import Spinner from "../../../components/common/Spinner";
+import QualityDot from "../../../components/student/QualityDot";
 import { Button } from "../../../components/ui/button";
 import {
   Card,
@@ -186,12 +187,22 @@ export default function DailyCheckinsIndex() {
     {
       key: "sleep_rating",
       label: "Sono",
-      render: (checkin) => `${checkin.sleep_rating}/10`,
+      render: (checkin) => (
+        <div className="flex items-center gap-2">
+          <QualityDot level={checkin.sleep_level} />
+          {checkin.sleep_rating}/10
+        </div>
+      ),
     },
     {
       key: "diet_rating",
       label: "Dieta",
-      render: (checkin) => `${checkin.diet_rating}/10`,
+      render: (checkin) => (
+        <div className="flex items-center gap-2">
+          <QualityDot level={checkin.diet_level} />
+          {checkin.diet_rating}/10
+        </div>
+      ),
     },
     {
       key: "summary",

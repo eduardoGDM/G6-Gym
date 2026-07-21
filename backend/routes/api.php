@@ -20,6 +20,7 @@ use App\Http\Controllers\Api\Student\WorkoutController as StudentWorkoutControll
 use App\Http\Controllers\Api\Student\WorkoutCheckinController;
 use App\Http\Controllers\Api\Student\DailyCheckinController;
 use App\Http\Controllers\Api\Student\DashboardController as StudentDashboardController;
+use App\Http\Controllers\Api\Student\GamificationController as StudentGamificationController;
 use App\Http\Controllers\Api\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Api\Admin\TrainerController as AdminTrainerController;
 use App\Http\Controllers\Api\Admin\StudentController as AdminStudentController;
@@ -81,6 +82,8 @@ Route::middleware('auth:sanctum')->group(function () {
 			Route::get('/dashboard/summary', [StudentDashboardController::class, 'summary']);
 			Route::get('/dashboard/recent-workouts', [StudentDashboardController::class, 'recentWorkouts']);
 			Route::get('/dashboard/evolution', [StudentDashboardController::class, 'evolution']);
+
+			Route::get('/gamification/summary', [StudentGamificationController::class, 'summary']);
 
 			Route::get('/my-workouts', [StudentWorkoutController::class, 'index']);
 			Route::get('/workout/{id}', [StudentWorkoutController::class, 'show']);

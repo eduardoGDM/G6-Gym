@@ -1,6 +1,14 @@
 import { yupResolver } from "@hookform/resolvers/yup";
-import { ArrowLeft, Save, Video } from "lucide-react";
-import { useEffect, useState } from "react";
+import {
+  ArrowLeft,
+  Check,
+  CloudOff,
+  Loader2,
+  Save,
+  TriangleAlert,
+  Video,
+} from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useFieldArray, useForm } from "react-hook-form";
 import toast from "react-hot-toast";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
@@ -10,6 +18,11 @@ import { crudToast } from "../../components/common/crudToast";
 import PageContainer from "../../components/common/PageContainer";
 import PageTitle from "../../components/common/PageTitle";
 import Spinner from "../../components/common/Spinner";
+import {
+  AUTOSAVE_STATUS,
+  readCheckinDraft,
+  useCheckinAutosave,
+} from "../../hooks/useCheckinAutosave";
 import FormSkeleton from "../../components/loading/FormSkeleton";
 import ListSkeleton from "../../components/loading/ListSkeleton";
 import { Badge } from "../../components/ui/badge";
@@ -24,12 +37,31 @@ import {
 import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
 import { Textarea } from "../../components/ui/textarea";
+import { showWorkoutFeedbackToast } from "../../components/student/workoutFeedbackToast";
+import gamificationService from "../../services/GamificationService";
 import workoutCheckinsService from "../../services/WorkoutCheckinsService";
 import workoutsService from "../../services/WorkoutsService";
 import { checkinSchema, getTodayISO } from "./utils/checkinSchema";
 
 const emptyToNull = (value) =>
   value === "" || value === undefined ? null : value;
+
+const buildCheckinPayload = (workoutId, data) => ({
+  workout_id: Number(workoutId),
+  performed_at: data.performed_at,
+  notes: emptyToNull(data.notes),
+  exercises: (data.exercises || []).map((item) => ({
+    exercise_id: item.exercise_id,
+    notes: emptyToNull(item.notes),
+    sets: (item.sets || []).map((set) => ({
+      set_number: set.set_number,
+      performed_weight: emptyToNull(set.performed_weight),
+      performed_repetitions: emptyToNull(set.performed_repetitions),
+      performed_rest_time: emptyToNull(set.performed_rest_time),
+      notes: emptyToNull(set.notes),
+    })),
+  })),
+});
 
 const buildExerciseDefaults = (workoutExercises = [], checkin = null) => {
   const checkinByExerciseId = new Map(
@@ -74,6 +106,57 @@ const buildExerciseDefaults = (workoutExercises = [], checkin = null) => {
     });
 };
 
+const AUTOSAVE_INDICATOR = {
+  [AUTOSAVE_STATUS.PENDING]: {
+    icon: Loader2,
+    label: "Alterações não salvas…",
+    className: "text-muted-foreground",
+    spin: false,
+  },
+  [AUTOSAVE_STATUS.SAVING]: {
+    icon: Loader2,
+    label: "Salvando…",
+    className: "text-muted-foreground",
+    spin: true,
+  },
+  [AUTOSAVE_STATUS.SAVED]: {
+    icon: Check,
+    label: "Salvo automaticamente",
+    className: "text-emerald-500",
+    spin: false,
+  },
+  [AUTOSAVE_STATUS.OFFLINE]: {
+    icon: CloudOff,
+    label: "Sem conexão. Tentaremos salvar novamente.",
+    className: "text-amber-500",
+    spin: false,
+  },
+  [AUTOSAVE_STATUS.ERROR]: {
+    icon: TriangleAlert,
+    label: "Erro ao salvar",
+    className: "text-red-400",
+    spin: false,
+  },
+};
+
+function AutosaveIndicator({ status }) {
+  const config = AUTOSAVE_INDICATOR[status];
+  if (!config) return null;
+
+  const Icon = config.icon;
+
+  return (
+    <div
+      className={`flex items-center gap-2 text-sm font-medium ${config.className}`}
+      role="status"
+      aria-live="polite"
+    >
+      <Icon className={`h-4 w-4 ${config.spin ? "animate-spin" : ""}`} />
+      <span>{config.label}</span>
+    </div>
+  );
+}
+
 export default function Workout() {
   const { id } = useParams();
   const [searchParams] = useSearchParams();
@@ -92,6 +175,7 @@ export default function Workout() {
     control,
     handleSubmit,
     reset,
+    watch,
     formState: { errors },
   } = useForm({
     resolver: yupResolver(checkinSchema),
@@ -103,6 +187,40 @@ export default function Workout() {
   });
 
   const { fields } = useFieldArray({ control, name: "exercises" });
+
+  // Chave estável do rascunho local: fixa por sessão de edição, para não "mudar"
+  // quando o autosave criar o check-in (ou o aluno alterar a data do treino).
+  const draftId = useMemo(
+    () =>
+      `checkin-draft:${checkinIdParam ? `id:${checkinIdParam}` : `workout:${id}`}`,
+    [checkinIdParam, id],
+  );
+
+  const buildPayload = useCallback(
+    (values) => buildCheckinPayload(id, values),
+    [id],
+  );
+
+  const draftToSyncRef = useRef(null);
+
+  const { status: autosaveStatus, saveNow } = useCheckinAutosave({
+    watch,
+    enabled: !loading && !notFound && Boolean(workout),
+    checkinId,
+    onCheckinCreated: setCheckinId,
+    buildPayload,
+    draftId,
+  });
+
+  // Rascunho local recuperado ao reabrir a página é sincronizado com a API
+  // assim que o carregamento termina, sem depender de nova digitação.
+  useEffect(() => {
+    if (!loading && !notFound && workout && draftToSyncRef.current) {
+      const draft = draftToSyncRef.current;
+      draftToSyncRef.current = null;
+      saveNow(draft);
+    }
+  }, [loading, notFound, workout, saveNow]);
 
   useEffect(() => {
     let active = true;
@@ -137,7 +255,7 @@ export default function Workout() {
 
         setCheckinId(checkin?.id || null);
 
-        reset({
+        const serverValues = {
           performed_at: checkin?.performed_at
             ? checkin.performed_at.slice(0, 10)
             : getTodayISO(),
@@ -146,7 +264,14 @@ export default function Workout() {
             workoutData.workout_exercises,
             checkin,
           ),
-        });
+        };
+
+        // Rascunho local não sincronizado (fechamento inesperado ou falha de rede
+        // na sessão anterior) tem prioridade sobre os dados do servidor e é
+        // reenviado após o carregamento.
+        const draft = readCheckinDraft(draftId);
+        reset(draft ?? serverValues);
+        if (draft) draftToSyncRef.current = draft;
       } catch (error) {
         if (!active) return;
         if (error.response?.status === 404) {
@@ -164,28 +289,13 @@ export default function Workout() {
     return () => {
       active = false;
     };
-  }, [id, checkinIdParam, reset]);
+  }, [id, checkinIdParam, reset, draftId]);
 
   const submitCheckin = async (data) => {
     try {
       setSubmitting(true);
 
-      const payload = {
-        workout_id: Number(id),
-        performed_at: data.performed_at,
-        notes: emptyToNull(data.notes),
-        exercises: data.exercises.map((item) => ({
-          exercise_id: item.exercise_id,
-          notes: emptyToNull(item.notes),
-          sets: (item.sets || []).map((set) => ({
-            set_number: set.set_number,
-            performed_weight: emptyToNull(set.performed_weight),
-            performed_repetitions: emptyToNull(set.performed_repetitions),
-            performed_rest_time: emptyToNull(set.performed_rest_time),
-            notes: emptyToNull(set.notes),
-          })),
-        })),
-      };
+      const payload = buildCheckinPayload(id, data);
 
       const request = checkinId
         ? workoutCheckinsService.update(checkinId, payload)
@@ -195,6 +305,15 @@ export default function Workout() {
         action: checkinId ? "update" : "create",
         entity: "Check-in",
       });
+
+      // Feedback de gamificação (streak + sono) após concluir — não bloqueia o
+      // fluxo caso a chamada falhe.
+      try {
+        const feedback = await gamificationService.summary();
+        showWorkoutFeedbackToast(feedback);
+      } catch {
+        // silencioso: o check-in já foi salvo com sucesso
+      }
 
       navigate("/student/my-workouts");
     } catch {
@@ -273,14 +392,18 @@ export default function Workout() {
       ) : (
         <Card className="border-border/80 bg-card/90">
           <CardHeader className="border-b border-border/80 px-6 py-6 sm:px-8">
-            <CardTitle className="text-2xl">
-              {checkinId ? "Editar check-in" : "Registrar check-in"}
-            </CardTitle>
-            <CardDescription>
-              {checkinId
-                ? "Você já registrou este treino nesta data. Ajuste os valores se necessário."
-                : "Preencha os dados de cada exercício conforme você realizou o treino."}
-            </CardDescription>
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+              <div className="space-y-1.5">
+                <CardTitle className="text-2xl">
+                  {checkinId ? "Editar check-in" : "Registrar check-in"}
+                </CardTitle>
+                <CardDescription>
+                  Seus dados são salvos automaticamente enquanto você preenche —
+                  não é necessário clicar em salvar.
+                </CardDescription>
+              </div>
+              <AutosaveIndicator status={autosaveStatus} />
+            </div>
           </CardHeader>
 
           <CardContent className="px-6 py-6 sm:px-8">
@@ -473,26 +596,33 @@ export default function Workout() {
                 </div>
               </div>
 
-              <div className="flex flex-col gap-3 border-t border-border/80 pt-6 md:flex-row md:justify-end">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => navigate("/student/my-workouts")}
-                >
-                  Cancelar
-                </Button>
-                <Button type="submit" disabled={submitting}>
-                  {submitting ? (
-                    <Spinner className="h-4 w-4" />
-                  ) : (
-                    <Save className="h-4 w-4" />
-                  )}
-                  {submitting
-                    ? "Salvando..."
-                    : checkinId
-                      ? "Salvar alterações"
-                      : "Concluir treino"}
-                </Button>
+              <div className="flex flex-col gap-3 border-t border-border/80 pt-6 md:flex-row md:items-center md:justify-between">
+                <p className="text-sm text-muted-foreground">
+                  Suas informações já são salvas automaticamente. Use o botão
+                  apenas para concluir e voltar.
+                </p>
+                <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => navigate("/student/my-workouts")}
+                  >
+                    Voltar
+                  </Button>
+                  <Button
+                    type="submit"
+                    disabled={
+                      submitting || autosaveStatus === AUTOSAVE_STATUS.SAVING
+                    }
+                  >
+                    {submitting ? (
+                      <Spinner className="h-4 w-4" />
+                    ) : (
+                      <Save className="h-4 w-4" />
+                    )}
+                    {submitting ? "Salvando..." : "Concluir treino"}
+                  </Button>
+                </div>
               </div>
             </form>
           </CardContent>
