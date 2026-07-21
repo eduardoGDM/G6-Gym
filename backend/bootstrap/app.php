@@ -16,6 +16,7 @@ return Application::configure(basePath: dirname(__DIR__))
 	)
 	->withMiddleware(function (Middleware $middleware): void {
 		$middleware->statefulApi();
+		$middleware->throttleApi();
 
 		$middleware->alias([
 			'verified' => \App\Http\Middleware\EnsureEmailIsVerified::class,

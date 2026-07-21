@@ -7,13 +7,26 @@ use App\Http\Requests\Trainer\StoreStudentAnamnesisVideoRequest;
 use App\Models\StudentAnamnesis;
 use App\Models\StudentAnamnesisAttachment;
 use App\Models\StudentProfile;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
 class StudentAnamnesisVideoController extends Controller
 {
+	/**
+	 * Admin tem visão global; trainer só acessa alunos vinculados a ele.
+	 */
+	private function scopeToTrainer($query, Request $request)
+	{
+		if ($request->user()->role === 'admin') {
+			return $query;
+		}
+
+		return $query->where('trainer_id', $request->user()->id);
+	}
+
 	public function store(StoreStudentAnamnesisVideoRequest $request, $student)
 	{
-		$studentProfile = StudentProfile::find($student);
+		$studentProfile = $this->scopeToTrainer(StudentProfile::query(), $request)->find($student);
 
 		if (!$studentProfile) {
 			return response()->json(['message' => 'Aluno não encontrado'], 404);
@@ -37,9 +50,9 @@ class StudentAnamnesisVideoController extends Controller
 		], 201);
 	}
 
-	public function destroy($student, $video)
+	public function destroy(Request $request, $student, $video)
 	{
-		$studentProfile = StudentProfile::find($student);
+		$studentProfile = $this->scopeToTrainer(StudentProfile::query(), $request)->find($student);
 
 		if (!$studentProfile) {
 			return response()->json(['message' => 'Aluno não encontrado'], 404);

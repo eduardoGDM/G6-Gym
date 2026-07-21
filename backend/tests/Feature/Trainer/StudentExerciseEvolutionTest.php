@@ -22,6 +22,7 @@ class StudentExerciseEvolutionTest extends TestCase
 		$studentUser = User::factory()->create(['role' => 'student']);
 		$studentProfile = StudentProfile::create([
 			'user_id' => $studentUser->id,
+			'trainer_id' => $trainer->id,
 			'cpf' => fake()->unique()->numerify('###########'),
 			'phone' => '11999999999',
 		]);
@@ -155,8 +156,7 @@ class StudentExerciseEvolutionTest extends TestCase
 			"/api/trainer/students/{$studentProfile->id}/exercises/{$exercise->id}/evolution",
 		);
 
-		$response->assertOk();
-		$response->assertJsonCount(0, 'points');
+		$response->assertStatus(404);
 	}
 
 	public function test_returns_422_when_exercise_does_not_belong_to_given_muscle_group(): void
@@ -254,7 +254,6 @@ class StudentExerciseEvolutionTest extends TestCase
 			"/api/trainer/students/{$studentProfile->id}/checkins/muscle-groups",
 		);
 
-		$response->assertOk();
-		$response->assertJsonCount(0);
+		$response->assertStatus(404);
 	}
 }

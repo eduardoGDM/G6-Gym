@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Trainer;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 use App\Models\WorkoutExercise;
 use App\Models\WorkoutExerciseSeries;
 
@@ -23,11 +24,14 @@ class WorkoutExerciseController extends Controller
 		'series.*.notes' => 'nullable|string',
 	];
 
-	public function index($workoutId)
+	public function index(Request $request, $workoutId)
 	{
 		return response()->json(
 			WorkoutExercise::with('exercise', 'series')
 				->where('workout_id', $workoutId)
+				->whereHas('workout', function ($query) use ($request) {
+					$query->where('trainer_id', $request->user()->id);
+				})
 				->orderBy('order')
 				->get()
 		);
@@ -36,7 +40,10 @@ class WorkoutExerciseController extends Controller
 	public function store(Request $request)
 	{
 		$request->validate(array_merge([
-			'workout_id' => 'required|exists:workouts,id',
+			'workout_id' => [
+				'required',
+				Rule::exists('workouts', 'id')->where('trainer_id', $request->user()->id),
+			],
 			'exercise_id' => 'required|exists:exercises,id',
 			'order' => 'nullable|integer|min:1',
 			'notes' => 'nullable|string',
@@ -76,9 +83,12 @@ class WorkoutExerciseController extends Controller
 		], 201);
 	}
 
-	public function show($id)
+	public function show(Request $request, $id)
 	{
 		$workoutExercise = WorkoutExercise::with(['exercise', 'workout', 'series'])
+			->whereHas('workout', function ($query) use ($request) {
+				$query->where('trainer_id', $request->user()->id);
+			})
 			->find($id);
 
 		if (!$workoutExercise) {
@@ -92,7 +102,9 @@ class WorkoutExerciseController extends Controller
 
 	public function update(Request $request, $id)
 	{
-		$workoutExercise = WorkoutExercise::find($id);
+		$workoutExercise = WorkoutExercise::whereHas('workout', function ($query) use ($request) {
+			$query->where('trainer_id', $request->user()->id);
+		})->find($id);
 
 		if (!$workoutExercise) {
 			return response()->json([
@@ -139,9 +151,11 @@ class WorkoutExerciseController extends Controller
 		]);
 	}
 
-	public function destroy($id)
+	public function destroy(Request $request, $id)
 	{
-		$workoutExercise = WorkoutExercise::find($id);
+		$workoutExercise = WorkoutExercise::whereHas('workout', function ($query) use ($request) {
+			$query->where('trainer_id', $request->user()->id);
+		})->find($id);
 
 		if (!$workoutExercise) {
 			return response()->json([

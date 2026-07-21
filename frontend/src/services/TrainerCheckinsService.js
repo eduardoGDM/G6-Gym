@@ -1,7 +1,12 @@
 import { sanctumRequest } from "../sanctumRequest";
 
 const trainerCheckinsService = {
-  async search({ page = 1, perPage = 10, studentProfileId = "", date = "" } = {}) {
+  async search({
+    page = 1,
+    perPage = 10,
+    studentProfileId = "",
+    date = "",
+  } = {}) {
     const { data } = await sanctumRequest(
       "get",
       "/trainer/checkins",

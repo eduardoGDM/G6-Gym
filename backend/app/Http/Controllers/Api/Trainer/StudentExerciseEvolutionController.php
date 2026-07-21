@@ -18,7 +18,7 @@ class StudentExerciseEvolutionController extends Controller
 	public function muscleGroups(Request $request, $student)
 	{
 		$trainerId = $request->user()->id;
-		$studentProfile = StudentProfile::find($student);
+		$studentProfile = StudentProfile::where('trainer_id', $trainerId)->find($student);
 
 		if (!$studentProfile) {
 			return response()->json([
@@ -51,7 +51,7 @@ class StudentExerciseEvolutionController extends Controller
 
 		$trainerId = $request->user()->id;
 		$muscleGroupId = $request->input('muscle_group_id');
-		$studentProfile = StudentProfile::find($student);
+		$studentProfile = StudentProfile::where('trainer_id', $trainerId)->find($student);
 
 		if (!$studentProfile) {
 			return response()->json([
@@ -114,7 +114,7 @@ class StudentExerciseEvolutionController extends Controller
 		$startDate = $request->input('start_date');
 		$endDate = $request->input('end_date');
 
-		$studentProfile = StudentProfile::find($student);
+		$studentProfile = StudentProfile::where('trainer_id', $trainerId)->find($student);
 
 		if (!$studentProfile) {
 			return response()->json([

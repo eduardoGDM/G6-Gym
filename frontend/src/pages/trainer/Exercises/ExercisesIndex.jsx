@@ -1,4 +1,8 @@
-import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  keepPreviousData,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { Dumbbell, Eye, Pencil, Plus, Search, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
@@ -27,7 +31,8 @@ export default function ExercisesIndex() {
 
   const debouncedSearch = useDebouncedValue(search, 500);
 
-  const [lastDebouncedSearch, setLastDebouncedSearch] = useState(debouncedSearch);
+  const [lastDebouncedSearch, setLastDebouncedSearch] =
+    useState(debouncedSearch);
   if (debouncedSearch !== lastDebouncedSearch) {
     setLastDebouncedSearch(debouncedSearch);
     setPage(1);
@@ -170,7 +175,9 @@ export default function ExercisesIndex() {
         emptyIcon={Dumbbell}
         emptyTone="secondary"
         emptyTitle={
-          debouncedSearch ? "Nenhum exercício encontrado" : "Nenhum exercício cadastrado"
+          debouncedSearch
+            ? "Nenhum exercício encontrado"
+            : "Nenhum exercício cadastrado"
         }
         emptyDescription={
           debouncedSearch
@@ -179,7 +186,10 @@ export default function ExercisesIndex() {
         }
         emptyAction={
           !debouncedSearch ? (
-            <Button variant="outline" onClick={() => navigate("/trainer/exercises/new")}>
+            <Button
+              variant="outline"
+              onClick={() => navigate("/trainer/exercises/new")}
+            >
               <Plus className="h-4 w-4" />
               Cadastrar exercício
             </Button>

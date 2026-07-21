@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Trainer;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 use App\Http\Resources\WorkoutResource;
 use App\Models\Workout;
 use App\Models\WorkoutExercise;
@@ -52,6 +53,7 @@ class WorkoutController extends Controller
 		$perPage = (int) $request->input('per_page', 10);
 
 		$workouts = Workout::with(['studentProfile.user', 'muscleGroups'])
+			->where('trainer_id', $request->user()->id)
 			->withCount('workoutExercises')
 			->when($studentSearch, function ($query) use ($studentSearch) {
 				$query->whereHas('studentProfile.user', function ($query) use ($studentSearch) {
@@ -73,7 +75,10 @@ class WorkoutController extends Controller
 	public function store(Request $request)
 	{
 		$request->validate(array_merge([
-			'student_profile_id' => 'required|exists:student_profiles,id',
+			'student_profile_id' => [
+				'required',
+				Rule::exists('student_profiles', 'id')->where('trainer_id', $request->user()->id),
+			],
 			'name' => 'required|string|max:255',
 			'description' => 'nullable|string',
 			'start_date' => 'required|date',
@@ -107,9 +112,11 @@ class WorkoutController extends Controller
 		], 201);
 	}
 
-	public function show($id)
+	public function show(Request $request, $id)
 	{
-		$workout = Workout::with(self::WORKOUT_RELATIONS)->find($id);
+		$workout = Workout::with(self::WORKOUT_RELATIONS)
+			->where('trainer_id', $request->user()->id)
+			->find($id);
 
 		if (!$workout) {
 			return response()->json([
@@ -122,7 +129,7 @@ class WorkoutController extends Controller
 
 	public function update(Request $request, $id)
 	{
-		$workout = Workout::find($id);
+		$workout = Workout::where('trainer_id', $request->user()->id)->find($id);
 
 		if (!$workout) {
 			return response()->json([
@@ -131,7 +138,10 @@ class WorkoutController extends Controller
 		}
 
 		$request->validate(array_merge([
-			'student_profile_id' => 'sometimes|exists:student_profiles,id',
+			'student_profile_id' => [
+				'sometimes',
+				Rule::exists('student_profiles', 'id')->where('trainer_id', $request->user()->id),
+			],
 			'name' => 'sometimes|string|max:255',
 			'description' => 'nullable|string',
 			'start_date' => 'sometimes|date',
@@ -168,9 +178,9 @@ class WorkoutController extends Controller
 		]);
 	}
 
-	public function destroy($id)
+	public function destroy(Request $request, $id)
 	{
-		$workout = Workout::find($id);
+		$workout = Workout::where('trainer_id', $request->user()->id)->find($id);
 
 		if (!$workout) {
 			return response()->json([

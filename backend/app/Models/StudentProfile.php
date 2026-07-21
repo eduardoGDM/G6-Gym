@@ -16,6 +16,7 @@ class StudentProfile extends Model
 
 	protected $fillable = [
 		'user_id',
+		'trainer_id',
 		'cpf',
 		'phone',
 		'birth_date',
@@ -35,6 +36,11 @@ class StudentProfile extends Model
 	public function user(): BelongsTo
 	{
 		return $this->belongsTo(User::class);
+	}
+
+	public function trainer(): BelongsTo
+	{
+		return $this->belongsTo(User::class, 'trainer_id');
 	}
 
 	public function workouts(): HasMany

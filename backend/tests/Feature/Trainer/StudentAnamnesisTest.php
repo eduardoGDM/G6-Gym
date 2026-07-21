@@ -13,12 +13,13 @@ class StudentAnamnesisTest extends TestCase
 {
 	use RefreshDatabase;
 
-	private function createStudent(): StudentProfile
+	private function createStudent(?User $trainer = null): StudentProfile
 	{
 		$studentUser = User::factory()->create(['role' => 'student']);
 
 		return StudentProfile::create([
 			'user_id' => $studentUser->id,
+			'trainer_id' => $trainer?->id,
 			'cpf' => fake()->unique()->numerify('###########'),
 			'phone' => '11999999999',
 		]);
@@ -27,7 +28,7 @@ class StudentAnamnesisTest extends TestCase
 	public function test_trainer_can_view_empty_anamnesis_for_a_student(): void
 	{
 		$trainer = User::factory()->create(['role' => 'trainer']);
-		$student = $this->createStudent();
+		$student = $this->createStudent($trainer);
 
 		$response = $this->actingAs($trainer)->getJson(
 			"/api/trainer/students/{$student->id}/anamnesis",
@@ -42,7 +43,7 @@ class StudentAnamnesisTest extends TestCase
 	public function test_trainer_can_update_anamnesis_observations(): void
 	{
 		$trainer = User::factory()->create(['role' => 'trainer']);
-		$student = $this->createStudent();
+		$student = $this->createStudent($trainer);
 
 		$response = $this->actingAs($trainer)->putJson(
 			"/api/trainer/students/{$student->id}/anamnesis",
@@ -61,7 +62,7 @@ class StudentAnamnesisTest extends TestCase
 		Storage::fake('public');
 
 		$trainer = User::factory()->create(['role' => 'trainer']);
-		$student = $this->createStudent();
+		$student = $this->createStudent($trainer);
 
 		$file = UploadedFile::fake()->image('evolucao.jpg');
 
@@ -90,7 +91,7 @@ class StudentAnamnesisTest extends TestCase
 		Storage::fake('public');
 
 		$trainer = User::factory()->create(['role' => 'trainer']);
-		$student = $this->createStudent();
+		$student = $this->createStudent($trainer);
 
 		$file = UploadedFile::fake()->create('documento.pdf', 100);
 
@@ -107,7 +108,7 @@ class StudentAnamnesisTest extends TestCase
 		Storage::fake('public');
 
 		$trainer = User::factory()->create(['role' => 'trainer']);
-		$student = $this->createStudent();
+		$student = $this->createStudent($trainer);
 
 		$file = UploadedFile::fake()->create('evolucao.mp4', 10_240, 'video/mp4');
 
@@ -142,7 +143,7 @@ class StudentAnamnesisTest extends TestCase
 		Storage::fake('public');
 
 		$trainer = User::factory()->create(['role' => 'trainer']);
-		$student = $this->createStudent();
+		$student = $this->createStudent($trainer);
 
 		$file = UploadedFile::fake()->create('documento.pdf', 100);
 
@@ -159,7 +160,7 @@ class StudentAnamnesisTest extends TestCase
 		Storage::fake('public');
 
 		$trainer = User::factory()->create(['role' => 'trainer']);
-		$student = $this->createStudent();
+		$student = $this->createStudent($trainer);
 
 		$file = UploadedFile::fake()->create('grande.mp4', 102_401, 'video/mp4');
 
@@ -176,7 +177,7 @@ class StudentAnamnesisTest extends TestCase
 		Storage::fake('public');
 
 		$trainer = User::factory()->create(['role' => 'trainer']);
-		$student = $this->createStudent();
+		$student = $this->createStudent($trainer);
 
 		$photoResponse = $this->actingAs($trainer)->postJson(
 			"/api/trainer/students/{$student->id}/anamnesis/photos",

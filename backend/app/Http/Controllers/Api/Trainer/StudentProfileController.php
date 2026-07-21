@@ -9,10 +9,12 @@ use App\Models\StudentProfile;
 
 class StudentProfileController extends Controller
 {
-	public function index()
+	public function index(Request $request)
 	{
 		return response()->json(
-			StudentProfile::with('user')->get()
+			StudentProfile::with('user')
+				->where('trainer_id', $request->user()->id)
+				->get()
 		);
 	}
 
@@ -41,6 +43,7 @@ class StudentProfileController extends Controller
 
 		$profile = StudentProfile::create([
 			'user_id' => $user->id,
+			'trainer_id' => $request->user()->id,
 			'cpf' => $request->cpf,
 			'phone' => $request->phone,
 			'birth_date' => $request->birth_date,
@@ -58,9 +61,11 @@ class StudentProfileController extends Controller
 		], 201);
 	}
 
-	public function show($id)
+	public function show(Request $request, $id)
 	{
-		$profile = StudentProfile::with('user')->find($id);
+		$profile = StudentProfile::with('user')
+			->where('trainer_id', $request->user()->id)
+			->find($id);
 
 		if (!$profile) {
 			return response()->json(['message' => 'Aluno não encontrado'], 404);
@@ -71,7 +76,7 @@ class StudentProfileController extends Controller
 
 	public function update(Request $request, $id)
 	{
-		$profile = StudentProfile::find($id);
+		$profile = StudentProfile::where('trainer_id', $request->user()->id)->find($id);
 
 		if (!$profile) {
 			return response()->json(['message' => 'Aluno não encontrado'], 404);
@@ -119,9 +124,9 @@ class StudentProfileController extends Controller
 		]);
 	}
 
-	public function destroy($id)
+	public function destroy(Request $request, $id)
 	{
-		$profile = StudentProfile::find($id);
+		$profile = StudentProfile::where('trainer_id', $request->user()->id)->find($id);
 
 		if (!$profile) {
 			return response()->json(['message' => 'Aluno não encontrado'], 404);
