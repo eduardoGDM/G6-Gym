@@ -9,6 +9,8 @@ import AuthLayout from "../layouts/AuthLayout";
 import StudentLayout from "../layouts/StudentLayout";
 import TrainerLayout from "../layouts/TrainerLayout";
 
+import PageLoader from "../components/common/PageLoader";
+
 import Login from "../pages/auth/Login";
 
 import DashboardAdmin from "../pages/admin/Dashboard";
@@ -53,7 +55,7 @@ export default function AppRoutes() {
   if (isLoading) {
     return (
       <div className="flex h-screen items-center justify-center">
-        <p>Carregando sessão...</p>
+        <PageLoader label="Carregando sessão..." />
       </div>
     );
   }
