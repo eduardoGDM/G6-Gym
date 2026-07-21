@@ -171,7 +171,10 @@ export default function StudentsIndex() {
         emptyTitle="Nenhum aluno cadastrado"
         emptyDescription="Cadastre novos alunos para acompanhar o desenvolvimento."
         emptyAction={
-          <Button variant="outline" onClick={() => navigate("/trainer/students/new")}>
+          <Button
+            variant="outline"
+            onClick={() => navigate("/trainer/students/new")}
+          >
             <Plus className="h-4 w-4" />
             Cadastrar Aluno
           </Button>

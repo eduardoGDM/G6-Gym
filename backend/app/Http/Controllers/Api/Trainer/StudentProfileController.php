@@ -132,8 +132,10 @@ class StudentProfileController extends Controller
 			return response()->json(['message' => 'Aluno não encontrado'], 404);
 		}
 
-		$profile->user()->delete();
-
+		// Soft delete: marca o aluno como removido (deleted_at) sem apagar o
+		// registro nem os dados relacionados (workouts, fichas, anamnese, etc).
+		// O User NÃO é deletado de propósito: a FK user_id usa cascadeOnDelete,
+		// então remover o User apagaria o profile em cascata no banco.
 		$profile->delete();
 
 		return response()->json([

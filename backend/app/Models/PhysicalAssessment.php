@@ -6,49 +6,51 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class WorkoutExercise extends Model
+class PhysicalAssessment extends Model
 {
 	use HasFactory;
 
-	protected $table = 'workout_exercises';
+	protected $table = 'physical_assessments';
 
 	protected $fillable = [
-		'workout_id',
-		'exercise_id',
-		'training_method_id',
-		'order',
-		'warm_up_sets',
-		'recognition_sets',
-		'valid_sets',
-		'reps',
-		'rir',
-		'rest_seconds',
-		'cadence',
-		'load',
-		'observations',
+		'student_profile_id',
+		'assessment_date',
+		'weight',
+		'height',
+		'fat_percentage',
+		'muscle_mass',
+		'chest',
+		'waist',
+		'abdomen',
+		'hip',
+		'left_arm',
+		'right_arm',
+		'left_thigh',
+		'right_thigh',
+		'left_calf',
+		'right_calf',
 	];
 
 	protected $casts = [
-		'order' => 'integer',
-		'warm_up_sets' => 'integer',
-		'recognition_sets' => 'integer',
-		'valid_sets' => 'integer',
-		'rest_seconds' => 'integer',
-		'load' => 'decimal:2',
+		'assessment_date' => 'date',
+		'weight' => 'decimal:2',
+		'height' => 'decimal:2',
+		'fat_percentage' => 'decimal:2',
+		'muscle_mass' => 'decimal:2',
+		'chest' => 'decimal:2',
+		'waist' => 'decimal:2',
+		'abdomen' => 'decimal:2',
+		'hip' => 'decimal:2',
+		'left_arm' => 'decimal:2',
+		'right_arm' => 'decimal:2',
+		'left_thigh' => 'decimal:2',
+		'right_thigh' => 'decimal:2',
+		'left_calf' => 'decimal:2',
+		'right_calf' => 'decimal:2',
 	];
 
-	public function workout(): BelongsTo
+	public function studentProfile(): BelongsTo
 	{
-		return $this->belongsTo(Workout::class);
-	}
-
-	public function exercise(): BelongsTo
-	{
-		return $this->belongsTo(Exercise::class);
-	}
-
-	public function trainingMethod(): BelongsTo
-	{
-		return $this->belongsTo(TrainingMethod::class);
+		return $this->belongsTo(StudentProfile::class);
 	}
 }
