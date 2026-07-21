@@ -1,9 +1,11 @@
 import axios from "axios";
 
+import { CSRF_COOKIE_URL } from "./config/api";
+
 export async function getCsrfToken() {
   try {
     // 1. Requisita o cookie CSRF
-    await axios.get("http://localhost:8000/sanctum/csrf-cookie", {
+    await axios.get(CSRF_COOKIE_URL, {
       withCredentials: true,
     });
 
@@ -14,13 +16,17 @@ export async function getCsrfToken() {
       ?.split("=")[1];
 
     if (!xsrfToken) {
-      console.error("XSRF-TOKEN não encontrado nos cookies");
+      if (import.meta.env.DEV) {
+        console.error("XSRF-TOKEN não encontrado nos cookies");
+      }
       return null;
     }
 
     return decodeURIComponent(xsrfToken);
   } catch (error) {
-    console.error("Erro ao buscar token CSRF:", error);
+    if (import.meta.env.DEV) {
+      console.error("Erro ao buscar token CSRF:", error);
+    }
     return null;
   }
 }

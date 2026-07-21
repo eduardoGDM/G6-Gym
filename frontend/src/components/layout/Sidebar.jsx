@@ -1,4 +1,4 @@
-import { LogOut, X } from "lucide-react";
+import { LogOut } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -35,7 +35,9 @@ export default function Sidebar({
     try {
       await authService.logout();
     } catch (error) {
-      console.warn("Backend logout falhou:", error);
+      if (import.meta.env.DEV) {
+        console.warn("Backend logout falhou:", error);
+      }
     } finally {
       logout();
       navigate("/");
@@ -93,26 +95,6 @@ export default function Sidebar({
         </div>
 
         <div className="border-t border-border p-4 space-y-3">
-          <div className="flex items-center justify-between rounded-2xl border border-border bg-background/60 px-4 py-3">
-            <div>
-              <p className="text-sm font-semibold text-foreground">Modo</p>
-              <p className="text-xs text-muted-foreground">
-                {isDesktop ? "Desktop" : "Mobile"}
-              </p>
-            </div>
-
-            {!isDesktop ? (
-              <button
-                type="button"
-                onClick={onClose}
-                className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-border bg-card text-foreground transition hover:bg-accent"
-                aria-label="Fechar menu"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            ) : null}
-          </div>
-
           <button
             onClick={handleLogout}
             disabled={loadingLogout}
