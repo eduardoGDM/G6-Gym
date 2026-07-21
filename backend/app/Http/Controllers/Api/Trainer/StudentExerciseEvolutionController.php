@@ -26,7 +26,7 @@ class StudentExerciseEvolutionController extends Controller
 			], 404);
 		}
 
-		$muscleGroups = $this->executedCheckinExercisesQuery($studentProfile->id, $trainerId)
+		$muscleGroups = $this->executedCheckinExercisesQuery($studentProfile->id)
 			->get()
 			->pluck('exercise.muscleGroup')
 			->filter()
@@ -59,7 +59,7 @@ class StudentExerciseEvolutionController extends Controller
 			], 404);
 		}
 
-		$exercises = $this->executedCheckinExercisesQuery($studentProfile->id, $trainerId)
+		$exercises = $this->executedCheckinExercisesQuery($studentProfile->id)
 			->whereHas('exercise', function ($query) use ($muscleGroupId) {
 				$query->where('muscle_group_id', $muscleGroupId);
 			})
@@ -76,19 +76,16 @@ class StudentExerciseEvolutionController extends Controller
 
 	/**
 	 * Base de todos os filtros de evolução: apenas registros de
-	 * WorkoutCheckinExercise pertencentes a check-ins do aluno (escopados ao
-	 * trainer autenticado) que possuam ao menos uma série com carga
-	 * (performed_weight) de fato registrada. Nunca consulta Workout,
-	 * WorkoutExercise ou o cadastro geral de Exercise como fonte.
+	 * WorkoutCheckinExercise pertencentes a check-ins do aluno (já escopado ao
+	 * trainer autenticado pelo FK student_profiles.trainer_id) que possuam ao
+	 * menos uma série com carga (performed_weight) de fato registrada. Nunca
+	 * consulta Workout, WorkoutExercise ou o cadastro geral de Exercise como fonte.
 	 */
-	private function executedCheckinExercisesQuery(int $studentProfileId, int $trainerId)
+	private function executedCheckinExercisesQuery(int $studentProfileId)
 	{
 		return WorkoutCheckinExercise::query()
-			->whereHas('workoutCheckin', function ($query) use ($studentProfileId, $trainerId) {
-				$query->where('student_profile_id', $studentProfileId)
-					->whereHas('workout', function ($query) use ($trainerId) {
-						$query->where('trainer_id', $trainerId);
-					});
+			->whereHas('workoutCheckin', function ($query) use ($studentProfileId) {
+				$query->where('student_profile_id', $studentProfileId);
 			})
 			->whereHas('sets', function ($query) {
 				$query->whereNotNull('performed_weight');
@@ -138,9 +135,6 @@ class StudentExerciseEvolutionController extends Controller
 
 		$checkins = WorkoutCheckin::query()
 			->where('student_profile_id', $studentProfile->id)
-			->whereHas('workout', function ($query) use ($trainerId) {
-				$query->where('trainer_id', $trainerId);
-			})
 			->whereHas('exercises', function ($query) use ($exerciseModel) {
 				$query->where('exercise_id', $exerciseModel->id);
 			})

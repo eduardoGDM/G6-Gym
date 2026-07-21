@@ -14,14 +14,11 @@ class DashboardController extends Controller
 	private const RECENT_LIMIT = 5;
 
 	/**
-	 * student_profiles não possui vínculo direto com um trainer, então o
-	 * escopo é sempre feito através dos treinos criados por ele.
+	 * O aluno pertence ao trainer através do FK student_profiles.trainer_id.
 	 */
 	private function scopeStudentsToTrainer($query, int $trainerId)
 	{
-		return $query->whereHas('workouts', function ($query) use ($trainerId) {
-			$query->where('trainer_id', $trainerId);
-		});
+		return $query->where('trainer_id', $trainerId);
 	}
 
 	public function summary(Request $request)
@@ -38,13 +35,13 @@ class DashboardController extends Controller
 			->where('active', true)
 			->count();
 
-		$workoutCheckinsToday = WorkoutCheckin::whereHas('workout', function ($query) use ($trainerId) {
+		$workoutCheckinsToday = WorkoutCheckin::whereHas('studentProfile', function ($query) use ($trainerId) {
 			$query->where('trainer_id', $trainerId);
 		})
 			->whereDate('performed_at', $today)
 			->count();
 
-		$dailyCheckinsToday = DailyCheckin::whereHas('studentProfile.workouts', function ($query) use ($trainerId) {
+		$dailyCheckinsToday = DailyCheckin::whereHas('studentProfile', function ($query) use ($trainerId) {
 			$query->where('trainer_id', $trainerId);
 		})
 			->whereDate('date', $today)
@@ -62,7 +59,7 @@ class DashboardController extends Controller
 	{
 		$trainerId = $request->user()->id;
 
-		$checkins = WorkoutCheckin::whereHas('workout', function ($query) use ($trainerId) {
+		$checkins = WorkoutCheckin::whereHas('studentProfile', function ($query) use ($trainerId) {
 			$query->where('trainer_id', $trainerId);
 		})
 			->with(['studentProfile.user:id,name', 'workout:id,name'])
@@ -86,7 +83,7 @@ class DashboardController extends Controller
 	{
 		$trainerId = $request->user()->id;
 
-		$checkins = DailyCheckin::whereHas('studentProfile.workouts', function ($query) use ($trainerId) {
+		$checkins = DailyCheckin::whereHas('studentProfile', function ($query) use ($trainerId) {
 			$query->where('trainer_id', $trainerId);
 		})
 			->with('studentProfile.user:id,name')

@@ -22,9 +22,7 @@ class StudentWorkoutSheetController extends Controller
 
         $trainer = $request->user();
 
-        $isLinkedToTrainer = Workout::where('student_profile_id', $studentProfile->id)
-            ->where('trainer_id', $trainer->id)
-            ->exists();
+        $isLinkedToTrainer = (int) $studentProfile->trainer_id === (int) $trainer->id;
 
         if (!$isLinkedToTrainer) {
             return response()->json([

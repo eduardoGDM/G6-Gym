@@ -10,13 +10,12 @@ use Illuminate\Http\Request;
 class DailyCheckinController extends Controller
 {
 	/**
-	 * Restringe sempre a check-ins diários de alunos que possuem ao menos um treino
-	 * criado pelo trainer autenticado, já que student_profiles não possui vínculo
-	 * direto com um trainer.
+	 * Restringe sempre a check-ins diários dos alunos vinculados ao trainer
+	 * autenticado através do FK student_profiles.trainer_id.
 	 */
 	private function scopeToTrainer($query, int $trainerId)
 	{
-		return $query->whereHas('studentProfile.workouts', function ($query) use ($trainerId) {
+		return $query->whereHas('studentProfile', function ($query) use ($trainerId) {
 			$query->where('trainer_id', $trainerId);
 		});
 	}

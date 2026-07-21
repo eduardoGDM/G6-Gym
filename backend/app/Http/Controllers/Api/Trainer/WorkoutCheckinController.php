@@ -18,12 +18,12 @@ class WorkoutCheckinController extends Controller
 	];
 
 	/**
-	 * Restringe sempre a check-ins de treinos criados pelo próprio trainer,
-	 * já que student_profiles não possui vínculo direto com um trainer.
+	 * Restringe sempre a check-ins dos alunos vinculados ao trainer autenticado
+	 * através do FK student_profiles.trainer_id.
 	 */
 	private function scopeToTrainer($query, int $trainerId)
 	{
-		return $query->whereHas('workout', function ($query) use ($trainerId) {
+		return $query->whereHas('studentProfile', function ($query) use ($trainerId) {
 			$query->where('trainer_id', $trainerId);
 		});
 	}
@@ -76,17 +76,16 @@ class WorkoutCheckinController extends Controller
 	}
 
 	/**
-	 * Lista apenas os alunos que possuem ao menos um treino criado pelo trainer autenticado,
-	 * para alimentar o filtro de aluno da listagem de check-ins.
+	 * Lista os alunos vinculados ao trainer autenticado (FK
+	 * student_profiles.trainer_id), para alimentar o filtro de aluno da
+	 * listagem de check-ins.
 	 */
 	public function students(Request $request)
 	{
 		$trainerId = $request->user()->id;
 
 		$students = StudentProfile::with('user')
-			->whereHas('workouts', function ($query) use ($trainerId) {
-				$query->where('trainer_id', $trainerId);
-			})
+			->where('trainer_id', $trainerId)
 			->get();
 
 		return response()->json($students);

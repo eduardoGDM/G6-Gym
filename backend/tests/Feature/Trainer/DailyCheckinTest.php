@@ -21,6 +21,7 @@ class DailyCheckinTest extends TestCase
         ]);
         $studentProfile = StudentProfile::create([
             'user_id' => $studentUser->id,
+            'trainer_id' => $trainer->id,
             'cpf' => fake()->unique()->numerify('###########'),
             'phone' => '11999999999',
         ]);
