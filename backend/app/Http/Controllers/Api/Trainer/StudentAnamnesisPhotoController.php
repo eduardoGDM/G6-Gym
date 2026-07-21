@@ -1,0 +1,63 @@
+<?php
+
+namespace App\Http\Controllers\Api\Trainer;
+
+use App\Http\Controllers\Controller;
+use App\Http\Requests\Trainer\StoreStudentAnamnesisPhotoRequest;
+use App\Models\StudentAnamnesis;
+use App\Models\StudentAnamnesisAttachment;
+use App\Models\StudentProfile;
+use Illuminate\Support\Facades\Storage;
+
+class StudentAnamnesisPhotoController extends Controller
+{
+	public function store(StoreStudentAnamnesisPhotoRequest $request, $student)
+	{
+		$studentProfile = StudentProfile::find($student);
+
+		if (!$studentProfile) {
+			return response()->json(['message' => 'Aluno não encontrado'], 404);
+		}
+
+		$anamnesis = StudentAnamnesis::firstOrCreate(['student_profile_id' => $studentProfile->id]);
+
+		$file = $request->file('photo');
+		$path = $file->store('anamnesis-photos', 'public');
+
+		$photo = $anamnesis->photos()->create([
+			'type' => 'image',
+			'path' => $path,
+			'original_name' => $file->getClientOriginalName(),
+			'size' => $file->getSize(),
+		]);
+
+		return response()->json([
+			'message' => 'Foto adicionada com sucesso',
+			'photo' => $photo,
+		], 201);
+	}
+
+	public function destroy($student, $photo)
+	{
+		$studentProfile = StudentProfile::find($student);
+
+		if (!$studentProfile) {
+			return response()->json(['message' => 'Aluno não encontrado'], 404);
+		}
+
+		$photoModel = StudentAnamnesisAttachment::where('type', 'image')
+			->whereHas('studentAnamnesis', function ($query) use ($studentProfile) {
+				$query->where('student_profile_id', $studentProfile->id);
+			})
+			->find($photo);
+
+		if (!$photoModel) {
+			return response()->json(['message' => 'Foto não encontrada'], 404);
+		}
+
+		Storage::disk('public')->delete($photoModel->path);
+		$photoModel->delete();
+
+		return response()->json(['message' => 'Foto removida com sucesso']);
+	}
+}

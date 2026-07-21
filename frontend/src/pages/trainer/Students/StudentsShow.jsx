@@ -16,6 +16,7 @@ import {
   CardTitle,
 } from "../../../components/ui/card";
 import studentsService from "../../../services/StudentsService";
+import AnamnesisSection from "./components/AnamnesisSection";
 import ExerciseEvolutionSection from "./components/ExerciseEvolutionSection";
 
 export default function StudentsShow() {
@@ -157,7 +158,10 @@ export default function StudentsShow() {
       </Card>
 
       {!loading && !error && student ? (
-        <ExerciseEvolutionSection studentId={id} />
+        <>
+          <AnamnesisSection studentId={id} readOnly />
+          <ExerciseEvolutionSection studentId={id} />
+        </>
       ) : null}
     </PageContainer>
   );

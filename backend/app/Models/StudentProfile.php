@@ -61,4 +61,9 @@ class StudentProfile extends Model
 	{
 		return $this->hasMany(DailyCheckin::class);
 	}
+
+	public function anamnesis(): HasOne
+	{
+		return $this->hasOne(StudentAnamnesis::class);
+	}
 }

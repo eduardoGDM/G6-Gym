@@ -10,6 +10,9 @@ use App\Http\Controllers\Api\Trainer\WorkoutExerciseController;
 use App\Http\Controllers\Api\Trainer\MuscleGroupController;
 use App\Http\Controllers\Api\Trainer\StudentWorkoutSheetController;
 use App\Http\Controllers\Api\Trainer\StudentExerciseEvolutionController;
+use App\Http\Controllers\Api\Trainer\StudentAnamnesisController;
+use App\Http\Controllers\Api\Trainer\StudentAnamnesisPhotoController;
+use App\Http\Controllers\Api\Trainer\StudentAnamnesisVideoController;
 use App\Http\Controllers\Api\Trainer\WorkoutCheckinController as TrainerWorkoutCheckinController;
 use App\Http\Controllers\Api\Trainer\DailyCheckinController as TrainerDailyCheckinController;
 use App\Http\Controllers\Api\Trainer\DashboardController as TrainerDashboardController;
@@ -57,6 +60,19 @@ Route::middleware('auth:sanctum')->group(function () {
 
 			Route::get('daily-checkins/{id}', [TrainerDailyCheckinController::class, 'show']);
 			Route::get('daily-checkins', [TrainerDailyCheckinController::class, 'index']);
+		});
+
+	Route::prefix('trainer')
+		->middleware('role:trainer,admin')
+		->group(function () {
+			Route::get('students/{student}/anamnesis', [StudentAnamnesisController::class, 'show']);
+			Route::put('students/{student}/anamnesis', [StudentAnamnesisController::class, 'update']);
+
+			Route::post('students/{student}/anamnesis/photos', [StudentAnamnesisPhotoController::class, 'store']);
+			Route::delete('students/{student}/anamnesis/photos/{photo}', [StudentAnamnesisPhotoController::class, 'destroy']);
+
+			Route::post('students/{student}/anamnesis/videos', [StudentAnamnesisVideoController::class, 'store']);
+			Route::delete('students/{student}/anamnesis/videos/{video}', [StudentAnamnesisVideoController::class, 'destroy']);
 		});
 
 	Route::prefix('student')

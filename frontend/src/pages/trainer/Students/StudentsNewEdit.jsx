@@ -23,6 +23,7 @@ import { Select } from "../../../components/ui/select";
 import { Textarea } from "../../../components/ui/textarea";
 import { crudToast } from "../../../components/common/crudToast";
 import studentsService from "../../../services/StudentsService";
+import AnamnesisSection from "./components/AnamnesisSection";
 import {
   formatCpf,
   formatDecimal,
@@ -408,6 +409,15 @@ export default function StudentsNewEdit() {
           )}
         </CardContent>
       </Card>
+
+      {isEdit && !initialLoading ? (
+        <AnamnesisSection studentId={id} />
+      ) : !isEdit ? (
+        <div className="mt-6 rounded-2xl border border-dashed border-border/80 bg-card/60 p-6 text-center text-sm text-muted-foreground">
+          A seção de Anamnese (observações, fotos e vídeos) ficará disponível após a
+          criação do cadastro do aluno.
+        </div>
+      ) : null}
     </PageContainer>
   );
 }
