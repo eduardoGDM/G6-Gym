@@ -144,7 +144,7 @@ export default function ExerciseEvolutionSection({ studentId }) {
   const hasHistory = (muscleGroups || []).length > 0;
 
   return (
-    <div className="mt-6 rounded-2xl border border-border/80 bg-card/90 shadow-[0_12px_40px_rgba(0,0,0,0.25)]">
+    <div className="mt-6 rounded-2xl border border-border/80 bg-card/90 shadow-card">
       <div className="flex items-center gap-2 border-b border-border/80 px-6 py-6 sm:px-8">
         <TrendingUp className="h-5 w-5 text-primary" />
         <div>

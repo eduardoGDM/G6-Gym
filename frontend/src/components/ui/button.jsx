@@ -3,7 +3,7 @@ import { cn } from "../../lib/utils";
 const buttonVariants = {
   variant: {
     default:
-      "bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 focus-visible:ring-primary",
+      "bg-primary text-primary-foreground shadow-subtle transition-shadow duration-150 hover:bg-primary/90 focus-visible:ring-primary",
     secondary:
       "bg-secondary text-secondary-foreground hover:bg-secondary/90 focus-visible:ring-secondary",
     outline:

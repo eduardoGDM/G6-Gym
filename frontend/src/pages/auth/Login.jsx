@@ -90,10 +90,10 @@ export default function Login() {
     <div className="flex min-h-screen items-center justify-center px-4 py-10">
       <div className="grid w-full max-w-6xl gap-6 lg:grid-cols-[1.1fr_0.9fr]">
         {/* LADO ESQUERDO */}
-        <div className="flex flex-col justify-between rounded-[2rem] border border-border bg-card/80 p-8 shadow-[0_20px_60px_rgba(0,0,0,0.28)] backdrop-blur-xl lg:p-10">
+        <div className="flex flex-col justify-between rounded-[2rem] border border-border bg-card/80 p-8 shadow-card backdrop-blur-xl lg:p-10">
           <div>
             <div className="flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-lg shadow-primary/20">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-subtle">
                 <Dumbbell className="h-5 w-5" />
               </div>
               <div>
@@ -137,7 +137,7 @@ export default function Login() {
         </div>
 
         {/* FORM */}
-        <Card className="border-border/80 bg-card/90 shadow-[0_20px_60px_rgba(0,0,0,0.28)]">
+        <Card className="border-border/80 bg-card/90">
           <CardContent className="p-8 lg:p-10">
             <div className="mb-8">
               <p className="text-xs font-semibold uppercase tracking-[0.28em] text-primary/80">

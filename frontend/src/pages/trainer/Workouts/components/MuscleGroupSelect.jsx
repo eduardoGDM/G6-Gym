@@ -47,7 +47,7 @@ export default function MuscleGroupSelect({
       <button
         type="button"
         onClick={() => setOpen((current) => !current)}
-        className="flex h-11 w-full items-center justify-between rounded-xl border border-border bg-card px-3.5 py-2.5 text-sm text-foreground shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+        className="flex h-11 w-full items-center justify-between rounded-xl border border-border bg-card px-3.5 py-2.5 text-sm text-foreground shadow-subtle transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
       >
         <span className={cn(!selectedOptions.length && "text-muted-foreground/70")}>
           {selectedOptions.length
@@ -58,7 +58,7 @@ export default function MuscleGroupSelect({
       </button>
 
       {open ? (
-        <div className="absolute z-20 mt-1 max-h-64 w-full overflow-y-auto rounded-xl border border-border bg-card p-1.5 shadow-lg">
+        <div className="absolute z-20 mt-1 max-h-64 w-full overflow-y-auto rounded-xl border border-border bg-card p-1.5 shadow-popover">
           {loading ? (
             <p className="px-3 py-2 text-sm text-muted-foreground">
               Carregando...

@@ -16,7 +16,7 @@ export default function StatCard({
 
   return (
     <Card
-      className="border-border/80 bg-card/80 animate-in fade-in slide-in-from-bottom-2 duration-300 transition-transform hover:-translate-y-0.5 hover:shadow-[0_16px_48px_rgba(0,0,0,0.3)]"
+      className="border-border/80 bg-card/80 animate-in fade-in slide-in-from-bottom-2 duration-300 transition-transform hover:-translate-y-0.5 hover:shadow-popover"
       style={{ animationDelay: `${delay}ms`, animationFillMode: "backwards" }}
     >
       <CardContent className="p-5">

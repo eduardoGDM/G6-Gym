@@ -23,7 +23,7 @@ function MenuGroup({ item, onClick }) {
         className={cn(
           "flex w-full items-center gap-3 rounded-2xl border px-3.5 py-3 text-sm transition-all duration-200",
           hasActiveChild
-            ? "border-primary/30 bg-primary/15 text-foreground shadow-[0_10px_25px_rgba(124,58,237,0.12)]"
+            ? "border-primary/30 bg-primary/15 text-foreground shadow-subtle"
             : "border-transparent bg-transparent text-muted-foreground hover:border-border hover:bg-accent/70 hover:text-foreground",
         )}
       >
@@ -97,7 +97,7 @@ export default function MenuItem({ item, onClick }) {
       className={cn(
         "flex items-center gap-3 rounded-2xl border px-3.5 py-3 text-sm transition-all duration-200",
         selected
-          ? "border-primary/30 bg-primary/15 text-foreground shadow-[0_10px_25px_rgba(124,58,237,0.12)]"
+          ? "border-primary/30 bg-primary/15 text-foreground shadow-subtle"
           : "border-transparent bg-transparent text-muted-foreground hover:border-border hover:bg-accent/70 hover:text-foreground",
       )}
     >

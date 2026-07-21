@@ -11,6 +11,14 @@ import ErrorState from "../../../components/loading/ErrorState";
 import { Badge } from "../../../components/ui/badge";
 import { Button } from "../../../components/ui/button";
 import { Card, CardContent } from "../../../components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "../../../components/ui/table";
 import trainerCheckinsService from "../../../services/TrainerCheckinsService";
 
 const formatDate = (value) => {
@@ -140,67 +148,39 @@ export default function CheckinsShow() {
                     ) : null}
                   </div>
 
-                  <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-border/70">
-                      <thead className="bg-muted/30">
-                        <tr>
-                          <th className="px-3 py-2 text-left text-xs font-semibold text-foreground">
-                            Série
-                          </th>
-                          <th className="px-3 py-2 text-left text-xs font-semibold text-foreground">
-                            Carga planejada
-                          </th>
-                          <th className="px-3 py-2 text-left text-xs font-semibold text-foreground">
-                            Carga realizada
-                          </th>
-                          <th className="px-3 py-2 text-left text-xs font-semibold text-foreground">
-                            Reps. planejadas
-                          </th>
-                          <th className="px-3 py-2 text-left text-xs font-semibold text-foreground">
-                            Reps. realizadas
-                          </th>
-                          <th className="px-3 py-2 text-left text-xs font-semibold text-foreground">
-                            Descanso planejado
-                          </th>
-                          <th className="px-3 py-2 text-left text-xs font-semibold text-foreground">
-                            Descanso realizado
-                          </th>
-                          <th className="px-3 py-2 text-left text-xs font-semibold text-foreground">
-                            Observação
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-border/60 bg-card/70">
-                        {(item.sets || []).map((set) => (
-                          <tr key={set.id}>
-                            <td className="px-3 py-2 text-sm font-medium text-foreground">
-                              {displayValue(set.set_number)}
-                            </td>
-                            <td className="px-3 py-2 text-sm text-muted-foreground">
-                              {displayValue(set.planned_weight)}
-                            </td>
-                            <td className="px-3 py-2 text-sm text-muted-foreground">
-                              {displayValue(set.performed_weight)}
-                            </td>
-                            <td className="px-3 py-2 text-sm text-muted-foreground">
-                              {displayValue(set.planned_repetitions)}
-                            </td>
-                            <td className="px-3 py-2 text-sm text-muted-foreground">
-                              {displayValue(set.performed_repetitions)}
-                            </td>
-                            <td className="px-3 py-2 text-sm text-muted-foreground">
-                              {displayValue(set.planned_rest_time)}
-                            </td>
-                            <td className="px-3 py-2 text-sm text-muted-foreground">
-                              {displayValue(set.performed_rest_time)}
-                            </td>
-                            <td className="px-3 py-2 text-sm text-muted-foreground">
-                              {displayValue(set.notes)}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                  <div className="overflow-hidden rounded-xl border border-border/60">
+                    <div className="overflow-x-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow hoverable={false}>
+                            <TableHead className="text-xs">Série</TableHead>
+                            <TableHead className="text-xs">Carga planejada</TableHead>
+                            <TableHead className="text-xs">Carga realizada</TableHead>
+                            <TableHead className="text-xs">Reps. planejadas</TableHead>
+                            <TableHead className="text-xs">Reps. realizadas</TableHead>
+                            <TableHead className="text-xs">Descanso planejado</TableHead>
+                            <TableHead className="text-xs">Descanso realizado</TableHead>
+                            <TableHead className="text-xs">Observação</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {(item.sets || []).map((set) => (
+                            <TableRow key={set.id} hoverable={false}>
+                              <TableCell className="font-medium text-foreground">
+                                {displayValue(set.set_number)}
+                              </TableCell>
+                              <TableCell>{displayValue(set.planned_weight)}</TableCell>
+                              <TableCell>{displayValue(set.performed_weight)}</TableCell>
+                              <TableCell>{displayValue(set.planned_repetitions)}</TableCell>
+                              <TableCell>{displayValue(set.performed_repetitions)}</TableCell>
+                              <TableCell>{displayValue(set.planned_rest_time)}</TableCell>
+                              <TableCell>{displayValue(set.performed_rest_time)}</TableCell>
+                              <TableCell>{displayValue(set.notes)}</TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
                   </div>
 
                   {item.notes ? (

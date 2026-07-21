@@ -9,11 +9,10 @@ import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import toast from "react-hot-toast";
 
+import DataTable from "../../../components/common/DataTable";
 import PageContainer from "../../../components/common/PageContainer";
 import PageTitle from "../../../components/common/PageTitle";
 import { crudToast } from "../../../components/common/crudToast";
-import ErrorState from "../../../components/loading/ErrorState";
-import TableSkeleton from "../../../components/loading/TableSkeleton";
 import Spinner from "../../../components/common/Spinner";
 import { Button } from "../../../components/ui/button";
 import {
@@ -172,6 +171,51 @@ export default function DailyCheckinsIndex() {
     }
   };
 
+  const columns = [
+    {
+      key: "date",
+      label: "Data",
+      className: "text-sm font-medium text-foreground",
+      render: (checkin) => (
+        <div className="flex items-center gap-2">
+          <CalendarDays className="h-4 w-4 text-muted-foreground" />
+          {formatDate(checkin.date)}
+        </div>
+      ),
+    },
+    {
+      key: "sleep_rating",
+      label: "Sono",
+      render: (checkin) => `${checkin.sleep_rating}/10`,
+    },
+    {
+      key: "diet_rating",
+      label: "Dieta",
+      render: (checkin) => `${checkin.diet_rating}/10`,
+    },
+    {
+      key: "summary",
+      label: "Resumo das observações",
+      className: "hidden sm:table-cell",
+      render: (checkin) => summarizeNotes(checkin),
+    },
+    {
+      key: "actions",
+      label: "Ações",
+      render: (checkin) => (
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => handleEdit(checkin)}
+        >
+          <Pencil className="h-4 w-4" />
+          Editar
+        </Button>
+      ),
+    },
+  ];
+
   return (
     <PageContainer>
       <PageTitle
@@ -315,139 +359,33 @@ export default function DailyCheckinsIndex() {
         </div>
       </div>
 
-      <Card className="border-border/80 bg-card/80">
-        {isLoading ? (
-          <CardContent className="overflow-x-auto p-0">
-            <TableSkeleton
-              columns={[
-                "Data",
-                "Sono",
-                "Dieta",
-                { label: "Resumo das observações", className: "hidden sm:table-cell" },
-              ]}
-              actionsCount={1}
-              rows={6}
-            />
-          </CardContent>
-        ) : isError ? (
-          <CardContent>
-            <ErrorState onRetry={refetch} />
-          </CardContent>
-        ) : checkins.length === 0 ? (
-          <CardContent className="flex flex-col items-center justify-center gap-3 py-16 text-center animate-in fade-in duration-300">
-            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/15 text-primary">
-              <ClipboardList className="h-7 w-7" />
-            </div>
-            <div>
-              <h2 className="text-lg font-semibold">
-                {debouncedFilterDate
-                  ? "Nenhum check-in encontrado para esta data"
-                  : "Nenhum check-in registrado ainda"}
-              </h2>
-              <p className="mt-1 text-sm text-muted-foreground">
-                {debouncedFilterDate
-                  ? "Tente ajustar o filtro de data."
-                  : "Registre seu primeiro check-in diário acima."}
-              </p>
-            </div>
-          </CardContent>
-        ) : (
-          <>
-            <CardContent
-              className={`animate-in fade-in duration-300 overflow-x-auto p-0 transition-opacity ${
-                isFetching ? "opacity-60" : ""
-              }`}
-            >
-              <table className="min-w-full divide-y divide-border/70">
-                <thead className="bg-muted/30">
-                  <tr>
-                    <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">
-                      Data
-                    </th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">
-                      Sono
-                    </th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">
-                      Dieta
-                    </th>
-                    <th className="hidden px-4 py-3 text-left text-sm font-semibold text-foreground sm:table-cell">
-                      Resumo das observações
-                    </th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">
-                      Ações
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border/60 bg-card/70">
-                  {checkins.map((checkin) => (
-                    <tr
-                      key={checkin.id}
-                      className="transition-colors hover:bg-muted/10"
-                    >
-                      <td className="px-4 py-3 text-sm font-medium text-foreground">
-                        <div className="flex items-center gap-2">
-                          <CalendarDays className="h-4 w-4 text-muted-foreground" />
-                          {formatDate(checkin.date)}
-                        </div>
-                      </td>
-                      <td className="px-4 py-3 text-sm text-muted-foreground">
-                        {checkin.sleep_rating}/10
-                      </td>
-                      <td className="px-4 py-3 text-sm text-muted-foreground">
-                        {checkin.diet_rating}/10
-                      </td>
-                      <td className="hidden px-4 py-3 text-sm text-muted-foreground sm:table-cell">
-                        {summarizeNotes(checkin)}
-                      </td>
-                      <td className="px-4 py-3">
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleEdit(checkin)}
-                        >
-                          <Pencil className="h-4 w-4" />
-                          Editar
-                        </Button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </CardContent>
-
-            <div className="flex flex-col gap-3 border-t border-border/80 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
-              <span className="text-sm text-muted-foreground">
-                {from}–{to} de {total}
-              </span>
-
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={page <= 1}
-                  onClick={() => setPage((current) => Math.max(1, current - 1))}
-                >
-                  Anterior
-                </Button>
-                <span className="text-sm text-muted-foreground">
-                  Página {page} de {lastPage}
-                </span>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={page >= lastPage}
-                  onClick={() =>
-                    setPage((current) => Math.min(lastPage, current + 1))
-                  }
-                >
-                  Próxima
-                </Button>
-              </div>
-            </div>
-          </>
-        )}
-      </Card>
+      <DataTable
+        columns={columns}
+        rows={checkins}
+        loading={isLoading}
+        fetching={isFetching}
+        error={isError}
+        onRetry={refetch}
+        actionsCount={1}
+        emptyIcon={ClipboardList}
+        emptyTitle={
+          debouncedFilterDate
+            ? "Nenhum check-in encontrado para esta data"
+            : "Nenhum check-in registrado ainda"
+        }
+        emptyDescription={
+          debouncedFilterDate
+            ? "Tente ajustar o filtro de data."
+            : "Registre seu primeiro check-in diário acima."
+        }
+        pagination={{
+          summary: `${from}–${to} de ${total}`,
+          page,
+          lastPage,
+          onPrev: () => setPage((current) => Math.max(1, current - 1)),
+          onNext: () => setPage((current) => Math.min(lastPage, current + 1)),
+        }}
+      />
     </PageContainer>
   );
 }

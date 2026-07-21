@@ -15,13 +15,11 @@ import { useNavigate } from "react-router-dom";
 
 import ActionIconButton from "../../../components/common/ActionIconButton";
 import { crudToast } from "../../../components/common/crudToast";
+import DataTable from "../../../components/common/DataTable";
 import PageContainer from "../../../components/common/PageContainer";
 import PageTitle from "../../../components/common/PageTitle";
-import ErrorState from "../../../components/loading/ErrorState";
-import TableSkeleton from "../../../components/loading/TableSkeleton";
 import { Badge } from "../../../components/ui/badge";
 import { Button } from "../../../components/ui/button";
-import { Card, CardContent } from "../../../components/ui/card";
 import { Input } from "../../../components/ui/input";
 import { Select } from "../../../components/ui/select";
 import { useDebouncedValue } from "../../../hooks/useDebouncedValue";
@@ -132,6 +130,85 @@ export default function WorkoutsIndex() {
     }
   };
 
+  const columns = [
+    {
+      key: "name",
+      label: "Nome",
+      className: "text-sm font-medium text-foreground",
+      render: (workout) => (
+        <>
+          {workout.name}
+          <p className="mt-0.5 text-xs font-normal text-muted-foreground sm:hidden">
+            {workout.student_profile?.user?.name || "—"}
+          </p>
+        </>
+      ),
+    },
+    {
+      key: "student",
+      label: "Aluno",
+      className: "hidden sm:table-cell",
+      render: (workout) => workout.student_profile?.user?.name || "—",
+    },
+    {
+      key: "exercises_count",
+      label: "Exercícios",
+      className: "hidden lg:table-cell",
+      render: (workout) => workout.exercises_count ?? 0,
+    },
+    {
+      key: "start_date",
+      label: "Data início",
+      className: "hidden md:table-cell",
+      render: (workout) => formatDateBR(workout.start_date),
+    },
+    {
+      key: "status",
+      label: "Status",
+      render: (workout) => (
+        <Badge className="gap-1.5" variant={workout.active ? "default" : "secondary"}>
+          <span
+            className={`h-2 w-2 rounded-full ${
+              workout.active ? "bg-green-400" : "bg-gray-400"
+            }`}
+          />
+          {workout.active ? "Ativo" : "Inativo"}
+        </Badge>
+      ),
+    },
+    {
+      key: "actions",
+      label: "Ações",
+      render: (workout) => (
+        <div className="flex flex-wrap items-center gap-2">
+          <ActionIconButton
+            icon={Eye}
+            tooltip="Visualizar"
+            onClick={() => navigate(`/trainer/workouts/${workout.id}`)}
+          />
+          <ActionIconButton
+            icon={Pencil}
+            tooltip="Editar"
+            onClick={() => navigate(`/trainer/workouts/${workout.id}/edit`)}
+          />
+          <ActionIconButton
+            icon={workout.active ? Pause : Play}
+            tooltip={workout.active ? "Inativar treino" : "Ativar treino"}
+            onClick={() => handleToggleStatus(workout)}
+            loading={togglingId === workout.id}
+          />
+          <ActionIconButton
+            icon={Trash2}
+            tooltip="Excluir"
+            color="destructive"
+            onClick={() => handleDelete(workout.id)}
+            loading={deletingId === workout.id}
+          />
+        </div>
+      ),
+    },
+  ];
+
   return (
     <PageContainer>
       <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
@@ -161,11 +238,7 @@ export default function WorkoutsIndex() {
           />
         </div>
 
-        <Select
-          className="sm:w-48"
-          value={status}
-          onChange={handleStatusChange}
-        >
+        <Select className="sm:w-48" value={status} onChange={handleStatusChange}>
           {STATUS_OPTIONS.map((option) => (
             <option key={option.value} value={option.value}>
               {option.label}
@@ -174,201 +247,43 @@ export default function WorkoutsIndex() {
         </Select>
       </div>
 
-      <Card className="mt-4 border-border/80 bg-card/80">
-        {isLoading ? (
-          <CardContent className="overflow-x-auto p-0">
-            <TableSkeleton
-              columns={[
-                "Nome",
-                { label: "Aluno", className: "hidden sm:table-cell" },
-                { label: "Exercícios", className: "hidden lg:table-cell" },
-                { label: "Data início", className: "hidden md:table-cell" },
-                "Status",
-              ]}
-              actionsCount={4}
-              rows={6}
-            />
-          </CardContent>
-        ) : isError ? (
-          <CardContent>
-            <ErrorState onRetry={refetch} />
-          </CardContent>
-        ) : workouts.length === 0 ? (
-          <CardContent className="flex flex-col items-center justify-center gap-3 py-16 text-center animate-in fade-in duration-300">
-            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/15 text-primary">
-              <Dumbbell className="h-7 w-7" />
-            </div>
-            <div>
-              <h2 className="text-lg font-semibold">
-                {debouncedSearch
-                  ? "Nenhum treino encontrado"
-                  : "Nenhum treino cadastrado"}
-              </h2>
-              <p className="mt-1 text-sm text-muted-foreground">
-                {debouncedSearch
-                  ? "Tente buscar por outro nome de aluno."
-                  : "Cadastre um novo treino para começar a organizar as rotinas."}
-              </p>
-            </div>
-            {!debouncedSearch ? (
-              <Button
-                variant="outline"
-                onClick={() => navigate("/trainer/workouts/new")}
-              >
-                <Plus className="h-4 w-4" />
-                Cadastrar treino
-              </Button>
-            ) : null}
-          </CardContent>
-        ) : (
-          <>
-            <CardContent
-              className={`animate-in fade-in duration-300 overflow-x-auto p-0 transition-opacity ${
-                isFetching ? "opacity-60" : ""
-              }`}
-            >
-              <table className="min-w-full divide-y divide-border/70">
-                <thead className="bg-muted/30">
-                  <tr>
-                    <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">
-                      Nome
-                    </th>
-                    <th className="hidden px-4 py-3 text-left text-sm font-semibold text-foreground sm:table-cell">
-                      Aluno
-                    </th>
-                    <th className="hidden px-4 py-3 text-left text-sm font-semibold text-foreground lg:table-cell">
-                      Exercícios
-                    </th>
-                    <th className="hidden px-4 py-3 text-left text-sm font-semibold text-foreground md:table-cell">
-                      Data início
-                    </th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">
-                      Status
-                    </th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">
-                      Ações
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border/60 bg-card/70">
-                  {workouts.map((workout) => (
-                    <tr
-                      key={workout.id}
-                      className="transition-colors hover:bg-muted/10"
-                    >
-                      <td className="px-4 py-3 text-sm font-medium text-foreground">
-                        {workout.name}
-                        <p className="mt-0.5 text-xs font-normal text-muted-foreground sm:hidden">
-                          {workout.student_profile?.user?.name || "—"}
-                        </p>
-                      </td>
-                      <td className="hidden px-4 py-3 text-sm text-muted-foreground sm:table-cell">
-                        {workout.student_profile?.user?.name || "—"}
-                      </td>
-                      <td className="hidden px-4 py-3 text-sm text-muted-foreground lg:table-cell">
-                        {workout.exercises_count ?? 0}
-                      </td>
-                      <td className="hidden px-4 py-3 text-sm text-muted-foreground md:table-cell">
-                        {formatDateBR(workout.start_date)}
-                      </td>
-                      <td className="px-4 py-3">
-                        <Badge
-                          className="gap-1.5"
-                          variant={workout.active ? "default" : "secondary"}
-                        >
-                          <span
-                            className={`h-2 w-2 rounded-full ${
-                              workout.active ? "bg-green-400" : "bg-gray-400"
-                            }`}
-                          />
-                          {workout.active ? "Ativo" : "Inativo"}
-                        </Badge>
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <ActionIconButton
-                            icon={Eye}
-                            tooltip="Visualizar"
-                            onClick={() =>
-                              navigate(`/trainer/workouts/${workout.id}`)
-                            }
-                          />
-                          <ActionIconButton
-                            icon={Pencil}
-                            tooltip="Editar"
-                            onClick={() =>
-                              navigate(`/trainer/workouts/${workout.id}/edit`)
-                            }
-                          />
-                          <ActionIconButton
-                            icon={workout.active ? Pause : Play}
-                            tooltip={
-                              workout.active ? "Inativar treino" : "Ativar treino"
-                            }
-                            onClick={() => handleToggleStatus(workout)}
-                            loading={togglingId === workout.id}
-                          />
-                          <ActionIconButton
-                            icon={Trash2}
-                            tooltip="Excluir"
-                            color="destructive"
-                            onClick={() => handleDelete(workout.id)}
-                            loading={deletingId === workout.id}
-                          />
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </CardContent>
-
-            <div className="flex flex-col gap-3 border-t border-border/80 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <span>Exibir</span>
-                <Select
-                  className="!h-9 w-20"
-                  value={perPage}
-                  onChange={handlePerPageChange}
-                >
-                  {PER_PAGE_OPTIONS.map((option) => (
-                    <option key={option} value={option}>
-                      {option}
-                    </option>
-                  ))}
-                </Select>
-                <span>
-                  {from}–{to} de {total}
-                </span>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={page <= 1}
-                  onClick={() => setPage((current) => Math.max(1, current - 1))}
-                >
-                  Anterior
-                </Button>
-                <span className="text-sm text-muted-foreground">
-                  Página {page} de {lastPage}
-                </span>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={page >= lastPage}
-                  onClick={() =>
-                    setPage((current) => Math.min(lastPage, current + 1))
-                  }
-                >
-                  Próxima
-                </Button>
-              </div>
-            </div>
-          </>
-        )}
-      </Card>
+      <DataTable
+        className="mt-4"
+        columns={columns}
+        rows={workouts}
+        loading={isLoading}
+        fetching={isFetching}
+        error={isError}
+        onRetry={refetch}
+        actionsCount={4}
+        emptyIcon={Dumbbell}
+        emptyTitle={
+          debouncedSearch ? "Nenhum treino encontrado" : "Nenhum treino cadastrado"
+        }
+        emptyDescription={
+          debouncedSearch
+            ? "Tente buscar por outro nome de aluno."
+            : "Cadastre um novo treino para começar a organizar as rotinas."
+        }
+        emptyAction={
+          !debouncedSearch ? (
+            <Button variant="outline" onClick={() => navigate("/trainer/workouts/new")}>
+              <Plus className="h-4 w-4" />
+              Cadastrar treino
+            </Button>
+          ) : null
+        }
+        pagination={{
+          summary: `${from}–${to} de ${total}`,
+          page,
+          lastPage,
+          onPrev: () => setPage((current) => Math.max(1, current - 1)),
+          onNext: () => setPage((current) => Math.min(lastPage, current + 1)),
+          perPage,
+          perPageOptions: PER_PAGE_OPTIONS,
+          onPerPageChange: handlePerPageChange,
+        }}
+      />
     </PageContainer>
   );
 }

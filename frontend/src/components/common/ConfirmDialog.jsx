@@ -24,7 +24,7 @@ export default function ConfirmDialog({
         className="fixed inset-0 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200"
       />
 
-      <Card className="relative w-full max-w-sm border-border/80 bg-card shadow-[0_20px_60px_rgba(0,0,0,0.35)] animate-in fade-in zoom-in-95 slide-in-from-bottom-2 duration-200">
+      <Card className="relative w-full max-w-sm border-border/80 bg-card shadow-modal animate-in fade-in zoom-in-95 slide-in-from-bottom-2 duration-200">
         <CardContent className="p-6">
           <div
             className={

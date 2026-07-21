@@ -23,7 +23,7 @@ export default function DailyCheckinReminder() {
   }
 
   return (
-    <Card className="mb-6 border-primary/40 bg-card/95 shadow-[0_12px_40px_rgba(0,0,0,0.25)] animate-in fade-in slide-in-from-top-4 duration-300">
+    <Card className="mb-6 border-primary/40 bg-card/95 animate-in fade-in slide-in-from-top-4 duration-300">
       <div className="flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
         <div className="flex items-start gap-3">
           <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/15 text-primary">

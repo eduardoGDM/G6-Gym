@@ -5,13 +5,10 @@ import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 
 import ActionIconButton from "../../../components/common/ActionIconButton";
+import DataTable from "../../../components/common/DataTable";
 import PageContainer from "../../../components/common/PageContainer";
 import PageTitle from "../../../components/common/PageTitle";
-import ErrorState from "../../../components/loading/ErrorState";
-import TableSkeleton from "../../../components/loading/TableSkeleton";
 import { Badge } from "../../../components/ui/badge";
-import { Button } from "../../../components/ui/button";
-import { Card, CardContent } from "../../../components/ui/card";
 import { Input } from "../../../components/ui/input";
 import { useDebouncedValue } from "../../../hooks/useDebouncedValue";
 import trainerDailyCheckinsService from "../../../services/TrainerDailyCheckinsService";
@@ -100,6 +97,61 @@ export default function DailyCheckinsIndex() {
   const to = Math.min(page * PER_PAGE, total);
   const hasFilters = Boolean(student || dateFrom || dateTo);
 
+  const columns = [
+    {
+      key: "student",
+      label: "Aluno",
+      className: "text-sm font-medium text-foreground",
+      render: (checkin) => (
+        <>
+          {checkin.student_profile?.user?.name || "—"}
+          <p className="mt-0.5 text-xs font-normal text-muted-foreground sm:hidden">
+            {formatDate(checkin.date)}
+          </p>
+        </>
+      ),
+    },
+    {
+      key: "date",
+      label: "Data avaliada",
+      className: "hidden sm:table-cell",
+      render: (checkin) => formatDate(checkin.date),
+    },
+    {
+      key: "sleep_rating",
+      label: "Nota do sono",
+      render: (checkin) => <Badge variant="outline">{checkin.sleep_rating}</Badge>,
+    },
+    {
+      key: "diet_rating",
+      label: "Nota da dieta",
+      render: (checkin) => <Badge variant="outline">{checkin.diet_rating}</Badge>,
+    },
+    {
+      key: "summary",
+      label: "Resumo das observações",
+      className: "hidden md:table-cell",
+      render: (checkin) => summarizeObservations(checkin),
+    },
+    {
+      key: "created_at",
+      label: "Data de criação",
+      className: "hidden lg:table-cell",
+      render: (checkin) => formatDateTime(checkin.created_at),
+    },
+    {
+      key: "actions",
+      label: "Ações",
+      render: (checkin) => (
+        <ActionIconButton
+          icon={Eye}
+          tooltip="Visualizar"
+          onClick={() => navigate(`/trainer/checkins/daily/${checkin.id}`)}
+        />
+      ),
+    },
+  ];
+
   return (
     <PageContainer>
       <PageTitle
@@ -134,151 +186,32 @@ export default function DailyCheckinsIndex() {
         />
       </div>
 
-      <Card className="mt-4 border-border/80 bg-card/80">
-        {isLoading ? (
-          <CardContent className="overflow-x-auto p-0">
-            <TableSkeleton
-              columns={[
-                "Aluno",
-                { label: "Data avaliada", className: "hidden sm:table-cell" },
-                "Nota do sono",
-                "Nota da dieta",
-                { label: "Resumo das observações", className: "hidden md:table-cell" },
-                { label: "Data de criação", className: "hidden lg:table-cell" },
-              ]}
-              actionsCount={1}
-              rows={6}
-            />
-          </CardContent>
-        ) : isError ? (
-          <CardContent>
-            <ErrorState onRetry={refetch} />
-          </CardContent>
-        ) : checkins.length === 0 ? (
-          <CardContent className="flex flex-col items-center justify-center gap-3 py-16 text-center animate-in fade-in duration-300">
-            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/15 text-primary">
-              <BedDouble className="h-7 w-7" />
-            </div>
-            <div>
-              <h2 className="text-lg font-semibold">
-                {hasFilters
-                  ? "Nenhum check-in encontrado"
-                  : "Nenhum check-in registrado ainda"}
-              </h2>
-              <p className="mt-1 text-sm text-muted-foreground">
-                {hasFilters
-                  ? "Tente ajustar os filtros de aluno ou período."
-                  : "Assim que seus alunos registrarem o check-in diário, ele aparecerá aqui."}
-              </p>
-            </div>
-          </CardContent>
-        ) : (
-          <>
-            <CardContent
-              className={`animate-in fade-in duration-300 overflow-x-auto p-0 transition-opacity ${
-                isFetching ? "opacity-60" : ""
-              }`}
-            >
-              <table className="min-w-full divide-y divide-border/70">
-                <thead className="bg-muted/30">
-                  <tr>
-                    <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">
-                      Aluno
-                    </th>
-                    <th className="hidden px-4 py-3 text-left text-sm font-semibold text-foreground sm:table-cell">
-                      Data avaliada
-                    </th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">
-                      Nota do sono
-                    </th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">
-                      Nota da dieta
-                    </th>
-                    <th className="hidden px-4 py-3 text-left text-sm font-semibold text-foreground md:table-cell">
-                      Resumo das observações
-                    </th>
-                    <th className="hidden px-4 py-3 text-left text-sm font-semibold text-foreground lg:table-cell">
-                      Data de criação
-                    </th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">
-                      Ações
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border/60 bg-card/70">
-                  {checkins.map((checkin) => (
-                    <tr
-                      key={checkin.id}
-                      className="transition-colors hover:bg-muted/10"
-                    >
-                      <td className="px-4 py-3 text-sm font-medium text-foreground">
-                        {checkin.student_profile?.user?.name || "—"}
-                        <p className="mt-0.5 text-xs font-normal text-muted-foreground sm:hidden">
-                          {formatDate(checkin.date)}
-                        </p>
-                      </td>
-                      <td className="hidden px-4 py-3 text-sm text-muted-foreground sm:table-cell">
-                        {formatDate(checkin.date)}
-                      </td>
-                      <td className="px-4 py-3">
-                        <Badge variant="outline">{checkin.sleep_rating}</Badge>
-                      </td>
-                      <td className="px-4 py-3">
-                        <Badge variant="outline">{checkin.diet_rating}</Badge>
-                      </td>
-                      <td className="hidden px-4 py-3 text-sm text-muted-foreground md:table-cell">
-                        {summarizeObservations(checkin)}
-                      </td>
-                      <td className="hidden px-4 py-3 text-sm text-muted-foreground lg:table-cell">
-                        {formatDateTime(checkin.created_at)}
-                      </td>
-                      <td className="px-4 py-3">
-                        <ActionIconButton
-                          icon={Eye}
-                          tooltip="Visualizar"
-                          onClick={() =>
-                            navigate(`/trainer/checkins/daily/${checkin.id}`)
-                          }
-                        />
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </CardContent>
-
-            <div className="flex flex-col gap-3 border-t border-border/80 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
-              <span className="text-sm text-muted-foreground">
-                {from}–{to} de {total}
-              </span>
-
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={page <= 1}
-                  onClick={() => setPage((current) => Math.max(1, current - 1))}
-                >
-                  Anterior
-                </Button>
-                <span className="text-sm text-muted-foreground">
-                  Página {page} de {lastPage}
-                </span>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={page >= lastPage}
-                  onClick={() =>
-                    setPage((current) => Math.min(lastPage, current + 1))
-                  }
-                >
-                  Próxima
-                </Button>
-              </div>
-            </div>
-          </>
-        )}
-      </Card>
+      <DataTable
+        className="mt-4"
+        columns={columns}
+        rows={checkins}
+        loading={isLoading}
+        fetching={isFetching}
+        error={isError}
+        onRetry={refetch}
+        actionsCount={1}
+        emptyIcon={BedDouble}
+        emptyTitle={
+          hasFilters ? "Nenhum check-in encontrado" : "Nenhum check-in registrado ainda"
+        }
+        emptyDescription={
+          hasFilters
+            ? "Tente ajustar os filtros de aluno ou período."
+            : "Assim que seus alunos registrarem o check-in diário, ele aparecerá aqui."
+        }
+        pagination={{
+          summary: `${from}–${to} de ${total}`,
+          page,
+          lastPage,
+          onPrev: () => setPage((current) => Math.max(1, current - 1)),
+          onNext: () => setPage((current) => Math.min(lastPage, current + 1)),
+        }}
+      />
     </PageContainer>
   );
 }
