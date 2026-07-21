@@ -21,7 +21,8 @@ class WorkoutController extends Controller
 		}
 
 		$workouts = Workout::with([
-			'workoutExercises.exercise.muscleGroup'
+			'workoutExercises.exercise.muscleGroup',
+			'workoutExercises.series',
 		])
 			->where('student_profile_id', $profile->id)
 			->where('active', true)
@@ -43,7 +44,8 @@ class WorkoutController extends Controller
 		}
 
 		$workout = Workout::with([
-			'workoutExercises.exercise.muscleGroup'
+			'workoutExercises.exercise.muscleGroup',
+			'workoutExercises.series',
 		])
 			->where('student_profile_id', $profile->id)
 			->where('id', $id)

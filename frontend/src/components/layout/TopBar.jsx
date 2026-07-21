@@ -1,11 +1,12 @@
-import { Bell, Menu, MoonStar, UserCircle2 } from "lucide-react";
+import { Menu, UserCircle2 } from "lucide-react";
 import { cn } from "../../lib/utils";
 
 export default function Topbar({
   onMenuClick,
-  title = "G6 Academia",
-  subtitle = "Painel administrativo",
+  title = "G6Fit",
+  subtitle = "",
   isDesktop,
+  roleLabel = "Personal",
 }) {
   return (
     <header className="sticky top-0 z-30 border-b border-border bg-background/80 backdrop-blur-xl">
@@ -38,22 +39,6 @@ export default function Topbar({
         </div>
 
         <div className="flex items-center gap-2 sm:gap-3">
-          <button
-            type="button"
-            className="hidden h-11 w-11 items-center justify-center rounded-2xl border border-border bg-card text-foreground transition hover:bg-accent sm:inline-flex"
-            aria-label="Alternar tema"
-          >
-            <MoonStar className="h-4 w-4" />
-          </button>
-
-          <button
-            type="button"
-            className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-border bg-card text-foreground transition hover:bg-accent"
-            aria-label="Notificações"
-          >
-            <Bell className="h-4 w-4" />
-          </button>
-
           <div className="flex items-center gap-3 rounded-full border border-border bg-card px-1.5 py-1.5 pr-4">
             <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/15 text-primary">
               <UserCircle2 className="h-5 w-5" />
@@ -61,7 +46,7 @@ export default function Topbar({
 
             <div className="hidden leading-tight sm:block">
               <p className="text-sm font-semibold text-foreground">Usuario</p>
-              <p className="text-xs text-muted-foreground">Personal</p>
+              <p className="text-xs text-muted-foreground">{roleLabel}</p>
             </div>
           </div>
         </div>

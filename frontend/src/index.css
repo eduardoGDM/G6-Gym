@@ -18,12 +18,22 @@
   --color-accent: #23232f;
   --color-accent-foreground: #ffffff;
   --color-destructive: #ef4444;
+  --color-destructive-foreground: #ffffff;
+  --color-success: #22c55e;
+  --color-success-foreground: #ffffff;
   --color-border: #2a2a35;
   --color-input: #2a2a35;
   --color-ring: #7c3aed;
   --radius-lg: 1rem;
   --radius-xl: 1.125rem;
   --radius-2xl: 1.25rem;
+
+  /* Elevation scale — sombras sutis, contraste vem de cor/borda. */
+  --shadow-none: none;
+  --shadow-subtle: 0 1px 2px 0 rgba(0, 0, 0, 0.24);
+  --shadow-card: 0 2px 6px 0 rgba(0, 0, 0, 0.28), 0 1px 2px 0 rgba(0, 0, 0, 0.16);
+  --shadow-popover: 0 6px 16px 0 rgba(0, 0, 0, 0.32);
+  --shadow-modal: 0 12px 28px 0 rgba(0, 0, 0, 0.4);
 }
 
 @layer base {
@@ -65,5 +75,10 @@
   *::-webkit-scrollbar-thumb {
     background: #7c3aed;
     border-radius: 999px;
+  }
+
+  input[type="date"]::-webkit-calendar-picker-indicator {
+    display: none;
+    -webkit-appearance: none;
   }
 }

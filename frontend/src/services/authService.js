@@ -2,7 +2,7 @@ import { sanctumRequest } from "../sanctumRequest";
 
 const authService = {
   async me() {
-    const { data } = await sanctumRequest("get", "/api/auth/user");
+    const { data } = await sanctumRequest("get", "/auth/user");
     return data;
   },
 
@@ -16,16 +16,12 @@ const authService = {
   },
 
   async login(credentials) {
-    const { data } = await sanctumRequest(
-      "post",
-      "/api/auth/login",
-      credentials,
-    );
+    const { data } = await sanctumRequest("post", "/auth/login", credentials);
     return data;
   },
 
   async logout() {
-    const { data } = await sanctumRequest("post", "/api/auth/logout");
+    const { data } = await sanctumRequest("post", "/auth/logout");
     return data;
   },
 };

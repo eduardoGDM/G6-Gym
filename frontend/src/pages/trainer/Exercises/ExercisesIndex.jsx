@@ -1,35 +1,62 @@
-import { Dumbbell, Eye, Pencil, Plus, Trash2 } from "lucide-react";
+import {
+  keepPreviousData,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
+import { Dumbbell, Eye, Pencil, Plus, Search, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 
-import api from "../../../api/axios";
+import ActionIconButton from "../../../components/common/ActionIconButton";
+import { crudToast } from "../../../components/common/crudToast";
+import DataTable from "../../../components/common/DataTable";
 import PageContainer from "../../../components/common/PageContainer";
 import PageTitle from "../../../components/common/PageTitle";
 import { Button } from "../../../components/ui/button";
-import { Card, CardContent } from "../../../components/ui/card";
+import { Input } from "../../../components/ui/input";
+import { useDebouncedValue } from "../../../hooks/useDebouncedValue";
+import exercisesService from "../../../services/ExercisesService";
 
-export default function ExerciciosIndex() {
+const PER_PAGE_OPTIONS = [10, 25, 50];
+
+export default function ExercisesIndex() {
   const navigate = useNavigate();
-  const [exercicios, setExercicios] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
+
+  const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const [perPage, setPerPage] = useState(10);
   const [deletingId, setDeletingId] = useState(null);
 
-  const carregarExercicios = async () => {
-    try {
-      setLoading(true);
-      const { data } = await api.get("/trainer/exercicios");
-      setExercicios(data || []);
-    } catch (error) {
-      toast.error("Não foi possível carregar os exercícios.", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const debouncedSearch = useDebouncedValue(search, 500);
+
+  const [lastDebouncedSearch, setLastDebouncedSearch] =
+    useState(debouncedSearch);
+  if (debouncedSearch !== lastDebouncedSearch) {
+    setLastDebouncedSearch(debouncedSearch);
+    setPage(1);
+  }
+
+  const { data, isLoading, isFetching, isError, refetch } = useQuery({
+    queryKey: ["exercises", { page, search: debouncedSearch, perPage }],
+    queryFn: () =>
+      exercisesService.search({ page, perPage, search: debouncedSearch }),
+    placeholderData: keepPreviousData,
+  });
 
   useEffect(() => {
-    carregarExercicios();
-  }, []);
+    if (isError) {
+      toast.error("Não foi possível carregar os exercícios.");
+    }
+  }, [isError]);
+
+  const exercises = data?.data || [];
+  const meta = data?.meta;
+  const total = meta?.total || 0;
+  const lastPage = meta?.last_page || 1;
+  const from = total === 0 ? 0 : (page - 1) * perPage + 1;
+  const to = Math.min(page * perPage, total);
 
   const handleDelete = async (id) => {
     if (!window.confirm("Deseja realmente excluir este exercício?")) {
@@ -38,17 +65,75 @@ export default function ExerciciosIndex() {
 
     try {
       setDeletingId(id);
-      await api.delete(`/trainer/exercicios/${id}`);
-      toast.success("Exercício removido com sucesso");
-      await carregarExercicios();
-    } catch (error) {
-      const message =
-        error.response?.data?.message || "Erro ao excluir o exercício";
-      toast.error(message);
+      await crudToast(exercisesService.remove(id), {
+        action: "delete",
+        entity: "Exercício",
+      });
+      await queryClient.invalidateQueries({ queryKey: ["exercises"] });
+    } catch {
+      // erro já exibido pelo crudToast
     } finally {
       setDeletingId(null);
     }
   };
+
+  const handlePerPageChange = (event) => {
+    setPerPage(Number(event.target.value));
+    setPage(1);
+  };
+
+  const columns = [
+    {
+      key: "name",
+      label: "Nome",
+      className: "text-sm font-medium text-foreground",
+      render: (exercise) => (
+        <>
+          {exercise.name}
+          <p className="mt-0.5 text-xs font-normal text-muted-foreground sm:hidden">
+            {exercise.muscle_group?.name || "—"}
+          </p>
+        </>
+      ),
+    },
+    {
+      key: "muscle_group",
+      label: "Grupo muscular",
+      className: "hidden sm:table-cell",
+      render: (exercise) => exercise.muscle_group?.name || "—",
+    },
+    {
+      key: "equipment",
+      label: "Equipamento",
+      className: "hidden md:table-cell",
+      render: (exercise) => exercise.equipment || "—",
+    },
+    {
+      key: "actions",
+      label: "Ações",
+      render: (exercise) => (
+        <div className="flex flex-wrap items-center gap-2">
+          <ActionIconButton
+            icon={Eye}
+            tooltip="Visualizar"
+            onClick={() => navigate(`/trainer/exercises/${exercise.id}`)}
+          />
+          <ActionIconButton
+            icon={Pencil}
+            tooltip="Editar"
+            onClick={() => navigate(`/trainer/exercises/${exercise.id}/edit`)}
+          />
+          <ActionIconButton
+            icon={Trash2}
+            tooltip="Excluir"
+            color="destructive"
+            onClick={() => handleDelete(exercise.id)}
+            loading={deletingId === exercise.id}
+          />
+        </div>
+      ),
+    },
+  ];
 
   return (
     <PageContainer>
@@ -68,24 +153,39 @@ export default function ExerciciosIndex() {
         </Button>
       </div>
 
-      <Card className="mt-4 border-border/80 bg-card/80">
-        {loading ? (
-          <CardContent className="flex items-center justify-center py-16 text-sm text-muted-foreground">
-            Carregando exercícios...
-          </CardContent>
-        ) : exercicios.length === 0 ? (
-          <CardContent className="flex flex-col items-center justify-center gap-3 py-16 text-center">
-            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-secondary/15 text-secondary">
-              <Dumbbell className="h-7 w-7" />
-            </div>
-            <div>
-              <h2 className="text-lg font-semibold">
-                Nenhum exercício cadastrado
-              </h2>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Adicione exercícios para montar treinos mais completos.
-              </p>
-            </div>
+      <div className="relative mt-4 max-w-sm">
+        <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <Input
+          value={search}
+          onChange={(event) => setSearch(event.target.value)}
+          placeholder="Buscar exercício..."
+          className="pl-10"
+        />
+      </div>
+
+      <DataTable
+        className="mt-4"
+        columns={columns}
+        rows={exercises}
+        loading={isLoading}
+        fetching={isFetching}
+        error={isError}
+        onRetry={refetch}
+        actionsCount={3}
+        emptyIcon={Dumbbell}
+        emptyTone="secondary"
+        emptyTitle={
+          debouncedSearch
+            ? "Nenhum exercício encontrado"
+            : "Nenhum exercício cadastrado"
+        }
+        emptyDescription={
+          debouncedSearch
+            ? "Tente buscar por outro nome ou grupo muscular."
+            : "Adicione exercícios para montar treinos mais completos."
+        }
+        emptyAction={
+          !debouncedSearch ? (
             <Button
               variant="outline"
               onClick={() => navigate("/trainer/exercises/new")}
@@ -93,85 +193,19 @@ export default function ExerciciosIndex() {
               <Plus className="h-4 w-4" />
               Cadastrar exercício
             </Button>
-          </CardContent>
-        ) : (
-          <CardContent className="overflow-x-auto p-0">
-            <table className="min-w-full divide-y divide-border/70">
-              <thead className="bg-muted/30">
-                <tr>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">
-                    Nome
-                  </th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">
-                    Grupo muscular
-                  </th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">
-                    Equipamento
-                  </th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">
-                    Ações
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border/60 bg-card/70">
-                {exercicios.map((exercicio) => (
-                  <tr
-                    key={exercicio.id}
-                    className="transition-colors hover:bg-muted/10"
-                  >
-                    <td className="px-4 py-3 text-sm font-medium text-foreground">
-                      {exercicio.nome}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-muted-foreground">
-                      {exercicio.grupoMuscular?.nome || "—"}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-muted-foreground">
-                      {exercicio.equipamento || "—"}
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() =>
-                            navigate(`/trainer/exercicios/${exercicio.id}`)
-                          }
-                        >
-                          <Eye className="h-4 w-4" />
-                          Visualizar
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() =>
-                            navigate(
-                              `/trainer/exercicios/${exercicio.id}/editar`,
-                            )
-                          }
-                        >
-                          <Pencil className="h-4 w-4" />
-                          Editar
-                        </Button>
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          onClick={() => handleDelete(exercicio.id)}
-                          disabled={deletingId === exercicio.id}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                          {deletingId === exercicio.id
-                            ? "Excluindo..."
-                            : "Excluir"}
-                        </Button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </CardContent>
-        )}
-      </Card>
+          ) : null
+        }
+        pagination={{
+          summary: `${from}–${to} de ${total}`,
+          page,
+          lastPage,
+          onPrev: () => setPage((current) => Math.max(1, current - 1)),
+          onNext: () => setPage((current) => Math.min(lastPage, current + 1)),
+          perPage,
+          perPageOptions: PER_PAGE_OPTIONS,
+          onPerPageChange: handlePerPageChange,
+        }}
+      />
     </PageContainer>
   );
 }

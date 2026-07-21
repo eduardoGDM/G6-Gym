@@ -11,6 +11,7 @@ use App\Models\Exercise;
 use App\Models\StudentProfile;
 use App\Models\Workout;
 use App\Models\WorkoutExercise;
+use App\Models\WorkoutExerciseSeries;
 
 class SuperSeeder extends Seeder
 {
@@ -100,36 +101,91 @@ class SuperSeeder extends Seeder
 		// WORKOUT EXERCISES
 		// ======================
 
-		WorkoutExercise::create([
+		$benchPressExercise = WorkoutExercise::create([
 			'workout_id' => $workout->id,
 			'exercise_id' => $benchPress->id,
-			'training_method_id' => null,
 			'order' => 1,
-			'warm_up_sets' => 2,
-			'recognition_sets' => 1,
-			'valid_sets' => 3,
-			'reps' => '10-12',
-			'rir' => 2,
-			'rest_seconds' => 60,
-			'cadence' => '2-1-2',
-			'load' => 40,
-			'observations' => 'Foco em execução perfeita',
+			'notes' => 'Foco em execução perfeita',
 		]);
 
-		WorkoutExercise::create([
+		WorkoutExerciseSeries::create([
+			'workout_exercise_id' => $benchPressExercise->id,
+			'order' => 1,
+			'repetitions' => 12,
+			'weight' => 40,
+			'rest_time' => 60,
+			'rir' => 2,
+			'cadence' => '2-1-2',
+			'notes' => 'Aquecimento',
+		]);
+
+		WorkoutExerciseSeries::create([
+			'workout_exercise_id' => $benchPressExercise->id,
+			'order' => 2,
+			'repetitions' => 10,
+			'weight' => 40,
+			'rest_time' => 60,
+			'rir' => 2,
+			'cadence' => '2-1-2',
+		]);
+
+		WorkoutExerciseSeries::create([
+			'workout_exercise_id' => $benchPressExercise->id,
+			'order' => 3,
+			'repetitions' => 10,
+			'weight' => 40,
+			'rest_time' => 60,
+			'rir' => 1,
+			'cadence' => '2-1-2',
+			'notes' => 'Última série até a falha',
+		]);
+
+		$squatExercise = WorkoutExercise::create([
 			'workout_id' => $workout->id,
 			'exercise_id' => $squat->id,
-			'training_method_id' => null,
 			'order' => 2,
-			'warm_up_sets' => 2,
-			'recognition_sets' => 1,
-			'valid_sets' => 4,
-			'reps' => '8-10',
+			'notes' => 'Controle de profundidade',
+		]);
+
+		WorkoutExerciseSeries::create([
+			'workout_exercise_id' => $squatExercise->id,
+			'order' => 1,
+			'repetitions' => 10,
+			'weight' => 60,
+			'rest_time' => 90,
 			'rir' => 1,
-			'rest_seconds' => 90,
 			'cadence' => '3-1-1',
-			'load' => 60,
-			'observations' => 'Controle de profundidade',
+		]);
+
+		WorkoutExerciseSeries::create([
+			'workout_exercise_id' => $squatExercise->id,
+			'order' => 2,
+			'repetitions' => 8,
+			'weight' => 60,
+			'rest_time' => 90,
+			'rir' => 1,
+			'cadence' => '3-1-1',
+		]);
+
+		WorkoutExerciseSeries::create([
+			'workout_exercise_id' => $squatExercise->id,
+			'order' => 3,
+			'repetitions' => 8,
+			'weight' => 65,
+			'rest_time' => 90,
+			'rir' => 0,
+			'cadence' => '3-1-1',
+			'notes' => 'Drop set na última série',
+		]);
+
+		WorkoutExerciseSeries::create([
+			'workout_exercise_id' => $squatExercise->id,
+			'order' => 4,
+			'repetitions' => 6,
+			'weight' => 65,
+			'rest_time' => 90,
+			'rir' => 0,
+			'cadence' => '3-1-1',
 		]);
 	}
 }

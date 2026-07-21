@@ -1,4 +1,4 @@
-import { LogOut, X } from "lucide-react";
+import { LogOut } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -13,6 +13,7 @@ export default function Sidebar({
   mobileOpen,
   onClose,
   isDesktop,
+  roleLabel = "Personal",
 }) {
   const navigate = useNavigate();
   const { logout } = useAuthStore();
@@ -34,7 +35,9 @@ export default function Sidebar({
     try {
       await authService.logout();
     } catch (error) {
-      console.warn("Backend logout falhou:", error);
+      if (import.meta.env.DEV) {
+        console.warn("Backend logout falhou:", error);
+      }
     } finally {
       logout();
       navigate("/");
@@ -68,18 +71,11 @@ export default function Sidebar({
           <Logo />
 
           <span className="rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-primary">
-            Personal
+            {roleLabel}
           </span>
         </div>
 
         <div className="flex-1 overflow-y-auto px-4 py-4">
-          <div className="mb-4 rounded-2xl border border-border bg-background/60 px-4 py-3">
-            <p className="text-sm font-semibold text-foreground">Academia G6</p>
-            <p className="mt-1 text-xs leading-5 text-muted-foreground">
-              Gestão organizada para alunos, treinos e exercícios.
-            </p>
-          </div>
-
           <nav className="space-y-2">
             {menuItems.map((item) => (
               <MenuItem
@@ -92,30 +88,10 @@ export default function Sidebar({
         </div>
 
         <div className="border-t border-border p-4 space-y-3">
-          <div className="flex items-center justify-between rounded-2xl border border-border bg-background/60 px-4 py-3">
-            <div>
-              <p className="text-sm font-semibold text-foreground">Modo</p>
-              <p className="text-xs text-muted-foreground">
-                {isDesktop ? "Desktop" : "Mobile"}
-              </p>
-            </div>
-
-            {!isDesktop ? (
-              <button
-                type="button"
-                onClick={onClose}
-                className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-border bg-card text-foreground transition hover:bg-accent"
-                aria-label="Fechar menu"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            ) : null}
-          </div>
-
           <button
             onClick={handleLogout}
             disabled={loadingLogout}
-            className="flex w-full items-center justify-center gap-2 rounded-xl bg-red-500/10 px-4 py-3 text-sm font-semibold text-red-500 transition hover:bg-red-500/20 disabled:opacity-50"
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-destructive/10 px-4 py-3 text-sm font-semibold text-destructive transition-colors hover:bg-destructive/20 disabled:cursor-not-allowed disabled:opacity-50"
           >
             <LogOut className="h-4 w-4" />
             {loadingLogout ? "Saindo..." : "Sair da conta"}

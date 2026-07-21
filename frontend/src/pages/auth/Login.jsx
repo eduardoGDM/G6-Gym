@@ -3,10 +3,11 @@ import { useState } from "react";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 
+import Spinner from "../../components/common/Spinner";
 import { Button } from "../../components/ui/button";
+import { Field } from "../../components/forms/Field";
 import { Card, CardContent } from "../../components/ui/card";
 import { Input } from "../../components/ui/input";
-import { Label } from "../../components/ui/label";
 import authService from "../../services/authService";
 import useAuthStore from "../../store/authStore";
 
@@ -64,7 +65,11 @@ export default function Login() {
       toast.success("Login realizado com sucesso!");
 
       const redirectPath =
-        userData.role === "trainer" ? "/trainer" : "/student";
+        userData.role === "trainer"
+          ? "/trainer"
+          : userData.role === "admin"
+            ? "/admin"
+            : "/student";
 
       navigate(redirectPath);
     } catch (error) {
@@ -85,14 +90,14 @@ export default function Login() {
     <div className="flex min-h-screen items-center justify-center px-4 py-10">
       <div className="grid w-full max-w-6xl gap-6 lg:grid-cols-[1.1fr_0.9fr]">
         {/* LADO ESQUERDO */}
-        <div className="flex flex-col justify-between rounded-[2rem] border border-border bg-card/80 p-8 shadow-[0_20px_60px_rgba(0,0,0,0.28)] backdrop-blur-xl lg:p-10">
+        <div className="flex flex-col justify-between rounded-[2rem] border border-border bg-card/80 p-8 shadow-card backdrop-blur-xl lg:p-10">
           <div>
             <div className="flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-lg shadow-primary/20">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-subtle">
                 <Dumbbell className="h-5 w-5" />
               </div>
               <div>
-                <p className="text-2xl font-bold tracking-tight">G6 Academia</p>
+                <p className="text-2xl font-bold tracking-tight">G6Fit</p>
                 <p className="text-sm text-muted-foreground">
                   Gestão moderna para academia
                 </p>
@@ -132,7 +137,7 @@ export default function Login() {
         </div>
 
         {/* FORM */}
-        <Card className="border-border/80 bg-card/90 shadow-[0_20px_60px_rgba(0,0,0,0.28)]">
+        <Card className="border-border/80 bg-card/90">
           <CardContent className="p-8 lg:p-10">
             <div className="mb-8">
               <p className="text-xs font-semibold uppercase tracking-[0.28em] text-primary/80">
@@ -148,9 +153,7 @@ export default function Login() {
 
             <form onSubmit={handleSubmit} className="space-y-5">
               {/* EMAIL */}
-              <div className="space-y-2">
-                <Label htmlFor="email">E-mail</Label>
-
+              <Field label="E-mail" htmlFor="email" error={errors.email}>
                 <div className="relative">
                   <Mail className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
 
@@ -158,23 +161,18 @@ export default function Login() {
                     id="email"
                     type="email"
                     placeholder="usuario@email.com"
-                    className={`pl-10 ${errors.email ? "border-red-500" : ""}`}
+                    className="pl-10"
+                    aria-invalid={errors.email ? true : undefined}
                     value={formData.email}
                     onChange={handleChange}
                     disabled={loading}
                     autoComplete="email"
                   />
                 </div>
-
-                {errors.email && (
-                  <p className="text-sm text-red-500">{errors.email}</p>
-                )}
-              </div>
+              </Field>
 
               {/* PASSWORD */}
-              <div className="space-y-2">
-                <Label htmlFor="password">Senha</Label>
-
+              <Field label="Senha" htmlFor="password" error={errors.password}>
                 <div className="relative">
                   <Lock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
 
@@ -182,18 +180,15 @@ export default function Login() {
                     id="password"
                     type="password"
                     placeholder="Sua senha"
-                    className={`pl-10 ${errors.password ? "border-red-500" : ""}`}
+                    className="pl-10"
+                    aria-invalid={errors.password ? true : undefined}
                     value={formData.password}
                     onChange={handleChange}
                     disabled={loading}
                     autoComplete="current-password"
                   />
                 </div>
-
-                {errors.password && (
-                  <p className="text-sm text-red-500">{errors.password}</p>
-                )}
-              </div>
+              </Field>
 
               {/* REMEMBER */}
               <div className="flex items-center justify-between text-sm">
@@ -209,7 +204,7 @@ export default function Login() {
                 <button
                   type="button"
                   className="text-primary hover:underline"
-                  onClick={() => toast.info("Função em desenvolvimento")}
+                  onClick={() => toast("Função em desenvolvimento")}
                 >
                   Esqueci minha senha
                 </button>
@@ -223,7 +218,11 @@ export default function Login() {
                 disabled={loading}
               >
                 {loading ? "Entrando..." : "Entrar"}
-                {!loading && <ArrowRight className="h-4 w-4" />}
+                {loading ? (
+                  <Spinner className="h-4 w-4" />
+                ) : (
+                  <ArrowRight className="h-4 w-4" />
+                )}
               </Button>
 
               {/* DEV INFO */}

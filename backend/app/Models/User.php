@@ -20,6 +20,7 @@ class User extends Authenticatable
 		'email',
 		'password',
 		'role',
+		'is_active',
 	];
 
 	protected $hidden = [
@@ -30,6 +31,7 @@ class User extends Authenticatable
 	protected $casts = [
 		'email_verified_at' => 'datetime',
 		'password' => 'hashed',
+		'is_active' => 'boolean',
 	];
 
 	public function studentProfile(): HasOne
@@ -50,5 +52,10 @@ class User extends Authenticatable
 	public function isStudent(): bool
 	{
 		return $this->role === 'student';
+	}
+
+	public function isAdmin(): bool
+	{
+		return $this->role === 'admin';
 	}
 }

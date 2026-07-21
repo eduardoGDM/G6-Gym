@@ -5,6 +5,8 @@ import { useNavigate, useParams } from "react-router-dom";
 
 import PageContainer from "../../../components/common/PageContainer";
 import PageTitle from "../../../components/common/PageTitle";
+import DetailsSkeleton from "../../../components/loading/DetailsSkeleton";
+import ErrorState from "../../../components/loading/ErrorState";
 import { Button } from "../../../components/ui/button";
 import {
   Card,
@@ -14,26 +16,31 @@ import {
   CardTitle,
 } from "../../../components/ui/card";
 import studentsService from "../../../services/StudentsService";
+import AnamnesisSection from "./components/AnamnesisSection";
+import ExerciseEvolutionSection from "./components/ExerciseEvolutionSection";
 
 export default function StudentsShow() {
   const navigate = useNavigate();
   const { id } = useParams();
   const [student, setStudent] = useState(null);
   const [loading, setLoading] = useState(null);
+  const [error, setError] = useState(false);
+
+  const loadStudent = async () => {
+    try {
+      setLoading(true);
+      setError(false);
+      const data = await studentsService.getById(id);
+      setStudent(data);
+    } catch {
+      setError(true);
+      toast.error("Não foi possível carregar o aluno.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const loadStudent = async () => {
-      try {
-        setLoading(true);
-        const data = await studentsService.getById(id);
-        setStudent(data);
-      } catch (error) {
-        toast.error("Não foi possível carregar o student.");
-      } finally {
-        setLoading(false);
-      }
-    };
-
     loadStudent();
   }, [id]);
 
@@ -42,8 +49,8 @@ export default function StudentsShow() {
       <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
         <PageTitle
           eyebrow="Visualização"
-          title="Detalhes do student"
-          description="Consulte todos os dados cadastrados para este student."
+          title="Detalhes do aluno"
+          description="Consulte todos os dados cadastrados para este aluno."
         />
 
         <Button
@@ -68,15 +75,15 @@ export default function StudentsShow() {
 
         <CardContent className="px-6 py-6 sm:px-8">
           {loading ? (
-            <div className="py-8 text-center text-sm text-muted-foreground">
-              Carregando student...
-            </div>
+            <DetailsSkeleton blocks={4} linesPerBlock={2} />
+          ) : error ? (
+            <ErrorState onRetry={loadStudent} />
           ) : !student ? (
-            <div className="py-8 text-center text-sm text-muted-foreground">
+            <div className="py-8 text-center text-sm text-muted-foreground animate-in fade-in duration-300">
               Aluno não encontrado.
             </div>
           ) : (
-            <div className="grid gap-6 md:grid-cols-2">
+            <div className="grid gap-6 md:grid-cols-2 animate-in fade-in slide-in-from-bottom-2 duration-300">
               <div className="space-y-4 rounded-2xl border border-border/80 bg-background/60 p-5">
                 <div className="flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.22em] text-muted-foreground">
                   <UserRound className="h-4 w-4" />
@@ -149,6 +156,13 @@ export default function StudentsShow() {
           )}
         </CardContent>
       </Card>
+
+      {!loading && !error && student ? (
+        <>
+          <AnamnesisSection studentId={id} readOnly />
+          <ExerciseEvolutionSection studentId={id} />
+        </>
+      ) : null}
     </PageContainer>
   );
 }

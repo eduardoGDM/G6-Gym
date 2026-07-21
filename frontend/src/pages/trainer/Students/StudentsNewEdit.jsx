@@ -4,10 +4,13 @@ import { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
 import { useNavigate, useParams } from "react-router-dom";
-import * as yup from "yup";
 
+import { crudToast } from "../../../components/common/crudToast";
 import PageContainer from "../../../components/common/PageContainer";
 import PageTitle from "../../../components/common/PageTitle";
+import Spinner from "../../../components/common/Spinner";
+import { Field } from "../../../components/forms/Field";
+import FormSkeleton from "../../../components/loading/FormSkeleton";
 import { Button } from "../../../components/ui/button";
 import {
   Card,
@@ -17,66 +20,17 @@ import {
   CardTitle,
 } from "../../../components/ui/card";
 import { Input } from "../../../components/ui/input";
-import { Label } from "../../../components/ui/label";
 import { Select } from "../../../components/ui/select";
 import { Textarea } from "../../../components/ui/textarea";
 import studentsService from "../../../services/StudentsService";
-
-const schema = yup.object({
-  name: yup
-    .string()
-    .trim()
-    .required("O nome é obrigatório")
-    .max(255, "O nome deve ter no máximo 255 caracteres"),
-  email: yup
-    .string()
-    .trim()
-    .required("O e-mail é obrigatório")
-    .email("Digite um e-mail válido"),
-  password: yup
-    .string()
-    .trim()
-    .nullable()
-    .notRequired()
-    .when([], {
-      is: () => !Boolean(window.location.pathname.includes("/editar")),
-      then: (schema) => schema.required("A senha é obrigatória"),
-      otherwise: (schema) => schema.notRequired(),
-    }),
-  cpf: yup
-    .string()
-    .trim()
-    .required("O CPF é obrigatório")
-    .length(14, "O CPF deve ter 14 caracteres"),
-  phone: yup
-    .string()
-    .trim()
-    .nullable()
-    .notRequired()
-    .max(20, "O telefone deve ter no máximo 20 caracteres"),
-  birth_date: yup.string().trim().nullable().notRequired(),
-  gender: yup
-    .string()
-    .trim()
-    .nullable()
-    .notRequired()
-    .oneOf(["Masculino", "Feminino", "Outro"], "Selecione um sexo válido"),
-  height: yup
-    .number()
-    .transform((value, originalValue) => (originalValue === "" ? null : value))
-    .nullable()
-    .notRequired()
-    .min(0, "A altura deve ser maior ou igual a 0")
-    .max(3, "A altura deve ser menor ou igual a 3"),
-  current_weight: yup
-    .number()
-    .transform((value, originalValue) => (originalValue === "" ? null : value))
-    .nullable()
-    .notRequired()
-    .min(0, "O peso deve ser maior ou igual a 0")
-    .max(500, "O peso deve ser menor ou igual a 500"),
-  observations: yup.string().trim().nullable().notRequired(),
-});
+import AnamnesisSection from "./components/AnamnesisSection";
+import {
+  formatCpf,
+  formatDecimal,
+  formatPhone,
+  getTodayISO,
+  studentSchema,
+} from "./utils";
 
 const GENDER_OPTIONS = [
   { value: "Masculino", label: "Masculino" },
@@ -95,30 +49,38 @@ export default function StudentsNewEdit() {
     register,
     handleSubmit,
     reset,
+    setError,
     formState: { errors, isSubmitting },
   } = useForm({
-    resolver: yupResolver(schema),
+    resolver: yupResolver(studentSchema),
+    context: { isEdit },
     defaultValues: {
       name: "",
       email: "",
       password: "",
       cpf: "",
-      phone: "", // Alterado de telefone para phone
-      birth_date: "", // Alterado de data_nascimento para birth_date
+      phone: "",
+      birth_date: "",
       gender: "",
       height: "",
       current_weight: "",
-      observations: "", // Alterado de observacoes para observations
+      observations: "",
     },
   });
+
+  const cpfField = register("cpf");
+  const phoneField = register("phone");
+  const heightField = register("height");
+  const weightField = register("current_weight");
+  const todayISO = getTodayISO();
 
   const pageTitle = useMemo(
     () => ({
       eyebrow: isEdit ? "Edição" : "Cadastro",
-      title: isEdit ? "Editar student" : "Novo student",
+      title: isEdit ? "Editar aluno" : "Novo aluno",
       description: isEdit
-        ? "Atualize os dados do student selecionado."
-        : "Preencha os campos abaixo para criar um novo student.",
+        ? "Atualize os dados do aluno selecionado."
+        : "Preencha os campos abaixo para criar um novo aluno.",
     }),
     [isEdit],
   );
@@ -145,7 +107,7 @@ export default function StudentsNewEdit() {
           observations: data.observations || "",
         });
       } catch (error) {
-        toast.error("Não foi possível carregar os dados do student.");
+        toast.error("Não foi possível carregar os dados do aluno.");
       } finally {
         setInitialLoading(false);
       }
@@ -157,26 +119,45 @@ export default function StudentsNewEdit() {
   const onSubmit = async (data) => {
     try {
       setLoading(true);
+      const emptyToNull = (value) => (value === "" ? null : value);
+
       const payload = {
-        ...data,
-        height: data.height === "" ? null : Number(data.height),
-        current_weight:
-          data.current_weight === "" ? null : Number(data.current_weight),
+        name: data.name,
+        email: data.email,
+        cpf: data.cpf,
+        phone: emptyToNull(data.phone),
+        birth_date: emptyToNull(data.birth_date),
+        gender: emptyToNull(data.gender),
+        height: data.height,
+        current_weight: data.current_weight,
+        observations: emptyToNull(data.observations),
       };
 
-      if (isEdit) {
-        await studentsService.update(id, payload);
-        toast.success("Aluno atualizado com sucesso");
-      } else {
-        await studentsService.create(payload);
-        toast.success("Aluno criado com sucesso");
+      if (!isEdit || data.password) {
+        payload.password = data.password;
       }
 
+      const request = isEdit
+        ? studentsService.update(id, payload)
+        : studentsService.create(payload);
+
+      await crudToast(request, {
+        action: isEdit ? "update" : "create",
+        entity: "Aluno",
+        onError: (error) => {
+          const validationErrors = error.response?.data?.errors;
+
+          if (validationErrors) {
+            Object.entries(validationErrors).forEach(([field, messages]) => {
+              setError(field, { type: "server", message: messages[0] });
+            });
+          }
+        },
+      });
+
       navigate("/trainer/students");
-    } catch (error) {
-      const message =
-        error.response?.data?.message || "Erro ao salvar o student";
-      toast.error(message);
+    } catch {
+      // erro já exibido pelo crudToast
     } finally {
       setLoading(false);
     }
@@ -204,52 +185,48 @@ export default function StudentsNewEdit() {
           </CardTitle>
           <CardDescription>
             {isEdit
-              ? "Atualize as informações do aluno conforme as regras do controller."
+              ? "Atualize as informações do aluno."
               : "Preencha os campos necessários para cadastrar um novo aluno."}
           </CardDescription>
         </CardHeader>
 
         <CardContent className="px-6 py-6 sm:px-8">
           {initialLoading ? (
-            <div className="py-8 text-center text-sm text-muted-foreground">
-              Carregando formulário...
-            </div>
+            <FormSkeleton fields={8} columns={2} />
           ) : (
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+            <form
+              onSubmit={handleSubmit(onSubmit)}
+              className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300"
+            >
               <div className="grid gap-6 md:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="name">Nome</Label>
+                <Field label="Nome" htmlFor="name" error={errors.name?.message}>
                   <Input
                     id="name"
                     placeholder="Nome completo"
                     {...register("name")}
                   />
-                  {errors.name ? (
-                    <p className="text-sm text-red-400">
-                      {errors.name.message}
-                    </p>
-                  ) : null}
-                </div>
+                </Field>
 
-                <div className="space-y-2">
-                  <Label htmlFor="email">E-mail</Label>
+                <Field
+                  label="E-mail"
+                  htmlFor="email"
+                  error={errors.email?.message}
+                >
                   <Input
                     id="email"
                     type="email"
                     placeholder="usuario@email.com"
                     {...register("email")}
                   />
-                  {errors.email ? (
-                    <p className="text-sm text-red-400">
-                      {errors.email.message}
-                    </p>
-                  ) : null}
-                </div>
+                </Field>
               </div>
 
               <div className="grid gap-6 md:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="password">Senha</Label>
+                <Field
+                  label="Senha"
+                  htmlFor="password"
+                  error={errors.password?.message}
+                >
                   <Input
                     id="password"
                     type="password"
@@ -260,59 +237,60 @@ export default function StudentsNewEdit() {
                     }
                     {...register("password")}
                   />
-                  {errors.password ? (
-                    <p className="text-sm text-red-400">
-                      {errors.password.message}
-                    </p>
-                  ) : null}
-                </div>
+                </Field>
 
-                <div className="space-y-2">
-                  <Label htmlFor="cpf">CPF</Label>
+                <Field label="CPF" htmlFor="cpf" error={errors.cpf?.message}>
                   <Input
                     id="cpf"
                     placeholder="000.000.000-00"
-                    {...register("cpf")}
+                    maxLength={14}
+                    {...cpfField}
+                    onChange={(event) => {
+                      event.target.value = formatCpf(event.target.value);
+                      cpfField.onChange(event);
+                    }}
                   />
-                  {errors.cpf ? (
-                    <p className="text-sm text-red-400">{errors.cpf.message}</p>
-                  ) : null}
-                </div>
+                </Field>
               </div>
 
               <div className="grid gap-6 md:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="phone">Telefone</Label>
+                <Field
+                  label="Telefone"
+                  htmlFor="phone"
+                  error={errors.phone?.message}
+                >
                   <Input
                     id="phone"
                     placeholder="(00) 00000-0000"
-                    {...register("phone")}
+                    maxLength={15}
+                    {...phoneField}
+                    onChange={(event) => {
+                      event.target.value = formatPhone(event.target.value);
+                      phoneField.onChange(event);
+                    }}
                   />
-                  {errors.phone ? (
-                    <p className="text-sm text-red-400">
-                      {errors.phone.message}
-                    </p>
-                  ) : null}
-                </div>
+                </Field>
 
-                <div className="space-y-2">
-                  <Label htmlFor="birth_date">Data de nascimento</Label>
+                <Field
+                  label="Data de nascimento"
+                  htmlFor="birth_date"
+                  error={errors.birth_date?.message}
+                >
                   <Input
                     id="birth_date"
                     type="date"
+                    max={todayISO}
                     {...register("birth_date")}
                   />
-                  {errors.birth_date ? (
-                    <p className="text-sm text-red-400">
-                      {errors.birth_date.message}
-                    </p>
-                  ) : null}
-                </div>
+                </Field>
               </div>
 
               <div className="grid gap-6 md:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="gender">Sexo</Label>
+                <Field
+                  label="Sexo"
+                  htmlFor="gender"
+                  error={errors.gender?.message}
+                >
                   <Select id="gender" {...register("gender")}>
                     <option value="">Selecione</option>
                     {GENDER_OPTIONS.map((option) => (
@@ -321,60 +299,63 @@ export default function StudentsNewEdit() {
                       </option>
                     ))}
                   </Select>
-                  {errors.gender ? (
-                    <p className="text-sm text-red-400">
-                      {errors.gender.message}
-                    </p>
-                  ) : null}
-                </div>
+                </Field>
 
-                <div className="space-y-2">
-                  <Label htmlFor="height">Altura</Label>
+                <Field
+                  label="Altura (m)"
+                  htmlFor="height"
+                  error={errors.height?.message}
+                >
                   <Input
                     id="height"
                     type="number"
+                    inputMode="decimal"
                     step="0.01"
+                    min="0"
+                    max="3"
                     placeholder="1.75"
-                    {...register("height")}
+                    {...heightField}
+                    onBlur={(event) => {
+                      event.target.value = formatDecimal(event.target.value);
+                      heightField.onBlur(event);
+                    }}
                   />
-                  {errors.height ? (
-                    <p className="text-sm text-red-400">
-                      {errors.height.message}
-                    </p>
-                  ) : null}
-                </div>
+                </Field>
               </div>
 
               <div className="grid gap-6 md:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="current_weight">Peso atual</Label>
+                <Field
+                  label="Peso atual (kg)"
+                  htmlFor="current_weight"
+                  error={errors.current_weight?.message}
+                >
                   <Input
                     id="current_weight"
                     type="number"
+                    inputMode="decimal"
                     step="0.01"
+                    min="0"
+                    max="500"
                     placeholder="72.5"
-                    {...register("current_weight")}
+                    {...weightField}
+                    onBlur={(event) => {
+                      event.target.value = formatDecimal(event.target.value);
+                      weightField.onBlur(event);
+                    }}
                   />
-                  {errors.current_weight ? (
-                    <p className="text-sm text-red-400">
-                      {errors.current_weight.message}
-                    </p>
-                  ) : null}
-                </div>
+                </Field>
 
-                <div className="space-y-2">
-                  <Label htmlFor="observations">Observações</Label>
+                <Field
+                  label="Observações"
+                  htmlFor="observations"
+                  error={errors.observations?.message}
+                >
                   <Textarea
                     id="observations"
-                    placeholder="Observações do student"
+                    placeholder="Observações do aluno"
                     {...register("observations")}
                   />
-                  {errors.observations ? (
-                    <p className="text-sm text-red-400">
-                      {errors.observations.message}
-                    </p>
-                  ) : null}
-                </div>
+                </Field>
               </div>
 
               <div className="flex flex-col gap-3 border-t border-border/80 pt-6 md:flex-row md:justify-end">
@@ -386,18 +367,31 @@ export default function StudentsNewEdit() {
                   Cancelar
                 </Button>
                 <Button type="submit" disabled={loading || isSubmitting}>
-                  <Save className="h-4 w-4" />
+                  {loading || isSubmitting ? (
+                    <Spinner className="h-4 w-4" />
+                  ) : (
+                    <Save className="h-4 w-4" />
+                  )}
                   {loading || isSubmitting
                     ? "Salvando..."
                     : isEdit
                       ? "Salvar alterações"
-                      : "Criar student"}
+                      : "Criar aluno"}
                 </Button>
               </div>
             </form>
           )}
         </CardContent>
       </Card>
+
+      {isEdit && !initialLoading ? (
+        <AnamnesisSection studentId={id} />
+      ) : !isEdit ? (
+        <div className="mt-6 rounded-2xl border border-dashed border-border/80 bg-card/60 p-6 text-center text-sm text-muted-foreground">
+          A seção de Anamnese (observações, fotos e vídeos) ficará disponível
+          após a criação do cadastro do aluno.
+        </div>
+      ) : null}
     </PageContainer>
   );
 }

@@ -1,0 +1,13 @@
+.env
+.env.*
+!.env.example
+
+# Configurações pessoais de editor (não versionar).
+.vscode/
+.idea/
+.fleet/
+.zed/
+
+# Sistema operacional
+.DS_Store
+Thumbs.db
