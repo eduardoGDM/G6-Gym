@@ -12,8 +12,11 @@ dist
 dist-ssr
 *.local
 
-.env.local
-.env.*.local
+# Variáveis de ambiente — versionar apenas .env.example.
+# Arquivos locais (.env, .env.development, .env.production, .env.local...) são ignorados.
+.env
+.env.*
+!.env.example
 
 # Editor directories and files
 .vscode/*
