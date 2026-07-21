@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 
 import authService from "../services/authService";
@@ -11,32 +11,47 @@ import TrainerLayout from "../layouts/TrainerLayout";
 
 import PageLoader from "../components/common/PageLoader";
 
+// Login e Logout permanecem no bundle inicial (fluxo de entrada/saída).
+// As demais páginas são carregadas sob demanda (code splitting) para reduzir
+// o tamanho do bundle inicial e o tempo até a primeira renderização.
 import Login from "../pages/auth/Login";
-
-import DashboardAdmin from "../pages/admin/Dashboard";
-
-import DashboardStudent from "../pages/student/Dashboard";
-import DailyCheckinsIndex from "../pages/student/DailyCheckins/DailyCheckinsIndex";
-import History from "../pages/student/History";
-import HistoryDetail from "../pages/student/HistoryDetail";
-import MyWorkouts from "../pages/student/MyWorkouts";
-import Workout from "../pages/student/Workout";
-
 import LogoutPage from "../pages/auth/LogoutPage";
-import CheckinsIndex from "../pages/trainer/Checkins/CheckinsIndex";
-import CheckinsShow from "../pages/trainer/Checkins/CheckinsShow";
-import DashboardTrainer from "../pages/trainer/Dashboard";
-import TrainerDailyCheckinsIndex from "../pages/trainer/DailyCheckins/DailyCheckinsIndex";
-import TrainerDailyCheckinsShow from "../pages/trainer/DailyCheckins/DailyCheckinsShow";
-import ExercisesIndex from "../pages/trainer/Exercises/ExercisesIndex";
-import ExercisesNewEdit from "../pages/trainer/Exercises/ExercisesNewEdit";
-import ExercisesShow from "../pages/trainer/Exercises/ExercisesShow";
-import StudentsIndex from "../pages/trainer/Students/StudentsIndex";
-import StudentsNewEdit from "../pages/trainer/Students/StudentsNewEdit";
-import StudentsShow from "../pages/trainer/Students/StudentsShow";
-import WorkoutsIndex from "../pages/trainer/Workouts/WorkoutsIndex";
-import WorkoutsNewEdit from "../pages/trainer/Workouts/WorkoutsNewEdit";
-import WorkoutsShow from "../pages/trainer/Workouts/WorkoutsShow";
+
+const DashboardAdmin = lazy(() => import("../pages/admin/Dashboard"));
+
+const DashboardStudent = lazy(() => import("../pages/student/Dashboard"));
+const DailyCheckinsIndex = lazy(
+  () => import("../pages/student/DailyCheckins/DailyCheckinsIndex"),
+);
+const History = lazy(() => import("../pages/student/History"));
+const HistoryDetail = lazy(() => import("../pages/student/HistoryDetail"));
+const MyWorkouts = lazy(() => import("../pages/student/MyWorkouts"));
+const Workout = lazy(() => import("../pages/student/Workout"));
+
+const CheckinsIndex = lazy(() => import("../pages/trainer/Checkins/CheckinsIndex"));
+const CheckinsShow = lazy(() => import("../pages/trainer/Checkins/CheckinsShow"));
+const DashboardTrainer = lazy(() => import("../pages/trainer/Dashboard"));
+const TrainerDailyCheckinsIndex = lazy(
+  () => import("../pages/trainer/DailyCheckins/DailyCheckinsIndex"),
+);
+const TrainerDailyCheckinsShow = lazy(
+  () => import("../pages/trainer/DailyCheckins/DailyCheckinsShow"),
+);
+const ExercisesIndex = lazy(() => import("../pages/trainer/Exercises/ExercisesIndex"));
+const ExercisesNewEdit = lazy(
+  () => import("../pages/trainer/Exercises/ExercisesNewEdit"),
+);
+const ExercisesShow = lazy(() => import("../pages/trainer/Exercises/ExercisesShow"));
+const StudentsIndex = lazy(() => import("../pages/trainer/Students/StudentsIndex"));
+const StudentsNewEdit = lazy(
+  () => import("../pages/trainer/Students/StudentsNewEdit"),
+);
+const StudentsShow = lazy(() => import("../pages/trainer/Students/StudentsShow"));
+const WorkoutsIndex = lazy(() => import("../pages/trainer/Workouts/WorkoutsIndex"));
+const WorkoutsNewEdit = lazy(
+  () => import("../pages/trainer/Workouts/WorkoutsNewEdit"),
+);
+const WorkoutsShow = lazy(() => import("../pages/trainer/Workouts/WorkoutsShow"));
 
 export default function AppRoutes() {
   const { user, setUser, isLoading, setLoading } = useAuthStore();
@@ -62,7 +77,14 @@ export default function AppRoutes() {
 
   return (
     <BrowserRouter>
-      <Routes>
+      <Suspense
+        fallback={
+          <div className="flex h-screen items-center justify-center">
+            <PageLoader label="Carregando..." />
+          </div>
+        }
+      >
+        <Routes>
         <Route element={<AuthLayout />}>
           <Route
             path="/"
@@ -151,7 +173,8 @@ export default function AppRoutes() {
         <Route path="/logout" element={<LogoutPage />} />
 
         <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+        </Routes>
+      </Suspense>
     </BrowserRouter>
   );
 }
