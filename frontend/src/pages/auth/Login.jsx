@@ -163,7 +163,8 @@ export default function Login() {
                     id="email"
                     type="email"
                     placeholder="usuario@email.com"
-                    className={`pl-10 ${errors.email ? "border-red-500" : ""}`}
+                    className="pl-10"
+                    aria-invalid={errors.email ? true : undefined}
                     value={formData.email}
                     onChange={handleChange}
                     disabled={loading}
@@ -172,7 +173,7 @@ export default function Login() {
                 </div>
 
                 {errors.email && (
-                  <p className="text-sm text-red-500">{errors.email}</p>
+                  <p className="text-sm text-destructive">{errors.email}</p>
                 )}
               </div>
 
@@ -187,7 +188,8 @@ export default function Login() {
                     id="password"
                     type="password"
                     placeholder="Sua senha"
-                    className={`pl-10 ${errors.password ? "border-red-500" : ""}`}
+                    className="pl-10"
+                    aria-invalid={errors.password ? true : undefined}
                     value={formData.password}
                     onChange={handleChange}
                     disabled={loading}
@@ -196,7 +198,7 @@ export default function Login() {
                 </div>
 
                 {errors.password && (
-                  <p className="text-sm text-red-500">{errors.password}</p>
+                  <p className="text-sm text-destructive">{errors.password}</p>
                 )}
               </div>
 
@@ -214,7 +216,7 @@ export default function Login() {
                 <button
                   type="button"
                   className="text-primary hover:underline"
-                  onClick={() => toast.info("Função em desenvolvimento")}
+                  onClick={() => toast("Função em desenvolvimento")}
                 >
                   Esqueci minha senha
                 </button>

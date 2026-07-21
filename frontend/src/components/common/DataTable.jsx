@@ -24,28 +24,34 @@ function DataTablePagination({
   onPerPageChange,
 }) {
   return (
-    <div className="flex flex-col gap-3 border-t border-border/80 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
-      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+    <div className="flex flex-col gap-4 border-t border-border/80 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-sm text-muted-foreground">
         {perPageOptions ? (
-          <>
+          <div className="flex items-center gap-2">
             <span>Exibir</span>
-            <Select className="!h-9 w-20" value={perPage} onChange={onPerPageChange}>
+            <Select
+              size="sm"
+              className="w-[4.5rem]"
+              value={perPage}
+              onChange={onPerPageChange}
+              aria-label="Itens por página"
+            >
               {perPageOptions.map((option) => (
                 <option key={option} value={option}>
                   {option}
                 </option>
               ))}
             </Select>
-          </>
+          </div>
         ) : null}
-        <span>{summary}</span>
+        <span className="tabular-nums">{summary}</span>
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="flex items-center justify-between gap-2 sm:justify-end">
         <Button variant="outline" size="sm" disabled={page <= 1} onClick={onPrev}>
           Anterior
         </Button>
-        <span className="text-sm text-muted-foreground">
+        <span className="text-sm tabular-nums text-muted-foreground">
           Página {page} de {lastPage}
         </span>
         <Button variant="outline" size="sm" disabled={page >= lastPage} onClick={onNext}>

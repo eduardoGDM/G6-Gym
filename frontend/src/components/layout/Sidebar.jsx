@@ -98,7 +98,7 @@ export default function Sidebar({
           <button
             onClick={handleLogout}
             disabled={loadingLogout}
-            className="flex w-full items-center justify-center gap-2 rounded-xl bg-red-500/10 px-4 py-3 text-sm font-semibold text-red-500 transition hover:bg-red-500/20 disabled:opacity-50"
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-destructive/10 px-4 py-3 text-sm font-semibold text-destructive transition-colors hover:bg-destructive/20 disabled:cursor-not-allowed disabled:opacity-50"
           >
             <LogOut className="h-4 w-4" />
             {loadingLogout ? "Saindo..." : "Sair da conta"}
