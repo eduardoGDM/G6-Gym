@@ -2,6 +2,7 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import {
   ArrowLeft,
   Check,
+  ChevronDown,
   CloudOff,
   Loader2,
   Save,
@@ -9,7 +10,7 @@ import {
   Video,
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useFieldArray, useForm } from "react-hook-form";
+import { Controller, useFieldArray, useForm } from "react-hook-form";
 import toast from "react-hot-toast";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 
@@ -18,13 +19,11 @@ import { crudToast } from "../../components/common/crudToast";
 import PageContainer from "../../components/common/PageContainer";
 import PageTitle from "../../components/common/PageTitle";
 import Spinner from "../../components/common/Spinner";
-import {
-  AUTOSAVE_STATUS,
-  readCheckinDraft,
-  useCheckinAutosave,
-} from "../../hooks/useCheckinAutosave";
+import { Field } from "../../components/forms/Field";
+import { FormSection } from "../../components/forms/FormSection";
 import FormSkeleton from "../../components/loading/FormSkeleton";
 import ListSkeleton from "../../components/loading/ListSkeleton";
+import { showWorkoutFeedbackToast } from "../../components/student/workoutFeedbackToast";
 import { Badge } from "../../components/ui/badge";
 import { Button } from "../../components/ui/button";
 import {
@@ -34,12 +33,16 @@ import {
   CardHeader,
   CardTitle,
 } from "../../components/ui/card";
-import { Field } from "../../components/forms/Field";
-import { FormSection } from "../../components/forms/FormSection";
 import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
+import { NumberStepper } from "../../components/ui/number-stepper";
 import { Textarea } from "../../components/ui/textarea";
-import { showWorkoutFeedbackToast } from "../../components/student/workoutFeedbackToast";
+import {
+  AUTOSAVE_STATUS,
+  readCheckinDraft,
+  useCheckinAutosave,
+} from "../../hooks/useCheckinAutosave";
+import { cn } from "../../lib/utils";
 import gamificationService from "../../services/GamificationService";
 import workoutCheckinsService from "../../services/WorkoutCheckinsService";
 import workoutsService from "../../services/WorkoutsService";
@@ -78,9 +81,7 @@ const buildExerciseDefaults = (workoutExercises = [], checkin = null) => {
         (existingExercise?.sets || []).map((set) => [set.set_number, set]),
       );
 
-      const series = [...(item.series || [])].sort(
-        (a, b) => a.order - b.order,
-      );
+      const series = [...(item.series || [])].sort((a, b) => a.order - b.order);
 
       return {
         exercise_id: item.exercise_id,
@@ -151,34 +152,218 @@ const AUTOSAVE_INDICATOR = {
   },
 };
 
+// Descrições das técnicas avançadas, exibidas como legenda ao tocar no chip da
+// técnica na série. Mantidas em sincronia com a ficha de orientação do treino.
+const TECHNIQUE_DESCRIPTIONS = {
+  "Drop Set": "Reduza a carga (~30%) após a falha e continue sem descanso.",
+  "Muscle Round": "6 mini-séries de 6 repetições com pausas de 10–15 segundos.",
+  "Cluster Set":
+    "Divida a série em pequenos blocos com pausas curtas entre eles.",
+  "Backoff Set":
+    "Após as séries principais, reduza a carga (30–40%) e realize uma série adicional.",
+  Parciais:
+    "Após a falha, continue com repetições parciais na faixa de maior tensão.",
+};
+
 /**
- * Bloco apenas informativo com a prescrição da série (Tipo, Repetições, RIR,
- * Cadência, Técnica avançada). O aluno não edita esses dados — continua
- * registrando somente carga, repetições realizadas, descanso e observações.
+ * Chips compactos com a prescrição não-numérica da série (RIR, Cadência,
+ * Técnica avançada). Carga, repetições e descanso prescritos não entram aqui —
+ * viram a "meta" exibida junto de cada campo, evitando informação duplicada.
+ *
+ * Quando a técnica avançada possui descrição, seu chip vira um botão que
+ * mostra/oculta a legenda explicativa logo abaixo.
  */
 function PrescriptionInfo({ set }) {
+  const [showTechnique, setShowTechnique] = useState(false);
+
+  const technique = set.planned_advanced_technique;
+  const techniqueDescription = technique
+    ? TECHNIQUE_DESCRIPTIONS[technique]
+    : null;
+
   const items = [
-    { label: "Tipo", value: set.planned_type },
-    { label: "Repetições", value: set.planned_repetitions },
     { label: "RIR", value: set.planned_rir },
     { label: "Cadência", value: set.planned_cadence },
-    { label: "Técnica", value: set.planned_advanced_technique },
   ].filter(
-    (item) => item.value !== null && item.value !== undefined && item.value !== "",
+    (item) =>
+      item.value !== null && item.value !== undefined && item.value !== "",
   );
 
-  if (items.length === 0) return null;
+  if (items.length === 0 && !technique) return null;
 
   return (
-    <div className="flex flex-wrap gap-x-6 gap-y-2 rounded-lg border border-border/60 bg-background/40 px-3 py-2">
-      {items.map((item) => (
-        <div key={item.label} className="min-w-0">
-          <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-            {item.label}
-          </p>
-          <p className="text-sm font-medium text-foreground">{item.value}</p>
+    <div className="space-y-2">
+      <div className="flex flex-wrap gap-1.5">
+        {items.map((item) => (
+          <span
+            key={item.label}
+            className="inline-flex items-center gap-1 rounded-md bg-muted px-2 py-0.5 text-xs"
+          >
+            <span className="font-medium text-muted-foreground">
+              {item.label}
+            </span>
+            <span className="font-semibold text-foreground">{item.value}</span>
+          </span>
+        ))}
+
+        {technique ? (
+          techniqueDescription ? (
+            <button
+              type="button"
+              onClick={() => setShowTechnique((open) => !open)}
+              aria-expanded={showTechnique}
+              className="inline-flex items-center gap-1 rounded-md bg-muted px-2 py-0.5 text-xs transition-colors hover:bg-accent hover:text-foreground"
+            >
+              <span className="font-medium text-muted-foreground">Técnica</span>
+              <span className="font-semibold text-foreground">{technique}</span>
+              <ChevronDown
+                className={cn(
+                  "h-3 w-3 text-muted-foreground transition-transform",
+                  showTechnique && "rotate-180",
+                )}
+              />
+            </button>
+          ) : (
+            <span className="inline-flex items-center gap-1 rounded-md bg-muted px-2 py-0.5 text-xs">
+              <span className="font-medium text-muted-foreground">Técnica</span>
+              <span className="font-semibold text-foreground">{technique}</span>
+            </span>
+          )
+        ) : null}
+      </div>
+
+      {showTechnique && techniqueDescription ? (
+        <p className="rounded-lg border border-border/60 bg-muted/50 px-3 py-2 text-xs leading-relaxed text-muted-foreground">
+          {techniqueDescription}
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
+/**
+ * Uma série do check-in, otimizada para mobile: carga e repetições em destaque
+ * (steppers −/+ de toque fácil) e os campos secundários — descanso e observação
+ * — recolhidos atrás de um botão no mobile, sempre visíveis no desktop.
+ */
+function CheckinSet({ index, setIndex, set, control, register }) {
+  const [detailsOpen, setDetailsOpen] = useState(false);
+  const base = `exercises.${index}.sets.${setIndex}`;
+
+  return (
+    <div className="space-y-4 rounded-xl border border-border/60 bg-card/60 p-4 sm:p-5">
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-sm font-semibold text-foreground sm:text-base">
+          Série {set.set_number}
+        </p>
+        {set.planned_type ? (
+          <Badge variant="secondary" className="uppercase tracking-wide">
+            {set.planned_type}
+          </Badge>
+        ) : null}
+      </div>
+
+      <PrescriptionInfo set={set} />
+
+      <div className="flex flex-col gap-4">
+        <div className="space-y-1.5">
+          <Label htmlFor={`${base}.performed_weight`}>Carga (kg)</Label>
+          <Controller
+            control={control}
+            name={`${base}.performed_weight`}
+            render={({ field, fieldState }) => (
+              <NumberStepper
+                id={`${base}.performed_weight`}
+                name={field.name}
+                value={field.value}
+                onChange={field.onChange}
+                onBlur={field.onBlur}
+                step={2.5}
+                min={0}
+                precision={2}
+                inputMode="decimal"
+                aria-invalid={fieldState.invalid || undefined}
+              />
+            )}
+          />
+          {set.planned_weight ? (
+            <p className="text-xs text-muted-foreground mt-4">
+              Meta: {set.planned_weight} kg
+            </p>
+          ) : null}
         </div>
-      ))}
+
+        <div className="space-y-1.5">
+          <Label htmlFor={`${base}.performed_repetitions`}>Repetições</Label>
+          <Controller
+            control={control}
+            name={`${base}.performed_repetitions`}
+            render={({ field, fieldState }) => (
+              <NumberStepper
+                id={`${base}.performed_repetitions`}
+                name={field.name}
+                value={field.value}
+                onChange={field.onChange}
+                onBlur={field.onBlur}
+                step={1}
+                min={0}
+                precision={0}
+                inputMode="numeric"
+                aria-invalid={fieldState.invalid || undefined}
+              />
+            )}
+          />
+          {set.planned_repetitions ? (
+            <p className="text-xs text-muted-foreground mt-4">
+              Reps: {set.planned_repetitions}
+            </p>
+          ) : null}
+        </div>
+      </div>
+
+      <button
+        type="button"
+        onClick={() => setDetailsOpen((open) => !open)}
+        aria-expanded={detailsOpen}
+        className="flex w-full items-center justify-center gap-1.5 rounded-lg py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground md:hidden"
+      >
+        <ChevronDown
+          className={cn(
+            "h-3.5 w-3.5 transition-transform",
+            detailsOpen && "rotate-180",
+          )}
+        />
+        {detailsOpen ? "Ocultar detalhes" : "Descanso e observação"}
+      </button>
+
+      <div className={cn("space-y-8", !detailsOpen && "hidden", "md:block")}>
+        <div className="space-y-1.5">
+          <Label htmlFor={`${base}.performed_rest_time`}>Descanso (s)</Label>
+          <Input
+            id={`${base}.performed_rest_time`}
+            type="number"
+            min="0"
+            inputMode="numeric"
+            {...register(`${base}.performed_rest_time`)}
+          />
+          {set.planned_rest_time ? (
+            <p className="text-xs text-muted-foreground">
+              Meta: {set.planned_rest_time} s
+            </p>
+          ) : null}
+        </div>
+
+        <div className="space-y-1.5">
+          <Label htmlFor={`${base}.notes`}>Observação da série</Label>
+          <Textarea
+            id={`${base}.notes`}
+            autoResize
+            className="min-h-24"
+            placeholder="Ex: falha muscular, diminuí a carga, dor no ombro... (opcional)"
+            {...register(`${base}.notes`)}
+          />
+        </div>
+      </div>
     </div>
   );
 }
@@ -283,9 +468,8 @@ export default function Workout() {
         if (checkinIdParam) {
           checkin = await workoutCheckinsService.getById(checkinIdParam);
         } else {
-          const todaysCheckin = await workoutCheckinsService.getByDate(
-            getTodayISO(),
-          );
+          const todaysCheckin =
+            await workoutCheckinsService.getByDate(getTodayISO());
 
           if (
             todaysCheckin &&
@@ -397,65 +581,65 @@ export default function Workout() {
 
   return (
     <PageContainer>
-      <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-        <PageTitle
-          eyebrow="Check-in"
-          title={workout?.name || "Treino"}
-          description="Registre as cargas, repetições e observações do treino que você realizou."
-        />
+      <div className="mx-auto w-full max-w-4xl">
+        <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+          <PageTitle
+            eyebrow="Check-in"
+            title={workout?.name || "Treino"}
+            description="Registre as cargas, repetições e observações do treino que você realizou."
+          />
 
-        <Button
-          variant="outline"
-          className="w-full md:w-auto"
-          onClick={() => navigate("/student/my-workouts")}
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Voltar
-        </Button>
-      </div>
+          <Button
+            variant="outline"
+            className="w-full md:w-auto"
+            onClick={() => navigate("/student/my-workouts")}
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Voltar
+          </Button>
+        </div>
 
-      {loading ? (
-        <Card className="border-border/80 bg-card/90">
-          <CardContent className="space-y-8 px-6 py-6 sm:px-8">
-            <FormSkeleton fields={1} columns={1} footer={false} />
-            <ListSkeleton count={3} columns="" lines={4} />
-          </CardContent>
-        </Card>
-      ) : notFound ? (
-        <Card className="border-border/80 bg-card/80">
-          <CardContent className="p-6">
-            <p className="font-semibold">
-              Este treino não está mais disponível
-            </p>
-            <p className="text-sm text-muted-foreground">
-              Ele pode ter sido desativado ou removido pelo seu personal
-              trainer.
-            </p>
-          </CardContent>
-        </Card>
-      ) : (
-        <Card className="border-border/80 bg-card/90">
-          <CardHeader className="border-b border-border/80 px-6 py-6 sm:px-8">
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-              <div className="space-y-1.5">
-                <CardTitle className="text-2xl">
-                  {checkinId ? "Editar check-in" : "Registrar check-in"}
-                </CardTitle>
-                <CardDescription>
-                  Seus dados são salvos automaticamente enquanto você preenche —
-                  não é necessário clicar em salvar.
-                </CardDescription>
+        {loading ? (
+          <Card className="border-border/80 bg-card/90">
+            <CardContent className="space-y-8 px-6 py-6 sm:px-8">
+              <FormSkeleton fields={1} columns={1} footer={false} />
+              <ListSkeleton count={3} columns="" lines={4} />
+            </CardContent>
+          </Card>
+        ) : notFound ? (
+          <Card className="border-border/80 bg-card/80">
+            <CardContent className="p-6">
+              <p className="font-semibold">
+                Este treino não está mais disponível
+              </p>
+              <p className="text-sm text-muted-foreground">
+                Ele pode ter sido desativado ou removido pelo seu personal
+                trainer.
+              </p>
+            </CardContent>
+          </Card>
+        ) : (
+          <Card className="border-border/80 bg-card/90">
+            <CardHeader className="border-b border-border/80 px-6 py-5 sm:px-8 sm:py-6">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                <div className="space-y-1.5">
+                  <CardTitle className="text-2xl">
+                    {checkinId ? "Editar check-in" : "Registrar check-in"}
+                  </CardTitle>
+                  <CardDescription>
+                    Seus dados são salvos automaticamente enquanto você preenche
+                    — não é necessário clicar em salvar.
+                  </CardDescription>
+                </div>
+                <AutosaveIndicator status={autosaveStatus} />
               </div>
-              <AutosaveIndicator status={autosaveStatus} />
-            </div>
-          </CardHeader>
+            </CardHeader>
 
-          <CardContent className="px-6 py-6 sm:px-8">
-            <form
-              onSubmit={handleSubmit(onSubmit)}
-              className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300"
-            >
-              <div className="grid gap-6 md:grid-cols-2">
+            <CardContent className="px-6 py-6 sm:px-8 sm:py-8">
+              <form
+                onSubmit={handleSubmit(onSubmit)}
+                className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-300"
+              >
                 <Field
                   label="Data do treino"
                   htmlFor="performed_at"
@@ -465,250 +649,170 @@ export default function Workout() {
                     id="performed_at"
                     type="date"
                     max={getTodayISO()}
+                    className="min-w-0 max-w-full appearance-none"
                     {...register("performed_at")}
                   />
                 </Field>
-              </div>
 
-              <Field label="Observações gerais" htmlFor="notes">
-                <Textarea
-                  id="notes"
-                  placeholder="Como foi o treino? (opcional)"
-                  {...register("notes")}
-                />
-              </Field>
+                <Field label="Observações gerais" htmlFor="notes">
+                  <Textarea
+                    id="notes"
+                    autoResize
+                    placeholder="Como foi o treino? (opcional)"
+                    {...register("notes")}
+                  />
+                </Field>
 
-              <FormSection
-                title="Exercícios"
-                description="Informe a carga e repetições que você realizou em cada exercício."
-              >
-                {errors.exercises?.message ? (
-                  <p className="text-sm text-destructive">
-                    {errors.exercises.message}
-                  </p>
-                ) : null}
+                <FormSection
+                  title="Exercícios"
+                  description="Informe a carga e repetições que você realizou em cada exercício."
+                >
+                  {errors.exercises?.message ? (
+                    <p className="text-sm text-destructive">
+                      {errors.exercises.message}
+                    </p>
+                  ) : null}
 
-                <div className="space-y-4">
-                  {fields.map((field, index) => (
-                    <Card
-                      key={field.id}
-                      className="border-border/60 bg-background/40"
-                    >
-                      <CardContent className="space-y-4 p-5">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <p className="font-semibold text-foreground">
-                            {field.exercise_name}
-                          </p>
-                          {field.muscle_group ? (
-                            <Badge variant="outline">
-                              {field.muscle_group}
-                            </Badge>
-                          ) : null}
-                          {field.video_url ? (
-                            <ActionIconButton
-                              icon={Video}
-                              tooltip="Assistir demonstração do exercício"
-                              onClick={() =>
-                                window.open(
-                                  field.video_url,
-                                  "_blank",
-                                  "noopener,noreferrer",
-                                )
-                              }
-                              className="h-8 w-8"
+                  <div className="space-y-5">
+                    {fields.map((field, index) => (
+                      <Card
+                        key={field.id}
+                        className="border-border/60 bg-background/40"
+                      >
+                        <CardContent className="space-y-5 p-4 sm:p-6">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <p className="text-lg font-bold text-foreground">
+                              {field.exercise_name}
+                            </p>
+                            {field.muscle_group ? (
+                              <Badge variant="outline">
+                                {field.muscle_group}
+                              </Badge>
+                            ) : null}
+                            {field.video_url ? (
+                              <ActionIconButton
+                                icon={Video}
+                                tooltip="Assistir demonstração do exercício"
+                                onClick={() =>
+                                  window.open(
+                                    field.video_url,
+                                    "_blank",
+                                    "noopener,noreferrer",
+                                  )
+                                }
+                                className="h-8 w-8"
+                              />
+                            ) : null}
+                          </div>
+
+                          <div className="space-y-4 border-t border-border/50 pt-5">
+                            {(field.sets || []).map((set, setIndex) => (
+                              <CheckinSet
+                                key={`${field.id}-set-${set.set_number}`}
+                                index={index}
+                                setIndex={setIndex}
+                                set={set}
+                                control={control}
+                                register={register}
+                              />
+                            ))}
+                          </div>
+
+                          <Field
+                            label="Observação geral do exercício"
+                            htmlFor={`exercises.${index}.notes`}
+                          >
+                            <Textarea
+                              id={`exercises.${index}.notes`}
+                              autoResize
+                              placeholder="Observação geral sobre o exercício (opcional)"
+                              {...register(`exercises.${index}.notes`)}
                             />
-                          ) : null}
-                        </div>
+                          </Field>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </FormSection>
 
-                        <div className="space-y-3">
-                          {(field.sets || []).map((set, setIndex) => (
-                            <div
-                              key={`${field.id}-set-${set.set_number}`}
-                              className="space-y-3 rounded-xl border border-border/60 bg-card/60 p-4"
-                            >
-                              <p className="text-sm font-semibold text-foreground">
-                                Série {set.set_number}
-                              </p>
-
-                              <PrescriptionInfo set={set} />
-
-                              <div className="grid gap-4 sm:grid-cols-3">
-                                <div className="space-y-4">
-                                  <Label
-                                    htmlFor={`exercises.${index}.sets.${setIndex}.performed_weight`}
-                                  >
-                                    Carga (kg)
-                                    {set.planned_weight ? (
-                                      <span className="ml-1 font-normal text-muted-foreground">
-                                        (prescrito: {set.planned_weight})
-                                      </span>
-                                    ) : null}
-                                  </Label>
-                                  <Input
-                                    id={`exercises.${index}.sets.${setIndex}.performed_weight`}
-                                    type="number"
-                                    step="0.5"
-                                    min="0"
-                                    {...register(
-                                      `exercises.${index}.sets.${setIndex}.performed_weight`,
-                                    )}
-                                  />
-                                </div>
-
-                                <div className="space-y-4">
-                                  <Label
-                                    htmlFor={`exercises.${index}.sets.${setIndex}.performed_repetitions`}
-                                  >
-                                    Repetições
-                                    {set.planned_repetitions ? (
-                                      <span className="ml-1 font-normal text-muted-foreground">
-                                        (prescrito: {set.planned_repetitions})
-                                      </span>
-                                    ) : null}
-                                  </Label>
-                                  <Input
-                                    id={`exercises.${index}.sets.${setIndex}.performed_repetitions`}
-                                    type="number"
-                                    min="0"
-                                    {...register(
-                                      `exercises.${index}.sets.${setIndex}.performed_repetitions`,
-                                    )}
-                                  />
-                                </div>
-
-                                <div className="space-y-4">
-                                  <Label
-                                    htmlFor={`exercises.${index}.sets.${setIndex}.performed_rest_time`}
-                                  >
-                                    Descanso (s)
-                                    {set.planned_rest_time ? (
-                                      <span className="ml-1 font-normal text-muted-foreground">
-                                        (prescrito: {set.planned_rest_time})
-                                      </span>
-                                    ) : null}
-                                  </Label>
-                                  <Input
-                                    id={`exercises.${index}.sets.${setIndex}.performed_rest_time`}
-                                    type="number"
-                                    min="0"
-                                    {...register(
-                                      `exercises.${index}.sets.${setIndex}.performed_rest_time`,
-                                    )}
-                                  />
-                                </div>
-                              </div>
-
-                              <div className="space-y-4">
-                                <Label
-                                  htmlFor={`exercises.${index}.sets.${setIndex}.notes`}
-                                >
-                                  Observação da série
-                                </Label>
-                                <Textarea
-                                  id={`exercises.${index}.sets.${setIndex}.notes`}
-                                  placeholder="Ex: falha muscular, diminuí a carga, dor no ombro... (opcional)"
-                                  {...register(
-                                    `exercises.${index}.sets.${setIndex}.notes`,
-                                  )}
-                                />
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-
-                        <Field
-                          label="Observação geral do exercício"
-                          htmlFor={`exercises.${index}.notes`}
-                        >
-                          <Textarea
-                            id={`exercises.${index}.notes`}
-                            placeholder="Observação geral sobre o exercício (opcional)"
-                            {...register(`exercises.${index}.notes`)}
-                          />
-                        </Field>
-                      </CardContent>
-                    </Card>
-                  ))}
+                <div className="flex flex-col gap-3 border-t border-border/80 pt-6 md:flex-row md:items-center md:justify-between">
+                  <p className="text-sm text-muted-foreground">
+                    Suas informações já são salvas automaticamente. Use o botão
+                    apenas para concluir e voltar.
+                  </p>
+                  <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => navigate("/student/my-workouts")}
+                    >
+                      Voltar
+                    </Button>
+                    <Button
+                      type="submit"
+                      disabled={
+                        submitting || autosaveStatus === AUTOSAVE_STATUS.SAVING
+                      }
+                    >
+                      {submitting ? (
+                        <Spinner className="h-4 w-4" />
+                      ) : (
+                        <Save className="h-4 w-4" />
+                      )}
+                      {submitting ? "Salvando..." : "Concluir treino"}
+                    </Button>
+                  </div>
                 </div>
-              </FormSection>
+              </form>
+            </CardContent>
+          </Card>
+        )}
 
-              <div className="flex flex-col gap-3 border-t border-border/80 pt-6 md:flex-row md:items-center md:justify-between">
-                <p className="text-sm text-muted-foreground">
-                  Suas informações já são salvas automaticamente. Use o botão
-                  apenas para concluir e voltar.
-                </p>
+        {confirmState ? (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <button
+              type="button"
+              className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm"
+              aria-label="Fechar"
+              onClick={() => setConfirmState(null)}
+            />
+
+            <Card className="relative z-50 w-full max-w-md border-border/80 bg-card">
+              <CardContent className="space-y-4 p-6">
+                <div className="space-y-1">
+                  <p className="text-lg font-semibold text-foreground">
+                    Já existe um treino registrado para esta data
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    Você já possui um check-in de{" "}
+                    <strong>{confirmState.workoutName}</strong> nesta data.
+                    Deseja realmente criar outro check-in para este mesmo dia?
+                  </p>
+                </div>
+
                 <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
                   <Button
                     type="button"
                     variant="outline"
-                    onClick={() => navigate("/student/my-workouts")}
+                    onClick={() => setConfirmState(null)}
+                    disabled={submitting}
                   >
-                    Voltar
+                    Cancelar
                   </Button>
                   <Button
-                    type="submit"
-                    disabled={
-                      submitting || autosaveStatus === AUTOSAVE_STATUS.SAVING
-                    }
+                    type="button"
+                    onClick={handleConfirmDuplicate}
+                    disabled={submitting}
                   >
-                    {submitting ? (
-                      <Spinner className="h-4 w-4" />
-                    ) : (
-                      <Save className="h-4 w-4" />
-                    )}
-                    {submitting ? "Salvando..." : "Concluir treino"}
+                    {submitting ? <Spinner className="h-4 w-4" /> : null}
+                    Criar mesmo assim
                   </Button>
                 </div>
-              </div>
-            </form>
-          </CardContent>
-        </Card>
-      )}
-
-      {confirmState ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <button
-            type="button"
-            className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm"
-            aria-label="Fechar"
-            onClick={() => setConfirmState(null)}
-          />
-
-          <Card className="relative z-50 w-full max-w-md border-border/80 bg-card">
-            <CardContent className="space-y-4 p-6">
-              <div className="space-y-1">
-                <p className="text-lg font-semibold text-foreground">
-                  Já existe um treino registrado para esta data
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  Você já possui um check-in de{" "}
-                  <strong>{confirmState.workoutName}</strong> nesta data.
-                  Deseja realmente criar outro check-in para este mesmo dia?
-                </p>
-              </div>
-
-              <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setConfirmState(null)}
-                  disabled={submitting}
-                >
-                  Cancelar
-                </Button>
-                <Button
-                  type="button"
-                  onClick={handleConfirmDuplicate}
-                  disabled={submitting}
-                >
-                  {submitting ? <Spinner className="h-4 w-4" /> : null}
-                  Criar mesmo assim
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      ) : null}
+              </CardContent>
+            </Card>
+          </div>
+        ) : null}
+      </div>
     </PageContainer>
   );
 }

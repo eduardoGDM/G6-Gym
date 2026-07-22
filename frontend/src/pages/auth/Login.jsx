@@ -277,7 +277,6 @@ export default function Login() {
               </div>
             </Field>
 
-            {/* REMEMBER */}
             <div className="flex items-center justify-between text-sm">
               <label className="flex cursor-pointer items-center gap-2 text-muted-foreground transition-colors hover:text-foreground">
                 <input

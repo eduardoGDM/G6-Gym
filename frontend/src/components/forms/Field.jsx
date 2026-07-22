@@ -25,7 +25,7 @@ export function Field({
 }) {
   return (
     <div className={cn("space-y-1.5", className)}>
-      <div className="space-y-4">
+      <div className="space-y-1.5">
         {label ? (
           <Label htmlFor={htmlFor} className={labelClassName}>
             {label}

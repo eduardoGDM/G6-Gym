@@ -53,7 +53,7 @@ export default function Dashboard() {
       label: "Alunos ativos",
       value: summary?.active_students ?? 0,
       icon: Users,
-      tone: "from-primary/30 to-primary/10",
+      tone: "from-secondary/30 to-secondary/10",
     },
     {
       label: "Treinos ativos",
@@ -65,13 +65,13 @@ export default function Dashboard() {
       label: "Check-ins de treino hoje",
       value: summary?.workout_checkins_today ?? 0,
       icon: CalendarCheck2,
-      tone: "from-emerald-500/25 to-emerald-500/10",
+      tone: "from-secondary/30 to-secondary/10",
     },
     {
       label: "Check-ins diários hoje",
       value: summary?.daily_checkins_today ?? 0,
       icon: Moon,
-      tone: "from-indigo-500/25 to-indigo-500/10",
+      tone: "from-secondary/30 to-secondary/10",
     },
   ];
 

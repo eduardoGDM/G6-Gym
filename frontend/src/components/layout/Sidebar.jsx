@@ -93,7 +93,7 @@ export default function Sidebar({
           </nav>
         </div>
 
-        <div className="shrink-0 border-t border-border px-4 py-4">
+        <div className="shrink-0 border-t border-border px-4 pt-4 pb-[calc(3rem+env(safe-area-inset-bottom))]">
           <button
             onClick={handleLogout}
             disabled={loadingLogout}

@@ -123,6 +123,7 @@ export default function WorkoutSeriesCard({
             id={`${namePrefix}.rest_time`}
             type="number"
             min="0"
+            inputMode="numeric"
             placeholder="Ex: 60"
             {...register(`${namePrefix}.rest_time`)}
           />
@@ -138,6 +139,7 @@ export default function WorkoutSeriesCard({
             type="number"
             min="0"
             step="0.5"
+            inputMode="decimal"
             placeholder="Ex: 20"
             {...register(`${namePrefix}.weight`)}
           />
@@ -164,6 +166,7 @@ export default function WorkoutSeriesCard({
             id={`${namePrefix}.duration`}
             type="number"
             min="0"
+            inputMode="numeric"
             placeholder="Ex: 30"
             {...register(`${namePrefix}.duration`)}
           />

@@ -26,7 +26,10 @@ export function TableRow({ className, hoverable = true, ...props }) {
 export function TableHead({ className, ...props }) {
   return (
     <th
-      className={cn("px-4 py-3 text-left text-sm font-semibold text-foreground", className)}
+      className={cn(
+        "px-3 py-3 text-left text-sm font-semibold text-foreground sm:px-4",
+        className,
+      )}
       {...props}
     />
   );
@@ -34,6 +37,9 @@ export function TableHead({ className, ...props }) {
 
 export function TableCell({ className, ...props }) {
   return (
-    <td className={cn("px-4 py-3 text-sm text-muted-foreground", className)} {...props} />
+    <td
+      className={cn("px-3 py-3 text-sm text-muted-foreground sm:px-4", className)}
+      {...props}
+    />
   );
 }

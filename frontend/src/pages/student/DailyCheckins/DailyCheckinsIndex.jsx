@@ -262,7 +262,12 @@ export default function DailyCheckinsIndex() {
               error={errors.date?.message}
               className="max-w-xs"
             >
-              <Input id="date" type="date" {...register("date")} />
+              <Input
+                id="date"
+                type="date"
+                className="min-w-0 max-w-full appearance-none"
+                {...register("date")}
+              />
             </Field>
 
             <div className="grid gap-6 md:grid-cols-2">
@@ -358,6 +363,7 @@ export default function DailyCheckinsIndex() {
           <Input
             id="filter_date"
             type="date"
+            className="min-w-0 max-w-full appearance-none"
             value={filterDate}
             onChange={(event) => setFilterDate(event.target.value)}
           />
