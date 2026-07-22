@@ -2,6 +2,7 @@ import { LogOut } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
+import { cn } from "../../lib/utils";
 import authService from "../../services/authService";
 import useAuthStore from "../../store/authStore";
 import Logo from "./Logo";
@@ -67,16 +68,21 @@ export default function Sidebar({
         ].join(" ")}
         style={{ width: isDesktop ? drawerWidth : "min(88vw, 320px)" }}
       >
-        <div className="flex items-center justify-between border-b border-border px-5 py-5">
+        <div
+          className={cn(
+            "flex shrink-0 items-center justify-between gap-3 border-b border-border px-4",
+            isDesktop ? "min-h-[72px]" : "min-h-[64px]",
+          )}
+        >
           <Logo />
 
-          <span className="rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-primary">
+          <span className="shrink-0 rounded-full border border-primary/20 bg-primary/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-primary">
             {roleLabel}
           </span>
         </div>
 
         <div className="flex-1 overflow-y-auto px-4 py-4">
-          <nav className="space-y-2">
+          <nav className="space-y-1">
             {menuItems.map((item) => (
               <MenuItem
                 key={item.label}
@@ -87,13 +93,13 @@ export default function Sidebar({
           </nav>
         </div>
 
-        <div className="border-t border-border p-4 space-y-3">
+        <div className="shrink-0 border-t border-border px-4 py-4">
           <button
             onClick={handleLogout}
             disabled={loadingLogout}
-            className="flex w-full items-center justify-center gap-2 rounded-xl bg-destructive/10 px-4 py-3 text-sm font-semibold text-destructive transition-colors hover:bg-destructive/20 disabled:cursor-not-allowed disabled:opacity-50"
+            className="flex w-full items-center gap-3 rounded-xl border border-transparent px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:border-destructive/30 hover:bg-destructive/10 hover:text-destructive disabled:cursor-not-allowed disabled:opacity-50"
           >
-            <LogOut className="h-4 w-4" />
+            <LogOut className="h-4 w-4 shrink-0" />
             {loadingLogout ? "Saindo..." : "Sair da conta"}
           </button>
         </div>

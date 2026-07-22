@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Student;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\DailyCheckinResource;
 use App\Models\DailyCheckin;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 
@@ -69,14 +70,23 @@ class DailyCheckinController extends Controller
 			]);
 		}
 
-		$checkin = DailyCheckin::create([
-			'student_profile_id' => $profile->id,
-			'date' => $request->date,
-			'sleep_rating' => $request->sleep_rating,
-			'sleep_notes' => $request->sleep_notes,
-			'diet_rating' => $request->diet_rating,
-			'diet_notes' => $request->diet_notes,
-		]);
+		try {
+			$checkin = DailyCheckin::create([
+				'student_profile_id' => $profile->id,
+				'date' => $request->date,
+				'sleep_rating' => $request->sleep_rating,
+				'sleep_notes' => $request->sleep_notes,
+				'diet_rating' => $request->diet_rating,
+				'diet_notes' => $request->diet_notes,
+			]);
+		} catch (UniqueConstraintViolationException $e) {
+			// Corrida entre o exists() acima e o insert: o índice único
+			// (student_profile_id, date) protege a integridade e devolvemos 422
+			// em vez de deixar vazar um 500.
+			throw ValidationException::withMessages([
+				'date' => self::DUPLICATE_MESSAGE,
+			]);
+		}
 
 		return (new DailyCheckinResource($checkin))
 			->additional(['message' => 'Check-in Diário registrado com sucesso'])
@@ -139,13 +149,19 @@ class DailyCheckinController extends Controller
 			]);
 		}
 
-		$checkin->update([
-			'date' => $request->date,
-			'sleep_rating' => $request->sleep_rating,
-			'sleep_notes' => $request->sleep_notes,
-			'diet_rating' => $request->diet_rating,
-			'diet_notes' => $request->diet_notes,
-		]);
+		try {
+			$checkin->update([
+				'date' => $request->date,
+				'sleep_rating' => $request->sleep_rating,
+				'sleep_notes' => $request->sleep_notes,
+				'diet_rating' => $request->diet_rating,
+				'diet_notes' => $request->diet_notes,
+			]);
+		} catch (UniqueConstraintViolationException $e) {
+			throw ValidationException::withMessages([
+				'date' => self::DUPLICATE_MESSAGE,
+			]);
+		}
 
 		return (new DailyCheckinResource($checkin))
 			->additional(['message' => 'Check-in Diário atualizado com sucesso']);

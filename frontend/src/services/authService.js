@@ -6,11 +6,20 @@ const authService = {
     return data;
   },
 
-  // TODO - resolver pendencia de 401 quando nao esta autenticado, ( chamada desnecessaria )
   async initAuth() {
     try {
-      return await this.me();
+      const user = await this.me();
+
+      // /auth/user não passa pelo middleware de papel, então ainda responde
+      // para uma conta desativada. No client, tratamos como não autenticado.
+      if (user && user.is_active === false) {
+        return null;
+      }
+
+      return user;
     } catch {
+      // 401 quando não há sessão é esperado no primeiro carregamento; o
+      // interceptor global ignora o endpoint /auth/ e o fluxo segue no login.
       return null;
     }
   },

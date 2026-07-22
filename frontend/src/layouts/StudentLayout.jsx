@@ -3,7 +3,7 @@ import RoleLayout from "../components/layout/RoleLayout";
 import DailyCheckinReminder from "../components/student/DailyCheckinReminder";
 
 const menuItems = [
-  { label: "Dashboard", path: "/student", icon: LayoutDashboard },
+  { label: "Dashboard", path: "/student", icon: LayoutDashboard, end: true },
   { label: "Meus Treinos", path: "/student/my-workouts", icon: Dumbbell },
   { label: "Histórico", path: "/student/history", icon: History },
   {

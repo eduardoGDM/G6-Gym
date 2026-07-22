@@ -9,12 +9,14 @@ import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 
 import ActionIconButton from "../../../components/common/ActionIconButton";
+import ConfirmDialog from "../../../components/common/ConfirmDialog";
 import { crudToast } from "../../../components/common/crudToast";
 import DataTable from "../../../components/common/DataTable";
 import PageContainer from "../../../components/common/PageContainer";
 import PageTitle from "../../../components/common/PageTitle";
 import { Button } from "../../../components/ui/button";
 import { Input } from "../../../components/ui/input";
+import { useConfirmDialog } from "../../../hooks/useConfirmDialog";
 import { useDebouncedValue } from "../../../hooks/useDebouncedValue";
 import exercisesService from "../../../services/ExercisesService";
 
@@ -27,7 +29,7 @@ export default function ExercisesIndex() {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(10);
-  const [deletingId, setDeletingId] = useState(null);
+  const confirmDelete = useConfirmDialog();
 
   const debouncedSearch = useDebouncedValue(search, 500);
 
@@ -58,13 +60,8 @@ export default function ExercisesIndex() {
   const from = total === 0 ? 0 : (page - 1) * perPage + 1;
   const to = Math.min(page * perPage, total);
 
-  const handleDelete = async (id) => {
-    if (!window.confirm("Deseja realmente excluir este exercício?")) {
-      return;
-    }
-
+  const runDelete = async (id) => {
     try {
-      setDeletingId(id);
       await crudToast(exercisesService.remove(id), {
         action: "delete",
         entity: "Exercício",
@@ -72,8 +69,6 @@ export default function ExercisesIndex() {
       await queryClient.invalidateQueries({ queryKey: ["exercises"] });
     } catch {
       // erro já exibido pelo crudToast
-    } finally {
-      setDeletingId(null);
     }
   };
 
@@ -127,8 +122,10 @@ export default function ExercisesIndex() {
             icon={Trash2}
             tooltip="Excluir"
             color="destructive"
-            onClick={() => handleDelete(exercise.id)}
-            loading={deletingId === exercise.id}
+            onClick={() => confirmDelete.request(exercise.id)}
+            loading={
+              confirmDelete.loading && confirmDelete.target === exercise.id
+            }
           />
         </div>
       ),
@@ -205,6 +202,17 @@ export default function ExercisesIndex() {
           perPageOptions: PER_PAGE_OPTIONS,
           onPerPageChange: handlePerPageChange,
         }}
+      />
+
+      <ConfirmDialog
+        open={confirmDelete.open}
+        title="Excluir exercício"
+        description="Deseja realmente excluir este exercício? Esta ação não pode ser desfeita."
+        confirmLabel="Excluir"
+        variant="destructive"
+        loading={confirmDelete.loading}
+        onConfirm={() => confirmDelete.confirm(runDelete)}
+        onCancel={confirmDelete.cancel}
       />
     </PageContainer>
   );

@@ -4,11 +4,13 @@ import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 
 import ActionIconButton from "../../../components/common/ActionIconButton";
+import ConfirmDialog from "../../../components/common/ConfirmDialog";
 import { crudToast } from "../../../components/common/crudToast";
 import DataTable from "../../../components/common/DataTable";
 import PageContainer from "../../../components/common/PageContainer";
 import PageTitle from "../../../components/common/PageTitle";
 import { Button } from "../../../components/ui/button";
+import { useConfirmDialog } from "../../../hooks/useConfirmDialog";
 import studentsService from "../../../services/StudentsService";
 
 export default function StudentsIndex() {
@@ -16,8 +18,8 @@ export default function StudentsIndex() {
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
-  const [deletingId, setDeletingId] = useState(null);
   const [generatingSheetId, setGeneratingSheetId] = useState(null);
+  const confirmDelete = useConfirmDialog();
 
   const loadStudents = async () => {
     try {
@@ -37,13 +39,8 @@ export default function StudentsIndex() {
     loadStudents();
   }, []);
 
-  const handleDelete = async (id) => {
-    if (!window.confirm("Deseja realmente excluir este aluno?")) {
-      return;
-    }
-
+  const runDelete = async (id) => {
     try {
-      setDeletingId(id);
       await crudToast(studentsService.remove(id), {
         action: "delete",
         entity: "Aluno",
@@ -51,8 +48,6 @@ export default function StudentsIndex() {
       await loadStudents();
     } catch {
       // erro já exibido pelo crudToast
-    } finally {
-      setDeletingId(null);
     }
   };
 
@@ -133,8 +128,10 @@ export default function StudentsIndex() {
             icon={Trash2}
             tooltip="Excluir"
             color="destructive"
-            onClick={() => handleDelete(student.id)}
-            loading={deletingId === student.id}
+            onClick={() => confirmDelete.request(student.id)}
+            loading={
+              confirmDelete.loading && confirmDelete.target === student.id
+            }
           />
         </div>
       ),
@@ -179,6 +176,17 @@ export default function StudentsIndex() {
             Cadastrar Aluno
           </Button>
         }
+      />
+
+      <ConfirmDialog
+        open={confirmDelete.open}
+        title="Excluir aluno"
+        description="Deseja realmente excluir este aluno? O acesso dele à plataforma será desativado."
+        confirmLabel="Excluir"
+        variant="destructive"
+        loading={confirmDelete.loading}
+        onConfirm={() => confirmDelete.confirm(runDelete)}
+        onCancel={confirmDelete.cancel}
       />
     </PageContainer>
   );

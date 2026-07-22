@@ -63,12 +63,15 @@ return [
 
             /*
              * Middleware allows to prevent unexpected access to API documentation
+             *
+             * block-in-production: a UI do Swagger é ferramenta de desenvolvimento
+             * e responde 404 em produção (APP_ENV=production).
              */
             'middleware' => [
-                'api' => [],
-                'asset' => [],
-                'docs' => [],
-                'oauth2_callback' => [],
+                'api' => ['block-in-production'],
+                'asset' => ['block-in-production'],
+                'docs' => ['block-in-production'],
+                'oauth2_callback' => ['block-in-production'],
             ],
 
             /*

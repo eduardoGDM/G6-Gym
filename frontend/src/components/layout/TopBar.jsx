@@ -21,7 +21,7 @@ export default function Topbar({
             <button
               type="button"
               onClick={onMenuClick}
-              className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-border bg-card text-foreground transition hover:bg-accent"
+              className="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-border bg-card text-foreground transition-colors hover:bg-accent"
               aria-label="Abrir menu"
             >
               <Menu className="h-5 w-5" />
@@ -39,8 +39,8 @@ export default function Topbar({
         </div>
 
         <div className="flex items-center gap-2 sm:gap-3">
-          <div className="flex items-center gap-3 rounded-full border border-border bg-card px-1.5 py-1.5 pr-4">
-            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/15 text-primary">
+          <div className="flex items-center gap-2.5 rounded-full border border-border bg-card py-1.5 pl-1.5 pr-2 transition-colors hover:bg-accent sm:pr-4">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/15 text-primary">
               <UserCircle2 className="h-5 w-5" />
             </div>
 

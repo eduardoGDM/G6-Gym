@@ -9,7 +9,7 @@ import {
 import RoleLayout from "../components/layout/RoleLayout";
 
 const menuItems = [
-  { label: "Dashboard", path: "/trainer", icon: LayoutDashboard },
+  { label: "Dashboard", path: "/trainer", icon: LayoutDashboard, end: true },
   { label: "Alunos", path: "/trainer/students", icon: Users },
   { label: "Treinos", path: "/trainer/workouts", icon: Dumbbell },
   { label: "Exercícios", path: "/trainer/exercises", icon: BarChart3 },
