@@ -121,7 +121,6 @@ export default function Login() {
           <div className="absolute left-1/4 top-[-10%] h-[34rem] w-[34rem] -translate-x-1/2 rounded-full bg-primary/25 blur-[130px] animate-glow" />
           <div className="absolute bottom-[-15%] right-[-10%] h-[24rem] w-[24rem] rounded-full bg-secondary/15 blur-[120px]" />
           <div className="absolute inset-0 opacity-[0.14] [background-image:linear-gradient(to_right,var(--color-border)_1px,transparent_1px),linear-gradient(to_bottom,var(--color-border)_1px,transparent_1px)] [background-size:56px_56px] [mask-image:radial-gradient(ellipse_at_center,black,transparent_75%)]" />
-          <div className="absolute right-16 top-24 h-40 w-40 rounded-3xl border border-border/40 [mask-image:linear-gradient(to_bottom,black,transparent)]" />
         </div>
 
         {/* Marca */}
@@ -277,7 +276,6 @@ export default function Login() {
               </div>
             </Field>
 
-            {/* REMEMBER */}
             <div className="flex items-center justify-between text-sm">
               <label className="flex cursor-pointer items-center gap-2 text-muted-foreground transition-colors hover:text-foreground">
                 <input
