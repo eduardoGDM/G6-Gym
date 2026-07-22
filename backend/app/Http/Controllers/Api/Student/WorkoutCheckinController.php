@@ -217,12 +217,16 @@ class WorkoutCheckinController extends Controller
 			WorkoutCheckinExerciseSet::create([
 				'workout_checkin_exercise_id' => $checkinExercise->id,
 				'set_number' => $series->order,
+				'planned_type' => $series->type,
 				'planned_repetitions' => $series->repetitions,
+				'planned_rir' => $series->rir,
 				'performed_repetitions' => $performed['performed_repetitions'] ?? null,
 				'planned_weight' => $series->weight,
 				'performed_weight' => $performed['performed_weight'] ?? null,
 				'planned_rest_time' => $series->rest_time,
 				'performed_rest_time' => $performed['performed_rest_time'] ?? null,
+				'planned_cadence' => $series->cadence,
+				'planned_advanced_technique' => $series->advanced_technique,
 				'notes' => $performed['notes'] ?? null,
 			]);
 		}

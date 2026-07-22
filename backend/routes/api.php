@@ -18,6 +18,7 @@ use App\Http\Controllers\Api\Trainer\DailyCheckinController as TrainerDailyCheck
 use App\Http\Controllers\Api\Trainer\DashboardController as TrainerDashboardController;
 use App\Http\Controllers\Api\Student\WorkoutController as StudentWorkoutController;
 use App\Http\Controllers\Api\Student\WorkoutCheckinController;
+use App\Http\Controllers\Api\Student\ExerciseHistoryController;
 use App\Http\Controllers\Api\Student\DailyCheckinController;
 use App\Http\Controllers\Api\Student\DashboardController as StudentDashboardController;
 use App\Http\Controllers\Api\Student\GamificationController as StudentGamificationController;
@@ -87,6 +88,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
 			Route::get('/my-workouts', [StudentWorkoutController::class, 'index']);
 			Route::get('/workout/{id}', [StudentWorkoutController::class, 'show']);
+
+			Route::get('/exercises/{exercise}/history', [ExerciseHistoryController::class, 'index']);
 
 			Route::get('/checkins', [WorkoutCheckinController::class, 'index']);
 			Route::get('/checkins/by-date', [WorkoutCheckinController::class, 'byDate']);

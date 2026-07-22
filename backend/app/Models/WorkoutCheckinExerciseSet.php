@@ -15,12 +15,16 @@ class WorkoutCheckinExerciseSet extends Model
 	protected $fillable = [
 		'workout_checkin_exercise_id',
 		'set_number',
+		'planned_type',
 		'planned_repetitions',
+		'planned_rir',
 		'performed_repetitions',
 		'planned_weight',
 		'performed_weight',
 		'planned_rest_time',
 		'performed_rest_time',
+		'planned_cadence',
+		'planned_advanced_technique',
 		'notes',
 	];
 
