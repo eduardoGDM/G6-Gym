@@ -1,0 +1,45 @@
+# Dependências (reinstaladas dentro da imagem)
+vendor
+node_modules
+
+# Ambiente / segredos — nunca ir para a imagem
+.env
+.env.*
+!.env.example
+
+# Artefatos de build do frontend (backend serve apenas a API)
+public/build
+public/hot
+public/storage
+
+# SQLite local (projeto usa MySQL externo)
+database/*.sqlite
+database/*.sqlite-journal
+
+# Caches / logs / temporários
+storage/logs/*
+storage/framework/cache/data/*
+storage/framework/sessions/*
+storage/framework/views/*
+storage/api-docs/*
+bootstrap/cache/*.php
+.phpunit.result.cache
+.phpunit.cache
+
+# Ferramentas / IDE / VCS
+.git
+.gitignore
+.gitattributes
+.editorconfig
+.idea
+.vscode
+.zed
+.nova
+_ide_helper.php
+Homestead.*
+auth.json
+
+# Testes e docs não necessários em runtime
+tests
+README.md
+DEPLOY.md
