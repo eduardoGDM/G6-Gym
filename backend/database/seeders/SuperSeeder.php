@@ -111,32 +111,35 @@ class SuperSeeder extends Seeder
 		WorkoutExerciseSeries::create([
 			'workout_exercise_id' => $benchPressExercise->id,
 			'order' => 1,
-			'repetitions' => 12,
+			'repetitions' => '12-15',
 			'weight' => 40,
 			'rest_time' => 60,
-			'rir' => 2,
-			'cadence' => '2-1-2',
+			'rir' => '3',
+			'type' => 'Aquecimento',
+			'cadence' => '2s exc / 1s conc',
 			'notes' => 'Aquecimento',
 		]);
 
 		WorkoutExerciseSeries::create([
 			'workout_exercise_id' => $benchPressExercise->id,
 			'order' => 2,
-			'repetitions' => 10,
+			'repetitions' => '10',
 			'weight' => 40,
 			'rest_time' => 60,
-			'rir' => 2,
-			'cadence' => '2-1-2',
+			'rir' => '2',
+			'type' => 'Válida',
+			'cadence' => '2s exc / 1s conc',
 		]);
 
 		WorkoutExerciseSeries::create([
 			'workout_exercise_id' => $benchPressExercise->id,
 			'order' => 3,
-			'repetitions' => 10,
+			'repetitions' => '8-10',
 			'weight' => 40,
 			'rest_time' => 60,
-			'rir' => 1,
-			'cadence' => '2-1-2',
+			'rir' => 'FALHA',
+			'type' => 'Válida',
+			'cadence' => '2s exc / 1s conc',
 			'notes' => 'Última série até a falha',
 		]);
 
@@ -150,42 +153,47 @@ class SuperSeeder extends Seeder
 		WorkoutExerciseSeries::create([
 			'workout_exercise_id' => $squatExercise->id,
 			'order' => 1,
-			'repetitions' => 10,
+			'repetitions' => '10',
 			'weight' => 60,
 			'rest_time' => 90,
-			'rir' => 1,
-			'cadence' => '3-1-1',
+			'rir' => '2',
+			'type' => 'Reconhecimento',
+			'cadence' => '3s excêntrica',
 		]);
 
 		WorkoutExerciseSeries::create([
 			'workout_exercise_id' => $squatExercise->id,
 			'order' => 2,
-			'repetitions' => 8,
+			'repetitions' => '8',
 			'weight' => 60,
 			'rest_time' => 90,
-			'rir' => 1,
-			'cadence' => '3-1-1',
+			'rir' => '1',
+			'type' => 'Válida',
+			'cadence' => '3s excêntrica',
 		]);
 
 		WorkoutExerciseSeries::create([
 			'workout_exercise_id' => $squatExercise->id,
 			'order' => 3,
-			'repetitions' => 8,
+			'repetitions' => '8',
 			'weight' => 65,
 			'rest_time' => 90,
-			'rir' => 0,
-			'cadence' => '3-1-1',
+			'rir' => '0',
+			'type' => 'Válida',
+			'advanced_technique' => 'Drop Set',
+			'cadence' => '3s excêntrica',
 			'notes' => 'Drop set na última série',
 		]);
 
 		WorkoutExerciseSeries::create([
 			'workout_exercise_id' => $squatExercise->id,
 			'order' => 4,
-			'repetitions' => 6,
+			'repetitions' => '6',
 			'weight' => 65,
 			'rest_time' => 90,
-			'rir' => 0,
-			'cadence' => '3-1-1',
+			'rir' => 'FALHA',
+			'type' => 'Válida',
+			'cadence' => '3s excêntrica',
 		]);
 	}
 }

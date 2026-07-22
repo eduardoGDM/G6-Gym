@@ -1,5 +1,13 @@
 import * as yup from "yup";
 
+import {
+  ADVANCED_TECHNIQUES,
+  CADENCE_MAX_LENGTH,
+  REPETITIONS_REGEX,
+  RIR_OPTIONS,
+  SERIES_TYPES,
+} from "./seriesOptions";
+
 const emptyToUndefined = (value, originalValue) =>
   originalValue === "" ? undefined : value;
 
@@ -20,12 +28,41 @@ const optionalNumber = (min, max) => {
 };
 
 export const workoutExerciseSeriesSchema = yup.object({
-  repetitions: optionalNumber(0),
+  repetitions: yup
+    .string()
+    .trim()
+    .nullable()
+    .notRequired()
+    .matches(REPETITIONS_REGEX, {
+      message:
+        "Use um número (ex.: 8), uma faixa (ex.: 7-12) ou valores por série (ex.: 6x6x6x6).",
+      excludeEmptyString: true,
+    }),
   weight: optionalNumber(0),
   rest_time: optionalNumber(0),
-  rir: optionalNumber(0, 10),
+  rir: yup
+    .string()
+    .transform((value) => (value === "" ? null : value))
+    .nullable()
+    .notRequired()
+    .oneOf([...RIR_OPTIONS, null], "RIR inválido"),
+  type: yup
+    .string()
+    .required("Selecione o tipo da série")
+    .oneOf(SERIES_TYPES, "Tipo de série inválido"),
+  advanced_technique: yup
+    .string()
+    .transform((value) => (value === "" ? null : value))
+    .nullable()
+    .notRequired()
+    .oneOf([...ADVANCED_TECHNIQUES, null], "Técnica avançada inválida"),
   tempo: yup.string().trim().nullable().notRequired(),
-  cadence: yup.string().trim().nullable().notRequired(),
+  cadence: yup
+    .string()
+    .trim()
+    .nullable()
+    .notRequired()
+    .max(CADENCE_MAX_LENGTH, `Máximo de ${CADENCE_MAX_LENGTH} caracteres`),
   duration: optionalNumber(0),
   notes: yup.string().trim().nullable().notRequired(),
 });

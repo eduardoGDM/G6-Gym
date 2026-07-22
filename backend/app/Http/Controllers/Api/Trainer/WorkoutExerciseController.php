@@ -14,10 +14,10 @@ class WorkoutExerciseController extends Controller
 	private const SERIES_VALIDATION_RULES = [
 		'series' => 'nullable|array',
 		'series.*.order' => 'required|integer|min:1',
-		'series.*.repetitions' => 'nullable|integer|min:0',
+		'series.*.repetitions' => ['nullable', 'string', 'regex:/^(\d+(-\d+)?|\d+(x\d+)+)$/'],
 		'series.*.weight' => 'nullable|numeric|min:0',
 		'series.*.rest_time' => 'nullable|integer|min:0',
-		'series.*.rir' => 'nullable|integer|min:0|max:10',
+		'series.*.rir' => 'nullable|in:0,1,2,3,4,FALHA',
 		'series.*.tempo' => 'nullable|string|max:20',
 		'series.*.cadence' => 'nullable|string|max:20',
 		'series.*.duration' => 'nullable|integer|min:0',

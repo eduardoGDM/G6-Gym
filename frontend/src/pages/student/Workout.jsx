@@ -91,14 +91,24 @@ const buildExerciseDefaults = (workoutExercises = [], checkin = null) => {
         sets: series.map((s) => {
           const existingSet = existingSetByNumber.get(s.order);
 
+          // Repetições prescritas agora podem ser uma faixa (ex.: "7-12"), que não
+          // é um valor válido para o input numérico de repetições realizadas.
+          // Só pré-preenchemos quando a prescrição é um número único.
+          const isSingleNumberReps = /^\d+$/.test(String(s.repetitions ?? ""));
+
           return {
             set_number: s.order,
-            planned_repetitions: s.repetitions,
+            planned_type: s.type || "",
+            planned_repetitions: s.repetitions ?? "",
+            planned_rir: s.rir ?? "",
+            planned_cadence: s.cadence || "",
+            planned_advanced_technique: s.advanced_technique || "",
             planned_weight: s.weight,
             planned_rest_time: s.rest_time,
             performed_weight: existingSet?.performed_weight ?? s.weight ?? "",
             performed_repetitions:
-              existingSet?.performed_repetitions ?? s.repetitions ?? "",
+              existingSet?.performed_repetitions ??
+              (isSingleNumberReps ? s.repetitions : ""),
             performed_rest_time:
               existingSet?.performed_rest_time ?? s.rest_time ?? "",
             notes: existingSet?.notes || "",
@@ -140,6 +150,38 @@ const AUTOSAVE_INDICATOR = {
     spin: false,
   },
 };
+
+/**
+ * Bloco apenas informativo com a prescrição da série (Tipo, Repetições, RIR,
+ * Cadência, Técnica avançada). O aluno não edita esses dados — continua
+ * registrando somente carga, repetições realizadas, descanso e observações.
+ */
+function PrescriptionInfo({ set }) {
+  const items = [
+    { label: "Tipo", value: set.planned_type },
+    { label: "Repetições", value: set.planned_repetitions },
+    { label: "RIR", value: set.planned_rir },
+    { label: "Cadência", value: set.planned_cadence },
+    { label: "Técnica", value: set.planned_advanced_technique },
+  ].filter(
+    (item) => item.value !== null && item.value !== undefined && item.value !== "",
+  );
+
+  if (items.length === 0) return null;
+
+  return (
+    <div className="flex flex-wrap gap-x-6 gap-y-2 rounded-lg border border-border/60 bg-background/40 px-3 py-2">
+      {items.map((item) => (
+        <div key={item.label} className="min-w-0">
+          <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+            {item.label}
+          </p>
+          <p className="text-sm font-medium text-foreground">{item.value}</p>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 function AutosaveIndicator({ status }) {
   const config = AUTOSAVE_INDICATOR[status];
@@ -487,6 +529,8 @@ export default function Workout() {
                               <p className="text-sm font-semibold text-foreground">
                                 Série {set.set_number}
                               </p>
+
+                              <PrescriptionInfo set={set} />
 
                               <div className="grid gap-4 sm:grid-cols-3">
                                 <div className="space-y-4">

@@ -1,9 +1,12 @@
-import { ArrowDown, ArrowUp, Plus, Trash2 } from "lucide-react";
+import { ArrowDown, ArrowUp, Layers, Plus, Trash2 } from "lucide-react";
+import { useState } from "react";
 import { useFieldArray } from "react-hook-form";
 
 import { Field } from "../../../../components/forms/Field";
 import { Button } from "../../../../components/ui/button";
 import { Textarea } from "../../../../components/ui/textarea";
+import { DEFAULT_SERIES_TYPE } from "../utils";
+import AddMultipleSeriesDialog from "./AddMultipleSeriesDialog";
 import WorkoutSeriesCard from "./WorkoutSeriesCard";
 
 const emptySeries = {
@@ -11,6 +14,8 @@ const emptySeries = {
   weight: "",
   rest_time: "",
   rir: "",
+  type: DEFAULT_SERIES_TYPE,
+  advanced_technique: "",
   tempo: "",
   cadence: "",
   duration: "",
@@ -37,6 +42,31 @@ export default function WorkoutExerciseCard({
     control,
     name: `exercises.${index}.series`,
   });
+
+  const [multipleDialogOpen, setMultipleDialogOpen] = useState(false);
+
+  // Rola até a primeira série recém-criada, sem tirar o foco do formulário.
+  const scrollToSeries = (seriesIndex) => {
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        document
+          .getElementById(`exercises.${index}.series.${seriesIndex}`)
+          ?.scrollIntoView({ behavior: "smooth", block: "center" });
+      });
+    });
+  };
+
+  const handleAddMultipleSeries = (quantity) => {
+    const firstNewIndex = seriesFields.length;
+    // Mesma lógica do botão "Adicionar série", executada N vezes em uma
+    // única atualização de estado (append aceita um array).
+    appendSeries(
+      Array.from({ length: quantity }, () => ({ ...emptySeries })),
+      { shouldFocus: false },
+    );
+    setMultipleDialogOpen(false);
+    scrollToSeries(firstNewIndex);
+  };
 
   return (
     <div className="space-y-4 rounded-2xl border border-border/80 bg-background/60 p-5">
@@ -98,15 +128,26 @@ export default function WorkoutExerciseCard({
           <span className="text-sm font-medium text-foreground">
             Séries ({seriesFields.length})
           </span>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => appendSeries({ ...emptySeries })}
-          >
-            <Plus className="h-4 w-4" />
-            Adicionar série
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => appendSeries({ ...emptySeries })}
+            >
+              <Plus className="h-4 w-4" />
+              Adicionar série
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setMultipleDialogOpen(true)}
+            >
+              <Layers className="h-4 w-4" />
+              Adicionar múltiplas séries
+            </Button>
+          </div>
         </div>
 
         {seriesFields.length === 0 ? (
@@ -129,6 +170,13 @@ export default function WorkoutExerciseCard({
           </div>
         )}
       </div>
+
+      {multipleDialogOpen ? (
+        <AddMultipleSeriesDialog
+          onClose={() => setMultipleDialogOpen(false)}
+          onConfirm={handleAddMultipleSeries}
+        />
+      ) : null}
     </div>
   );
 }
