@@ -1,0 +1,80 @@
+# =============================================================================
+# Render Blueprint — G6 Backend (Laravel) via Docker
+#
+# Como usar:
+#   1. Faça push deste repositório para o GitHub/GitLab.
+#   2. No Render: New > Blueprint > selecione o repositório.
+#   3. Preencha as variáveis marcadas com sync:false (segredos/DB externo).
+#
+# Observação: o Render não oferece MySQL gerenciado (apenas PostgreSQL).
+# Este projeto usa MySQL EXTERNO — informe as credenciais em DB_*.
+# =============================================================================
+services:
+  - type: web
+    name: g6-backend
+    runtime: docker
+    plan: free
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    # Rota de health-check nativa do Laravel 11 (definida em bootstrap/app.php).
+    healthCheckPath: /up
+    autoDeploy: true
+    envVars:
+      # --- Aplicação --------------------------------------------------------
+      - key: APP_NAME
+        value: G6Fit
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: "false"
+      - key: APP_KEY            # gere com: php artisan key:generate --show
+        sync: false
+      - key: APP_URL            # ex.: https://g6-backend.onrender.com
+        sync: false
+      - key: APP_LOCALE
+        value: en
+      - key: APP_FALLBACK_LOCALE
+        value: en
+
+      # --- Banco de dados (MySQL EXTERNO) -----------------------------------
+      - key: DB_CONNECTION
+        value: mysql
+      - key: DB_HOST
+        sync: false
+      - key: DB_PORT
+        value: "3306"
+      - key: DB_DATABASE
+        sync: false
+      - key: DB_USERNAME
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+
+      # --- Sessão / Sanctum SPA (HTTPS em produção) -------------------------
+      - key: SESSION_DRIVER
+        value: cookie
+      - key: SESSION_SECURE_COOKIE
+        value: "true"
+      - key: SESSION_DOMAIN        # ex.: .seu-dominio.com (ou vazio p/ onrender)
+        sync: false
+      - key: SANCTUM_STATEFUL_DOMAINS  # domínio(s) do frontend, sem protocolo
+        sync: false
+      - key: FRONTEND_URL          # ex.: https://app.seu-dominio.com
+        sync: false
+      # - key: CORS_ALLOWED_ORIGINS  # opcional: lista separada por vírgula
+      #   sync: false
+
+      # --- Cache / Fila / Log -----------------------------------------------
+      - key: CACHE_STORE
+        value: database
+      - key: QUEUE_CONNECTION
+        value: database
+      - key: LOG_CHANNEL
+        value: stack
+      - key: LOG_LEVEL
+        value: error
+
+      # --- Deploy -----------------------------------------------------------
+      # Defina como "true" para rodar migrations automaticamente a cada deploy.
+      - key: RUN_MIGRATIONS
+        value: "false"

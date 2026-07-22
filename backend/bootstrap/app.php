@@ -18,6 +18,12 @@ return Application::configure(basePath: dirname(__DIR__))
 		$middleware->statefulApi();
 		$middleware->throttleApi();
 
+		// Deploy em Docker/Render: o TLS é terminado num proxy à frente da
+		// aplicação. Confiar nos cabeçalhos X-Forwarded-* garante que o
+		// Laravel detecte HTTPS corretamente (essencial para cookies seguros
+		// do Sanctum SPA). Ajuste de infraestrutura — não altera regra de negócio.
+		$middleware->trustProxies(at: '*');
+
 		$middleware->alias([
 			'verified' => \App\Http\Middleware\EnsureEmailIsVerified::class,
 			'role' => \App\Http\Middleware\CheckRole::class,
