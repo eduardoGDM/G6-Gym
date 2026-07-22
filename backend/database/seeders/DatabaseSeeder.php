@@ -2,10 +2,8 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\Hash;
 
 class DatabaseSeeder extends Seeder
 {
@@ -16,20 +14,10 @@ class DatabaseSeeder extends Seeder
 	 */
 	public function run(): void
 	{
-		// User::factory(10)->create();
+		// Usuários base: admin, personal e aluno (aluno vinculado ao personal).
+		$this->call(UsersSeeder::class);
 
-		User::factory()->create([
-			'name' => 'Test User',
-			'email' => 'test@example.com',
-		]);
-
-		User::factory()->create([
-			'name' => 'Test User',
-			'email' => 'trainer@trainer.com',
-			'password' => Hash::make('123456'),
-		]);
-
-
+		// Exercícios e dados de apoio.
 		$this->call(MuscleGroupSeeder::class);
 		$this->call(TrainingMethodsSeeder::class);
 		$this->call(ExerciseSeeder::class);
