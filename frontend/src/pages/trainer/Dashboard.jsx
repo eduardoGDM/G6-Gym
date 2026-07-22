@@ -80,7 +80,6 @@ export default function Dashboard() {
       <PageTitle
         eyebrow={`${getGreeting()}, ${user?.name?.split(" ")[0] || ""} 👋`}
         title="Bem-vindo novamente ao G6Fit"
-        description="Abaixo está um de hoje."
       />
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
