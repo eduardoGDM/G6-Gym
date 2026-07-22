@@ -2,8 +2,8 @@
 
 Sistema de gerenciamento de academia.
 
-- **Backend:** Laravel 11 + Sanctum (SPA Cookie Authentication)
-- **Frontend:** React + Vite
+- **Backend:** Laravel 13 + Sanctum (SPA Cookie Authentication) + MySQL
+- **Frontend:** React + Vite + Tailwind CSS
 
 Papéis: `trainer`, `student` (e `admin`).
 
@@ -78,6 +78,56 @@ Variáveis disponíveis (prefixo obrigatório `VITE_`):
 - Somente `backend/.env.example` e `frontend/.env.example` são versionados.
 - Todos os demais `.env*` são ignorados pelo Git (ver `.gitignore`).
 - **Nunca** commite segredos, chaves (`APP_KEY`) ou credenciais reais.
+
+---
+
+## Deploy em produção (checklist)
+
+### Backend
+
+1. **Variáveis de ambiente** (`.env`) — ver bloco de produção no topo de
+   `backend/.env.example`. No mínimo:
+   - `APP_ENV=production` e `APP_DEBUG=false`
+   - `APP_URL`, `FRONTEND_URL` (ou `CORS_ALLOWED_ORIGINS`) com os domínios reais
+   - `SESSION_DOMAIN`, `SESSION_SECURE_COOKIE=true` (HTTPS) e
+     `SANCTUM_STATEFUL_DOMAINS` com o(s) domínio(s) do frontend
+   - `DB_*` com as credenciais reais
+2. **Dependências e chave:**
+   ```bash
+   composer install --no-dev --optimize-autoloader
+   php artisan key:generate   # apenas se ainda não houver APP_KEY
+   php artisan migrate --force
+   ```
+3. **Storage dos uploads** (fotos/vídeos de anamnese):
+   ```bash
+   php artisan storage:link
+   ```
+4. **Caches de produção** (rodar a cada deploy, após alterar `.env`/rotas):
+   ```bash
+   php artisan config:cache
+   php artisan route:cache
+   php artisan view:cache
+   ```
+   > Para reverter um cache travado: `php artisan optimize:clear`.
+5. **Fila** — `QUEUE_CONNECTION=database` exige um worker ativo
+   (`php artisan queue:work`) via supervisor/cron. Hoje só o envio de e-mails
+   usaria a fila; se `MAIL_MAILER=log`, o worker é opcional no MVP.
+6. **Document root** do servidor web deve apontar para `backend/public`.
+7. **Swagger** (`/api/documentation`) responde **404** automaticamente quando
+   `APP_ENV=production`.
+
+### Frontend
+
+```bash
+cd frontend
+# .env.production com VITE_API_URL apontando para a API pública
+npm ci
+npm run build          # gera dist/
+```
+
+Sirva o conteúdo de `frontend/dist/` como site estático (ou via CDN). Garanta
+que a origem do frontend esteja listada em `CORS_ALLOWED_ORIGINS` /
+`SANCTUM_STATEFUL_DOMAINS` do backend.
 
 ---
 

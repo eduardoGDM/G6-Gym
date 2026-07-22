@@ -14,6 +14,7 @@ import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 
 import ActionIconButton from "../../../components/common/ActionIconButton";
+import ConfirmDialog from "../../../components/common/ConfirmDialog";
 import { crudToast } from "../../../components/common/crudToast";
 import DataTable from "../../../components/common/DataTable";
 import PageContainer from "../../../components/common/PageContainer";
@@ -22,6 +23,7 @@ import { Badge } from "../../../components/ui/badge";
 import { Button } from "../../../components/ui/button";
 import { Input } from "../../../components/ui/input";
 import { Select } from "../../../components/ui/select";
+import { useConfirmDialog } from "../../../hooks/useConfirmDialog";
 import { useDebouncedValue } from "../../../hooks/useDebouncedValue";
 import workoutsService from "../../../services/WorkoutsService";
 
@@ -47,8 +49,8 @@ export default function WorkoutsIndex() {
   const [status, setStatus] = useState("all");
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(10);
-  const [deletingId, setDeletingId] = useState(null);
   const [togglingId, setTogglingId] = useState(null);
+  const confirmDelete = useConfirmDialog();
 
   const debouncedSearch = useDebouncedValue(search, 500);
 
@@ -86,13 +88,8 @@ export default function WorkoutsIndex() {
   const from = total === 0 ? 0 : (page - 1) * perPage + 1;
   const to = Math.min(page * perPage, total);
 
-  const handleDelete = async (id) => {
-    if (!window.confirm("Deseja realmente excluir este treino?")) {
-      return;
-    }
-
+  const runDelete = async (id) => {
     try {
-      setDeletingId(id);
       await crudToast(workoutsService.remove(id), {
         action: "delete",
         entity: "Treino",
@@ -100,8 +97,6 @@ export default function WorkoutsIndex() {
       await queryClient.invalidateQueries({ queryKey: ["workouts"] });
     } catch {
       // erro já exibido pelo crudToast
-    } finally {
-      setDeletingId(null);
     }
   };
 
@@ -201,8 +196,10 @@ export default function WorkoutsIndex() {
             icon={Trash2}
             tooltip="Excluir"
             color="destructive"
-            onClick={() => handleDelete(workout.id)}
-            loading={deletingId === workout.id}
+            onClick={() => confirmDelete.request(workout.id)}
+            loading={
+              confirmDelete.loading && confirmDelete.target === workout.id
+            }
           />
         </div>
       ),
@@ -283,6 +280,17 @@ export default function WorkoutsIndex() {
           perPageOptions: PER_PAGE_OPTIONS,
           onPerPageChange: handlePerPageChange,
         }}
+      />
+
+      <ConfirmDialog
+        open={confirmDelete.open}
+        title="Excluir treino"
+        description="Deseja realmente excluir este treino? Esta ação não pode ser desfeita."
+        confirmLabel="Excluir"
+        variant="destructive"
+        loading={confirmDelete.loading}
+        onConfirm={() => confirmDelete.confirm(runDelete)}
+        onCancel={confirmDelete.cancel}
       />
     </PageContainer>
   );

@@ -21,6 +21,7 @@ return Application::configure(basePath: dirname(__DIR__))
 		$middleware->alias([
 			'verified' => \App\Http\Middleware\EnsureEmailIsVerified::class,
 			'role' => \App\Http\Middleware\CheckRole::class,
+			'block-in-production' => \App\Http\Middleware\BlockInProduction::class,
 		]);
 	})
 	->withExceptions(function (Exceptions $exceptions): void {

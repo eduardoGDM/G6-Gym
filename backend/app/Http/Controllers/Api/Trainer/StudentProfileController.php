@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Trainer;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use App\Models\User;
 use App\Models\StudentProfile;
 
@@ -136,7 +137,15 @@ class StudentProfileController extends Controller
 		// registro nem os dados relacionados (workouts, fichas, anamnese, etc).
 		// O User NÃO é deletado de propósito: a FK user_id usa cascadeOnDelete,
 		// então remover o User apagaria o profile em cascata no banco.
-		$profile->delete();
+		//
+		// O User é apenas desativado (is_active = false): sem isso o aluno
+		// "removido" continuaria conseguindo autenticar e ficaria num limbo
+		// (profile soft-deleted, mas login válido). As duas operações rodam em
+		// transação para não deixar estado inconsistente.
+		DB::transaction(function () use ($profile) {
+			$profile->user?->update(['is_active' => false]);
+			$profile->delete();
+		});
 
 		return response()->json([
 			'message' => 'Aluno removido com sucesso'
