@@ -4,7 +4,7 @@ export default function RatingSlider({ id, label, value, onChange }) {
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
-        <Label htmlFor={id}>{label}</Label>
+        <Label htmlFor={id} className="mb-0">{label}</Label>
         <span className="rounded-full bg-primary/15 px-2.5 py-0.5 text-sm font-semibold text-primary">
           {value === "" || value === undefined ? "-" : value}
         </span>

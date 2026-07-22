@@ -143,7 +143,7 @@ export default function StudentsShow() {
                 </div>
               </div>
 
-              <div className="space-y-4 rounded-2xl border border-border/80 bg-background/80 p-5">
+              <div className="space-y-4 rounded-2xl border border-border/80 bg-background/60 p-5">
                 <div className="flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.22em] text-muted-foreground">
                   <CalendarDays className="h-4 w-4" />
                   Observações

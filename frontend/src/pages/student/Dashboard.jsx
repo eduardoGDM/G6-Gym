@@ -140,7 +140,11 @@ export default function Dashboard() {
               label: "Data",
               render: (row) => formatDate(row.date),
             },
-            { key: "exercises_count", label: "Qtd. exercícios" },
+            {
+              key: "exercises_count",
+              label: "Qtd. exercícios",
+              className: "hidden sm:table-cell",
+            },
           ]}
           onAction={(row) => navigate(`/student/history/${row.id}`)}
           delay={120}

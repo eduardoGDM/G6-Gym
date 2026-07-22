@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, ArrowRight } from "lucide-react";
 import { useEffect } from "react";
 import toast from "react-hot-toast";
 import { useNavigate, useParams } from "react-router-dom";
@@ -28,6 +28,26 @@ const formatDate = (value) => {
 };
 
 const displayValue = (value) => (value === null || value === undefined || value === "" ? "-" : value);
+
+/**
+ * Linha "planejado → realizado" usada na visão mobile das séries. Em telas
+ * pequenas a tabela de 8 colunas é ilegível, então cada série vira um bloco
+ * com os pares agrupados (carga, repetições e descanso).
+ */
+function ComparisonRow({ label, planned, performed }) {
+  return (
+    <div className="flex items-baseline justify-between gap-3 text-sm">
+      <dt className="text-muted-foreground">{label}</dt>
+      <dd className="flex items-baseline gap-1.5 tabular-nums">
+        <span className="text-muted-foreground">{displayValue(planned)}</span>
+        <ArrowRight className="h-3 w-3 shrink-0 self-center text-muted-foreground/60" />
+        <span className="font-semibold text-foreground">
+          {displayValue(performed)}
+        </span>
+      </dd>
+    </div>
+  );
+}
 
 export default function CheckinsShow() {
   const { id } = useParams();
@@ -148,7 +168,49 @@ export default function CheckinsShow() {
                     ) : null}
                   </div>
 
-                  <div className="overflow-hidden rounded-xl border border-border/60">
+                  {/* Mobile: cada série vira um bloco legível, sem scroll lateral. */}
+                  <div className="space-y-2 md:hidden">
+                    {(item.sets || []).length === 0 ? (
+                      <p className="text-sm text-muted-foreground">
+                        Nenhuma série registrada.
+                      </p>
+                    ) : (
+                      (item.sets || []).map((set) => (
+                        <div
+                          key={set.id}
+                          className="rounded-xl border border-border/60 bg-background/40 p-3"
+                        >
+                          <p className="text-sm font-semibold text-foreground">
+                            Série {displayValue(set.set_number)}
+                          </p>
+                          <dl className="mt-2 space-y-1.5">
+                            <ComparisonRow
+                              label="Carga"
+                              planned={set.planned_weight}
+                              performed={set.performed_weight}
+                            />
+                            <ComparisonRow
+                              label="Repetições"
+                              planned={set.planned_repetitions}
+                              performed={set.performed_repetitions}
+                            />
+                            <ComparisonRow
+                              label="Descanso"
+                              planned={set.planned_rest_time}
+                              performed={set.performed_rest_time}
+                            />
+                          </dl>
+                          {set.notes ? (
+                            <p className="mt-2 break-words text-xs text-muted-foreground">
+                              {set.notes}
+                            </p>
+                          ) : null}
+                        </div>
+                      ))
+                    )}
+                  </div>
+
+                  <div className="hidden overflow-hidden rounded-xl border border-border/60 md:block">
                     <div className="overflow-x-auto">
                       <Table>
                         <TableHeader>

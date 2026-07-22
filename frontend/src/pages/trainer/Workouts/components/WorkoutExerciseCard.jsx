@@ -71,21 +71,21 @@ export default function WorkoutExerciseCard({
   return (
     <div className="space-y-4 rounded-2xl border border-border/80 bg-background/60 p-5">
       <div className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
+        <div className="flex min-w-0 items-center gap-3">
           <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/15 text-sm font-semibold text-primary">
             {index + 1}
           </span>
-          <div>
-            <p className="text-sm font-semibold text-foreground">
+          <div className="min-w-0">
+            <p className="truncate text-sm font-semibold text-foreground">
               {exercise?.name || "Exercício"}
             </p>
-            <p className="text-xs text-muted-foreground">
+            <p className="truncate text-xs text-muted-foreground">
               {exercise?.muscle_group?.name || "—"}
             </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-1">
+        <div className="flex shrink-0 items-center gap-1">
           <Button
             type="button"
             variant="outline"
@@ -124,15 +124,16 @@ export default function WorkoutExerciseCard({
       </Field>
 
       <div className="space-y-3">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <span className="text-sm font-medium text-foreground">
             Séries ({seriesFields.length})
           </span>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
             <Button
               type="button"
               variant="outline"
               size="sm"
+              className="w-full sm:w-auto"
               onClick={() => appendSeries({ ...emptySeries })}
             >
               <Plus className="h-4 w-4" />
@@ -142,6 +143,7 @@ export default function WorkoutExerciseCard({
               type="button"
               variant="outline"
               size="sm"
+              className="w-full sm:w-auto"
               onClick={() => setMultipleDialogOpen(true)}
             >
               <Layers className="h-4 w-4" />
