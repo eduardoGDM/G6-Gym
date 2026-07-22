@@ -29,7 +29,7 @@ import workoutsService from "../../../services/WorkoutsService";
 import ExercisePicker from "./components/ExercisePicker";
 import MuscleGroupSelect from "./components/MuscleGroupSelect";
 import WorkoutExerciseCard from "./components/WorkoutExerciseCard";
-import { getTodayISO, workoutSchema } from "./utils";
+import { DEFAULT_SERIES_TYPE, getTodayISO, workoutSchema } from "./utils";
 
 const emptyToNull = (value) =>
   value === "" || value === undefined ? null : value;
@@ -42,6 +42,8 @@ const mapSeriesFromApi = (series = []) =>
       weight: item.weight ?? "",
       rest_time: item.rest_time ?? "",
       rir: item.rir ?? "",
+      type: item.type || DEFAULT_SERIES_TYPE,
+      advanced_technique: item.advanced_technique || "",
       tempo: item.tempo || "",
       cadence: item.cadence || "",
       duration: item.duration ?? "",
@@ -55,6 +57,8 @@ const mapSeriesToPayload = (series = []) =>
     weight: emptyToNull(item.weight),
     rest_time: emptyToNull(item.rest_time),
     rir: emptyToNull(item.rir),
+    type: item.type || DEFAULT_SERIES_TYPE,
+    advanced_technique: emptyToNull(item.advanced_technique),
     tempo: emptyToNull(item.tempo),
     cadence: emptyToNull(item.cadence),
     duration: emptyToNull(item.duration),

@@ -89,14 +89,14 @@ class WorkoutCheckinTest extends TestCase
 
         $this->assertCount(3, $sets, 'a execução deve espelhar as 3 séries prescritas, mesmo que uma não tenha sido preenchida');
 
-        $this->assertSame(12, $sets[0]['planned_repetitions']);
+        $this->assertSame('12', $sets[0]['planned_repetitions']);
         $this->assertSame('40.00', $sets[0]['planned_weight']);
         $this->assertSame(12, $sets[0]['performed_repetitions']);
 
         $this->assertSame(9, $sets[1]['performed_repetitions']);
         $this->assertSame('Falha muscular', $sets[1]['notes']);
 
-        $this->assertSame(8, $sets[2]['planned_repetitions']);
+        $this->assertSame('8', $sets[2]['planned_repetitions']);
         $this->assertNull($sets[2]['performed_repetitions']);
     }
 
@@ -140,7 +140,7 @@ class WorkoutCheckinTest extends TestCase
         $this->assertSame('Ajustado', $set['notes']);
 
         // O snapshot original (planejado) não deve mudar mesmo com a prescrição alterada depois.
-        $this->assertSame(12, $set['planned_repetitions']);
+        $this->assertSame('12', $set['planned_repetitions']);
         $this->assertSame('40.00', $set['planned_weight']);
     }
 

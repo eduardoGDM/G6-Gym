@@ -1,9 +1,17 @@
 import { Trash2 } from "lucide-react";
 
 import { Field } from "../../../../components/forms/Field";
-import { Input } from "../../../../components/ui/input";
 import { Button } from "../../../../components/ui/button";
+import { Input } from "../../../../components/ui/input";
+import { Select } from "../../../../components/ui/select";
 import { Textarea } from "../../../../components/ui/textarea";
+import {
+  ADVANCED_TECHNIQUES,
+  CADENCE_MAX_LENGTH,
+  REPETITIONS_PLACEHOLDER,
+  RIR_OPTIONS,
+  SERIES_TYPES,
+} from "../utils";
 
 export default function WorkoutSeriesCard({
   register,
@@ -13,7 +21,10 @@ export default function WorkoutSeriesCard({
   onRemove,
 }) {
   return (
-    <div className="space-y-3 rounded-xl border border-border/70 bg-card/60 p-4">
+    <div
+      id={namePrefix}
+      className="space-y-3 rounded-xl border border-border/70 bg-card/60 p-4"
+    >
       <div className="flex items-center justify-between gap-3">
         <span className="text-sm font-semibold text-foreground">
           Série {seriesNumber}
@@ -30,16 +41,90 @@ export default function WorkoutSeriesCard({
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <Field
+          label="Tipo"
+          htmlFor={`${namePrefix}.type`}
+          error={errors?.type?.message}
+        >
+          <Select id={`${namePrefix}.type`} {...register(`${namePrefix}.type`)}>
+            {SERIES_TYPES.map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
+          </Select>
+        </Field>
+
+        <Field
           label="Repetições"
           htmlFor={`${namePrefix}.repetitions`}
           error={errors?.repetitions?.message}
         >
+          <div className="space-y-1">
+            <Input
+              id={`${namePrefix}.repetitions`}
+              placeholder={REPETITIONS_PLACEHOLDER}
+              {...register(`${namePrefix}.repetitions`)}
+            />
+          </div>
+        </Field>
+
+        <Field
+          label="RIR"
+          htmlFor={`${namePrefix}.rir`}
+          error={errors?.rir?.message}
+        >
+          <Select id={`${namePrefix}.rir`} {...register(`${namePrefix}.rir`)}>
+            <option value="">Não informado</option>
+            {RIR_OPTIONS.map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
+          </Select>
+        </Field>
+
+        <Field
+          label="Técnica avançada"
+          htmlFor={`${namePrefix}.advanced_technique`}
+          error={errors?.advanced_technique?.message}
+        >
+          <Select
+            id={`${namePrefix}.advanced_technique`}
+            {...register(`${namePrefix}.advanced_technique`)}
+          >
+            <option value="">Nenhuma</option>
+            {ADVANCED_TECHNIQUES.map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
+          </Select>
+        </Field>
+
+        <Field
+          label="Cadência"
+          htmlFor={`${namePrefix}.cadence`}
+          error={errors?.cadence?.message}
+        >
           <Input
-            id={`${namePrefix}.repetitions`}
+            id={`${namePrefix}.cadence`}
+            maxLength={CADENCE_MAX_LENGTH}
+            placeholder="Ex: 3s exc / 1s conc"
+            {...register(`${namePrefix}.cadence`)}
+          />
+        </Field>
+
+        <Field
+          label="Descanso (s)"
+          htmlFor={`${namePrefix}.rest_time`}
+          error={errors?.rest_time?.message}
+        >
+          <Input
+            id={`${namePrefix}.rest_time`}
             type="number"
             min="0"
-            placeholder="Ex: 12"
-            {...register(`${namePrefix}.repetitions`)}
+            placeholder="Ex: 60"
+            {...register(`${namePrefix}.rest_time`)}
           />
         </Field>
 
@@ -59,35 +144,6 @@ export default function WorkoutSeriesCard({
         </Field>
 
         <Field
-          label="Descanso (s)"
-          htmlFor={`${namePrefix}.rest_time`}
-          error={errors?.rest_time?.message}
-        >
-          <Input
-            id={`${namePrefix}.rest_time`}
-            type="number"
-            min="0"
-            placeholder="Ex: 60"
-            {...register(`${namePrefix}.rest_time`)}
-          />
-        </Field>
-
-        <Field
-          label="RIR"
-          htmlFor={`${namePrefix}.rir`}
-          error={errors?.rir?.message}
-        >
-          <Input
-            id={`${namePrefix}.rir`}
-            type="number"
-            min="0"
-            max="10"
-            placeholder="Ex: 2"
-            {...register(`${namePrefix}.rir`)}
-          />
-        </Field>
-
-        <Field
           label="Tempo"
           htmlFor={`${namePrefix}.tempo`}
           error={errors?.tempo?.message}
@@ -96,18 +152,6 @@ export default function WorkoutSeriesCard({
             id={`${namePrefix}.tempo`}
             placeholder="Ex: 3-1-1"
             {...register(`${namePrefix}.tempo`)}
-          />
-        </Field>
-
-        <Field
-          label="Cadência"
-          htmlFor={`${namePrefix}.cadence`}
-          error={errors?.cadence?.message}
-        >
-          <Input
-            id={`${namePrefix}.cadence`}
-            placeholder="Ex: lenta"
-            {...register(`${namePrefix}.cadence`)}
           />
         </Field>
 

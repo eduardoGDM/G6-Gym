@@ -269,12 +269,10 @@
             background-color: #1c1c24;
         }
 
-        .col-name { width: 30%; }
-        .col-sets { width: 8%; }
-        .col-reps { width: 9%; }
-        .col-load { width: 10%; }
-        .col-rest { width: 10%; }
-        .col-notes { width: 33%; }
+        .col-ex { width: 26%; }
+        .col-config { width: 23%; }
+        .col-series { width: 34%; }
+        .col-obs { width: 17%; }
 
         .ex-name {
             font-weight: bold;
@@ -291,15 +289,116 @@
             margin-top: 1px;
         }
 
-        .ex-variable {
+        .ex-equip {
+            display: block;
+            font-size: 6.5px;
             color: #b4b4c3;
-            font-style: italic;
+            margin-top: 1px;
         }
 
         .ex-notes {
             color: #b4b4c3;
             word-wrap: break-word;
             overflow-wrap: break-word;
+        }
+
+        /* ---------- Coluna Configuração (resumo técnico) ---------- */
+        .cfg-head {
+            color: #f8fafc;
+            font-weight: bold;
+            margin-bottom: 3px;
+        }
+
+        .cfg-type {
+            color: #a78bfa;
+            font-weight: bold;
+        }
+
+        .cfg-line {
+            margin-bottom: 1.5px;
+            color: #e4e4ec;
+        }
+
+        .cfg-label {
+            color: #a78bfa;
+            text-transform: uppercase;
+            font-size: 6px;
+            letter-spacing: 0.3px;
+        }
+
+        /* ---------- Coluna Séries (uma linha por série) ---------- */
+        .series-line {
+            margin-bottom: 3px;
+        }
+
+        .series-bullet {
+            color: #7c3aed;
+            font-weight: bold;
+        }
+
+        .series-type {
+            color: #f8fafc;
+            font-weight: bold;
+        }
+
+        .series-sub {
+            color: #b4b4c3;
+        }
+
+        .series-tech {
+            display: block;
+            color: #a78bfa;
+            font-size: 7px;
+            margin-top: 0.5px;
+        }
+
+        .series-note {
+            display: block;
+            color: #b4b4c3;
+            font-style: italic;
+            font-size: 7px;
+            margin-top: 0.5px;
+        }
+
+        .series-empty {
+            color: #b4b4c3;
+            font-style: italic;
+        }
+
+        /* ---------- Caixa de técnica avançada ---------- */
+        tr.technique-row td {
+            padding: 0 8px 6px 8px;
+            background-color: #17171d;
+            border-bottom: 0.5px solid #2a2a35;
+        }
+
+        .technique-box {
+            background-color: #1f1f29;
+            border: 0.5px solid #2a2a35;
+            border-left: 2.5px solid #7c3aed;
+            border-radius: 0 4px 4px 0;
+            padding: 5px 8px;
+        }
+
+        .technique-title {
+            display: block;
+            color: #a78bfa;
+            text-transform: uppercase;
+            font-size: 6px;
+            letter-spacing: 0.4px;
+            font-weight: bold;
+            margin-bottom: 3px;
+        }
+
+        .technique-item {
+            font-size: 7.5px;
+            color: #b4b4c3;
+            margin-bottom: 1.5px;
+        }
+
+        .technique-name {
+            color: #f8fafc;
+            font-weight: bold;
         }
 
         /* ---------- Mini tabela de séries variáveis ---------- */
@@ -415,10 +514,6 @@
             Este aluno não possui treinos ativos no momento.
         </div>
     @else
-        <div class="summary-row">
-            <span class="summary-chip"><strong>{{ $workouts->count() }}</strong> treino{{ $workouts->count() > 1 ? 's' : '' }} ativo{{ $workouts->count() > 1 ? 's' : '' }}</span>
-            <span class="summary-chip"><strong>{{ $workouts->sum(fn ($w) => $w->workoutExercises->count()) }}</strong> exercícios no total</span>
-        </div>
     @endif
 
     @php
@@ -431,17 +526,43 @@
             return $formatted . 'kg';
         };
 
-        $compareFields = ['repetitions', 'weight', 'rest_time', 'rir', 'tempo', 'cadence', 'duration', 'notes'];
+        // Valores distintos preservando a ordem de aparição (ex.: reps, RIR).
+        $uniqueVals = function ($series, $key) {
+            $out = [];
+            foreach ($series as $s) {
+                $v = $s->{$key};
+                if ($v !== null && $v !== '' && !in_array($v, $out, true)) {
+                    $out[] = $v;
+                }
+            }
+            return $out;
+        };
 
-        $fieldLabels = [
-            'repetitions' => 'Reps',
-            'weight' => 'Carga',
-            'rest_time' => 'Descanso',
-            'rir' => 'RIR',
-            'tempo' => 'Tempo',
-            'cadence' => 'Cadência',
-            'duration' => 'Duração',
-            'notes' => 'Obs.',
+        // Tipo predominante (mais frequente) entre as séries.
+        $predominantType = function ($series) {
+            $counts = [];
+            foreach ($series as $s) {
+                if ($s->type !== null && $s->type !== '') {
+                    $counts[$s->type] = ($counts[$s->type] ?? 0) + 1;
+                }
+            }
+            if (empty($counts)) {
+                return null;
+            }
+            arsort($counts);
+            return array_key_first($counts);
+        };
+
+        $rirLabel = fn ($v) => $v === 'FALHA' ? 'Falha' : $v;
+        $rirTag = fn ($v) => $v === 'FALHA' ? 'Falha' : 'RIR ' . $v;
+
+        // Descrições fixas das técnicas avançadas (definidas pela aplicação).
+        $techniqueDescriptions = [
+            'Drop Set' => 'Reduza a carga (~30%) após a falha e continue sem descanso.',
+            'Muscle Round' => '6 mini-séries de 6 repetições com pausas de 10–15 segundos.',
+            'Cluster Set' => 'Divida a série em pequenos blocos com pausas curtas entre eles.',
+            'Backoff Set' => 'Após as séries principais, reduza a carga (30–40%) e realize uma série adicional.',
+            'Parciais' => 'Após a falha, continue com repetições parciais na faixa de maior tensão.',
         ];
     @endphp
 
@@ -454,122 +575,130 @@
                 <span class="workout-name">{{ $workout->name }}</span>
             </div>
 
-            @if($workout->muscleGroups->isNotEmpty() || $workout->description)
+            @if($workout->description)
                 <div class="workout-sub">
-                    @foreach($workout->muscleGroups as $muscleGroup)
-                        <span class="muscle-tag">{{ strtoupper($muscleGroup->name) }}</span>
-                    @endforeach
-
-                    @if($workout->description)
-                        <div class="workout-desc">{{ $workout->description }}</div>
-                    @endif
+                    <div class="workout-desc">{{ $workout->description }}</div>
                 </div>
             @endif
 
             <table class="ex-table">
                 <thead>
                     <tr>
-                        <th class="col-name">Exercício</th>
-                        <th class="col-sets">Séries</th>
-                        <th class="col-reps">Reps</th>
-                        <th class="col-load">Carga</th>
-                        <th class="col-rest">Descanso</th>
-                        <th class="col-notes">Observações</th>
+                        <th class="col-ex">Exercício</th>
+                        <th class="col-config">Configuração</th>
+                        <th class="col-series">Séries</th>
+                        <th class="col-obs">Observações</th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach($workout->workoutExercises as $exerciseIndex => $workoutExercise)
                         @php
-                            $seriesList = $workoutExercise->series;
-                            $first = $seriesList->first();
+                            $seriesList = $workoutExercise->series->sortBy('order')->values();
 
-                            $isUniform = $seriesList->count() <= 1 || $seriesList->every(function ($s) use ($first, $compareFields) {
-                                foreach ($compareFields as $field) {
-                                    if ($s->{$field} != $first->{$field}) {
-                                        return false;
-                                    }
-                                }
-                                return true;
-                            });
-
-                            $activeCols = [];
-                            if (!$isUniform) {
-                                foreach ($fieldLabels as $field => $label) {
-                                    if ($seriesList->contains(fn ($s) => $s->{$field} !== null && $s->{$field} !== '')) {
-                                        $activeCols[$field] = $label;
-                                    }
-                                }
-                            }
-
-                            $extras = [];
-                            if ($first) {
-                                if ($first->rir !== null) $extras[] = 'RIR ' . $first->rir;
-                                if ($first->tempo !== null) $extras[] = 'Tempo ' . $first->tempo;
-                                if ($first->cadence !== null) $extras[] = 'Cad. ' . $first->cadence;
-                                if ($first->duration !== null) $extras[] = $first->duration . 's';
-                            }
-
-                            $notesParts = array_filter([
-                                $workoutExercise->notes,
-                                $isUniform ? ($first->notes ?? null) : null,
-                                $extras ? implode(' · ', $extras) : null,
-                            ]);
+                            $reps = $uniqueVals($seriesList, 'repetitions');
+                            $rirs = array_map($rirLabel, $uniqueVals($seriesList, 'rir'));
+                            $techniques = $uniqueVals($seriesList, 'advanced_technique');
+                            $cadences = $uniqueVals($seriesList, 'cadence');
+                            $rests = array_map(fn ($v) => $v . 's', $uniqueVals($seriesList, 'rest_time'));
+                            $tempos = $uniqueVals($seriesList, 'tempo');
+                            $predominant = $predominantType($seriesList);
                         @endphp
                         <tr class="{{ $exerciseIndex % 2 === 1 ? 'row-even' : '' }}">
-                            <td class="col-name">
+                            <td class="col-ex">
                                 <span class="ex-name">{{ $exerciseIndex + 1 }}. {{ $workoutExercise->exercise->name }}</span>
                                 @if($workoutExercise->exercise->muscleGroup)
                                     <span class="ex-group">{{ $workoutExercise->exercise->muscleGroup->name }}</span>
                                 @endif
+                                @if($workoutExercise->exercise->equipment)
+                                    <span class="ex-equip">{{ $workoutExercise->exercise->equipment }}</span>
+                                @endif
                             </td>
 
-                            @if($seriesList->isEmpty())
-                                <td class="col-sets">—</td>
-                                <td class="col-reps">—</td>
-                                <td class="col-load">—</td>
-                                <td class="col-rest">—</td>
-                            @elseif($isUniform)
-                                <td class="col-sets">{{ $seriesList->count() }}</td>
-                                <td class="col-reps">{{ $first->repetitions ?? '—' }}</td>
-                                <td class="col-load">{{ $formatLoad($first->weight) ?? '—' }}</td>
-                                <td class="col-rest">{{ $first->rest_time !== null ? $first->rest_time . 's' : '—' }}</td>
-                            @else
-                                <td class="col-sets">{{ $seriesList->count() }}</td>
-                                <td class="col-reps ex-variable" colspan="3">variável &middot; ver detalhe abaixo</td>
-                            @endif
+                            <td class="col-config">
+                                @if($seriesList->isEmpty())
+                                    <span class="series-empty">Sem séries.</span>
+                                @else
+                                    @php
+                                        $countText = $seriesList->count() . ' ' . ($seriesList->count() === 1 ? 'série' : 'séries');
+                                    @endphp
+                                    <div class="cfg-head">
+                                        {{ $countText }}
+                                        @if($predominant)
+                                            &middot; <span class="cfg-type">{{ $predominant }}</span>
+                                        @endif
+                                    </div>
+                                    @if($reps)
+                                        <div class="cfg-line"><span class="cfg-label">Reps</span> {{ implode(' · ', $reps) }}</div>
+                                    @endif
+                                    @if($rirs)
+                                        <div class="cfg-line"><span class="cfg-label">RIR</span> {{ implode(' · ', $rirs) }}</div>
+                                    @endif
+                                    @if($techniques)
+                                        <div class="cfg-line"><span class="cfg-label">Técnica</span> {{ implode(' · ', $techniques) }}</div>
+                                    @endif
+                                    @if($cadences)
+                                        <div class="cfg-line"><span class="cfg-label">Cadência</span> {{ implode(' · ', $cadences) }}</div>
+                                    @endif
+                                    @if($rests)
+                                        <div class="cfg-line"><span class="cfg-label">Descanso</span> {{ implode(' · ', $rests) }}</div>
+                                    @endif
+                                    @if($tempos)
+                                        <div class="cfg-line"><span class="cfg-label">Tempo</span> {{ implode(' · ', $tempos) }}</div>
+                                    @endif
+                                @endif
+                            </td>
 
-                            <td class="col-notes ex-notes">{{ implode(' — ', $notesParts) ?: '—' }}</td>
+                            <td class="col-series">
+                                @if($seriesList->isEmpty())
+                                    <span class="series-empty">Nenhuma série detalhada.</span>
+                                @else
+                                    @foreach($seriesList as $seriesIndex => $series)
+                                        @php
+                                            $load = $formatLoad($series->weight);
+                                            $rirText = ($series->rir !== null && $series->rir !== '') ? $rirTag($series->rir) : null;
+                                            $typeText = $series->type ?: 'Série ' . ($seriesIndex + 1);
+
+                                            $subParts = [];
+                                            if ($series->repetitions) $subParts[] = '— ' . $series->repetitions . ' reps';
+                                            if ($load) $subParts[] = '· ' . $load;
+                                            if ($rirText) $subParts[] = '(' . $rirText . ')';
+                                            $subText = implode(' ', $subParts);
+                                        @endphp
+                                        <div class="series-line">
+                                            <span class="series-bullet">•</span>
+                                            <span class="series-type">{{ $typeText }}</span>
+                                            @if($subText)
+                                                <span class="series-sub">{{ $subText }}</span>
+                                            @endif
+                                            @if($series->advanced_technique)
+                                                <span class="series-tech">{{ $series->advanced_technique }}</span>
+                                            @endif
+                                            @if($series->notes)
+                                                <span class="series-note">{{ $series->notes }}</span>
+                                            @endif
+                                        </div>
+                                    @endforeach
+                                @endif
+                            </td>
+
+                            <td class="col-obs ex-notes">{{ $workoutExercise->notes ?: '—' }}</td>
                         </tr>
 
-                        @if(!$isUniform)
-                            <tr class="detail-row">
-                                <td colspan="6">
-                                    <table class="mini-table">
-                                        <tr>
-                                            <th>Série</th>
-                                            @foreach($activeCols as $label)
-                                                <th>{{ $label }}</th>
-                                            @endforeach
-                                        </tr>
-                                        @foreach($seriesList as $series)
-                                            <tr>
-                                                <td>{{ $series->order }}</td>
-                                                @foreach($activeCols as $field => $label)
-                                                    <td>
-                                                        @if($field === 'weight')
-                                                            {{ $formatLoad($series->weight) ?? '—' }}
-                                                        @elseif($field === 'rest_time')
-                                                            {{ $series->rest_time !== null ? $series->rest_time . 's' : '—' }}
-                                                        @elseif($field === 'duration')
-                                                            {{ $series->duration !== null ? $series->duration . 's' : '—' }}
-                                                        @else
-                                                            {{ $series->{$field} ?? '—' }}
-                                                        @endif
-                                                    </td>
-                                                @endforeach
-                                            </tr>
+                        @if(!empty($techniques))
+                            <tr class="technique-row">
+                                <td colspan="4">
+                                    <div class="technique-box">
+                                        <span class="technique-title">Técnica Avançada</span>
+                                        @foreach($techniques as $technique)
+                                            @php $techniqueDesc = $techniqueDescriptions[$technique] ?? null; @endphp
+                                            <div class="technique-item">
+                                                <span class="technique-name">{{ $technique }}</span>
+                                                @if($techniqueDesc)
+                                                    — {{ $techniqueDesc }}
+                                                @endif
+                                            </div>
                                         @endforeach
-                                    </table>
+                                    </div>
                                 </td>
                             </tr>
                         @endif

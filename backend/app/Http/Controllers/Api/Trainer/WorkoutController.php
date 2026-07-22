@@ -30,14 +30,24 @@ class WorkoutController extends Controller
 		'exercises.*.notes' => 'nullable|string',
 		'exercises.*.series' => 'nullable|array',
 		'exercises.*.series.*.order' => 'required|integer|min:1',
-		'exercises.*.series.*.repetitions' => 'nullable|integer|min:0',
+		'exercises.*.series.*.repetitions' => ['nullable', 'string', 'regex:/^(\d+(-\d+)?|\d+(x\d+)+)$/'],
 		'exercises.*.series.*.weight' => 'nullable|numeric|min:0',
 		'exercises.*.series.*.rest_time' => 'nullable|integer|min:0',
-		'exercises.*.series.*.rir' => 'nullable|integer|min:0|max:10',
+		'exercises.*.series.*.rir' => 'nullable|in:0,1,2,3,4,FALHA',
+		'exercises.*.series.*.type' => 'required|in:Aquecimento,Reconhecimento,Válida',
+		'exercises.*.series.*.advanced_technique' => 'nullable|in:Drop Set,Muscle Round,Parciais,Backoff Set,Cluster Set',
 		'exercises.*.series.*.tempo' => 'nullable|string|max:20',
-		'exercises.*.series.*.cadence' => 'nullable|string|max:20',
+		'exercises.*.series.*.cadence' => 'nullable|string|max:50',
 		'exercises.*.series.*.duration' => 'nullable|integer|min:0',
 		'exercises.*.series.*.notes' => 'nullable|string',
+	];
+
+	private const SERIES_VALIDATION_MESSAGES = [
+		'exercises.*.series.*.repetitions.regex' => 'Use um número (ex.: 8), uma faixa (ex.: 7-12) ou valores por série (ex.: 6x6x6x6).',
+		'exercises.*.series.*.rir.in' => 'RIR inválido.',
+		'exercises.*.series.*.type.required' => 'Selecione o tipo da série.',
+		'exercises.*.series.*.type.in' => 'Tipo de série inválido.',
+		'exercises.*.series.*.advanced_technique.in' => 'Técnica avançada inválida.',
 	];
 
 	public function index(Request $request)
@@ -84,7 +94,7 @@ class WorkoutController extends Controller
 			'start_date' => 'required|date',
 			'end_date' => 'nullable|date|after_or_equal:start_date',
 			'active' => 'nullable|boolean',
-		], self::EXERCISES_VALIDATION_RULES));
+		], self::EXERCISES_VALIDATION_RULES), self::SERIES_VALIDATION_MESSAGES);
 
 		$workout = DB::transaction(function () use ($request) {
 			$workout = Workout::create([
@@ -147,7 +157,7 @@ class WorkoutController extends Controller
 			'start_date' => 'sometimes|date',
 			'end_date' => 'nullable|date|after_or_equal:start_date',
 			'active' => 'nullable|boolean',
-		], self::EXERCISES_VALIDATION_RULES));
+		], self::EXERCISES_VALIDATION_RULES), self::SERIES_VALIDATION_MESSAGES);
 
 		DB::transaction(function () use ($request, $workout) {
 			$workout->update($request->only([
@@ -213,6 +223,8 @@ class WorkoutController extends Controller
 					'weight' => $series['weight'] ?? null,
 					'rest_time' => $series['rest_time'] ?? null,
 					'rir' => $series['rir'] ?? null,
+					'type' => $series['type'] ?? 'Válida',
+					'advanced_technique' => $series['advanced_technique'] ?? null,
 					'tempo' => $series['tempo'] ?? null,
 					'cadence' => $series['cadence'] ?? null,
 					'duration' => $series['duration'] ?? null,
