@@ -4,6 +4,7 @@ import {
   Check,
   ChevronDown,
   CloudOff,
+  History,
   Loader2,
   Save,
   TriangleAlert,
@@ -23,6 +24,7 @@ import { Field } from "../../components/forms/Field";
 import { FormSection } from "../../components/forms/FormSection";
 import FormSkeleton from "../../components/loading/FormSkeleton";
 import ListSkeleton from "../../components/loading/ListSkeleton";
+import ExerciseHistoryModal from "../../components/student/ExerciseHistoryModal";
 import { showWorkoutFeedbackToast } from "../../components/student/workoutFeedbackToast";
 import { Badge } from "../../components/ui/badge";
 import { Button } from "../../components/ui/button";
@@ -398,6 +400,7 @@ export default function Workout() {
   const [notFound, setNotFound] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [confirmState, setConfirmState] = useState(null);
+  const [historyExercise, setHistoryExercise] = useState(null);
 
   const {
     register,
@@ -705,6 +708,21 @@ export default function Workout() {
                             ) : null}
                           </div>
 
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setHistoryExercise({
+                                id: field.exercise_id,
+                                name: field.exercise_name,
+                                muscleGroup: field.muscle_group,
+                              })
+                            }
+                            className="flex w-full items-center justify-center gap-1 rounded-lg border border-border/60 bg-muted/40 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                          >
+                            <History className="h-4 w-4" />
+                            Histórico de exercício
+                          </button>
+
                           <div className="space-y-4 border-t border-border/50 pt-5">
                             {(field.sets || []).map((set, setIndex) => (
                               <CheckinSet
@@ -812,6 +830,14 @@ export default function Workout() {
             </Card>
           </div>
         ) : null}
+
+        <ExerciseHistoryModal
+          open={Boolean(historyExercise)}
+          onClose={() => setHistoryExercise(null)}
+          exerciseId={historyExercise?.id}
+          exerciseName={historyExercise?.name}
+          muscleGroup={historyExercise?.muscleGroup}
+        />
       </div>
     </PageContainer>
   );
