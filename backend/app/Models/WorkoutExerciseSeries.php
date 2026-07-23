@@ -21,7 +21,6 @@ class WorkoutExerciseSeries extends Model
 		'rir',
 		'type',
 		'advanced_technique',
-		'tempo',
 		'cadence',
 		'duration',
 		'notes',

@@ -600,7 +600,6 @@
                             $techniques = $uniqueVals($seriesList, 'advanced_technique');
                             $cadences = $uniqueVals($seriesList, 'cadence');
                             $rests = array_map(fn ($v) => $v . 's', $uniqueVals($seriesList, 'rest_time'));
-                            $tempos = $uniqueVals($seriesList, 'tempo');
                             $predominant = $predominantType($seriesList);
                         @endphp
                         <tr class="{{ $exerciseIndex % 2 === 1 ? 'row-even' : '' }}">
@@ -641,9 +640,6 @@
                                     @endif
                                     @if($rests)
                                         <div class="cfg-line"><span class="cfg-label">Descanso</span> {{ implode(' · ', $rests) }}</div>
-                                    @endif
-                                    @if($tempos)
-                                        <div class="cfg-line"><span class="cfg-label">Tempo</span> {{ implode(' · ', $tempos) }}</div>
                                     @endif
                                 @endif
                             </td>

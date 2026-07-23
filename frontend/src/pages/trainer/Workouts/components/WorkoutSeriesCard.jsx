@@ -146,18 +146,6 @@ export default function WorkoutSeriesCard({
         </Field>
 
         <Field
-          label="Tempo"
-          htmlFor={`${namePrefix}.tempo`}
-          error={errors?.tempo?.message}
-        >
-          <Input
-            id={`${namePrefix}.tempo`}
-            placeholder="Ex: 3-1-1"
-            {...register(`${namePrefix}.tempo`)}
-          />
-        </Field>
-
-        <Field
           label="Duração (s)"
           htmlFor={`${namePrefix}.duration`}
           error={errors?.duration?.message}

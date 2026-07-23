@@ -109,7 +109,6 @@ export default function WorkoutExerciseSummaryCard({ exercise }) {
                 />
                 <SummaryRow label="Cadência" value={config.cadence.join(" · ")} />
                 <SummaryRow label="Descanso" value={config.rest.join(" · ")} />
-                <SummaryRow label="Tempo" value={config.tempo.join(" · ")} />
               </dl>
             </div>
           )}
