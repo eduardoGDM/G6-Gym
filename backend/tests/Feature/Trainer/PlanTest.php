@@ -47,11 +47,33 @@ class PlanTest extends TestCase
 
 		$response->assertOk();
 		$response->assertJsonPath('plan.code', 'essencial');
-		$response->assertJsonPath('plan.student_limit', 15);
+		$response->assertJsonPath('plan.student_limit', 50);
 		$response->assertJsonPath('usage.students', 12);
-		$response->assertJsonPath('usage.students_limit', 15);
+		$response->assertJsonPath('usage.students_limit', 50);
 		$response->assertJsonPath('plan.features.physical_assessment', true);
 		$response->assertJsonPath('plan.features.videos', false);
+	}
+
+	/**
+	 * Preço é assunto do admin. A negociação acontece fora do sistema, então o
+	 * valor não deve nem trafegar até o personal.
+	 */
+	public function test_price_is_never_exposed_to_the_trainer(): void
+	{
+		$trainer = $this->createTrainerWithStudents();
+		$this->assignPlan($trainer, 'standard');
+
+		$this->actingAs($trainer)
+			->getJson('/api/trainer/plan')
+			->assertOk()
+			->assertJsonMissingPath('plan.price_cents');
+
+		$response = $this->actingAs($trainer)->getJson('/api/trainer/plans');
+		$response->assertOk();
+
+		foreach (range(0, 3) as $index) {
+			$response->assertJsonMissingPath("{$index}.price_cents");
+		}
 	}
 
 	public function test_trainer_without_plan_still_sees_the_usage(): void
@@ -70,12 +92,12 @@ class PlanTest extends TestCase
 	public function test_unlimited_plan_has_no_student_limit(): void
 	{
 		$trainer = $this->createTrainerWithStudents(3);
-		$this->assignPlan($trainer, 'ilimitado');
+		$this->assignPlan($trainer, 'pro');
 
 		$response = $this->actingAs($trainer)->getJson('/api/trainer/plan');
 
 		$response->assertOk();
-		$response->assertJsonPath('plan.code', 'ilimitado');
+		$response->assertJsonPath('plan.code', 'pro');
 		$response->assertJsonPath('usage.students_limit', null);
 	}
 
@@ -118,8 +140,8 @@ class PlanTest extends TestCase
 		$response->assertJsonCount(4);
 		$response->assertJsonPath('0.code', 'free');
 		$response->assertJsonPath('0.is_current', false);
-		$response->assertJsonPath('2.code', 'pro');
-		$response->assertJsonPath('2.is_current', true);
+		$response->assertJsonPath('3.code', 'pro');
+		$response->assertJsonPath('3.is_current', true);
 	}
 
 	public function test_ladder_matches_the_final_model(): void
@@ -129,20 +151,34 @@ class PlanTest extends TestCase
 		$response = $this->actingAs($trainer)->getJson('/api/trainer/plans');
 
 		$response->assertOk();
+		$response->assertJsonCount(4);
 
-		// Free: 1 aluno, avaliação física liberada, sem fotos nem vídeos.
-		$response->assertJsonPath('0.student_limit', 1);
-		$response->assertJsonPath('0.features.physical_assessment', true);
+		// Free: 3 alunos, sem mídia.
+		$response->assertJsonPath('0.code', 'free');
+		$response->assertJsonPath('0.student_limit', 3);
 		$response->assertJsonPath('0.features.photos', false);
 		$response->assertJsonPath('0.features.videos', false);
 
-		// Essencial abre fotos; vídeos só no Pro.
-		$response->assertJsonPath('1.features.photos', true);
+		// Standard: capacidade real, ainda sem mídia — é o que o torna barato
+		// de servir.
+		$response->assertJsonPath('1.code', 'standard');
+		$response->assertJsonPath('1.student_limit', 20);
+		$response->assertJsonPath('1.features.photos', false);
 		$response->assertJsonPath('1.features.videos', false);
-		$response->assertJsonPath('2.features.videos', true);
 
-		// PDF deixou de ser diferencial de plano.
-		foreach ([0, 1, 2, 3] as $index) {
+		// Essencial abre fotos; vídeo só no Pro, que é o teto sem limite.
+		$response->assertJsonPath('2.code', 'essencial');
+		$response->assertJsonPath('2.student_limit', 50);
+		$response->assertJsonPath('2.features.photos', true);
+		$response->assertJsonPath('2.features.videos', false);
+
+		$response->assertJsonPath('3.code', 'pro');
+		$response->assertJsonPath('3.student_limit', null);
+		$response->assertJsonPath('3.features.videos', true);
+
+		// Avaliação física e PDF estão em todos os degraus.
+		foreach (range(0, 3) as $index) {
+			$response->assertJsonPath("{$index}.features.physical_assessment", true);
 			$response->assertJsonPath("{$index}.features.pdf", true);
 		}
 	}

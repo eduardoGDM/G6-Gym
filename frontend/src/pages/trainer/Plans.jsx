@@ -9,7 +9,7 @@ import { Badge } from "../../components/ui/badge";
 import { Card, CardContent } from "../../components/ui/card";
 import trainerPlanService from "../../services/TrainerPlanService";
 import { cn } from "../../lib/utils";
-import { formatPlanPrice, formatUsage, isOverLimit } from "../../utils/plan";
+import { formatUsage, isOverLimit } from "../../utils/plan";
 
 /**
  * Features que a escada trava. São só duas, e ambas por custo marginal
@@ -63,10 +63,8 @@ function CurrentPlanCard({ current }) {
               <p className="text-2xl font-semibold tracking-tight text-foreground">
                 {plan?.name || "Sem plano"}
               </p>
-              {plan ? (
-                <Badge variant="outline">
-                  {formatPlanPrice(plan.price_cents)}
-                </Badge>
+              {plan?.student_limit === null ? (
+                <Badge variant="outline">Alunos ilimitados</Badge>
               ) : null}
             </div>
             {endsAt ? (
@@ -125,17 +123,9 @@ function PlanCard({ plan }) {
           {plan.is_current ? <Badge>Seu plano</Badge> : null}
         </div>
 
-        <p className="mt-3 text-3xl font-semibold tracking-tight text-foreground">
-          {formatPlanPrice(plan.price_cents)}
-          {plan.price_cents ? (
-            <span className="text-sm font-normal text-muted-foreground">
-              /mês
-            </span>
-          ) : null}
-        </p>
-
-        <p className="mt-1 flex items-center gap-1.5 text-sm font-medium text-primary">
-          <Users className="h-4 w-4" />
+        {/* Sem preço: a contratação é feita pelo suporte, não pelo sistema. */}
+        <p className="mt-3 flex items-center gap-2 text-2xl font-semibold tracking-tight text-foreground">
+          <Users className="h-5 w-5 shrink-0 text-primary" />
           {formatLimit(plan.student_limit)}
         </p>
 
@@ -164,7 +154,7 @@ function PlanCard({ plan }) {
 
         {plan.student_limit === null ? (
           <p className="mt-auto pt-5 text-xs text-muted-foreground">
-            Acima de 40 alunos, fale com a gente.
+            Sem teto de alunos.
           </p>
         ) : null}
       </CardContent>
@@ -220,8 +210,9 @@ export default function Plans() {
           Comparar planos
         </h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          A cobrança é por capacidade de alunos. Só fotos e vídeos dependem do
-          plano — todo o resto está incluído em todos eles.
+          Os planos se diferenciam por capacidade de alunos. Só fotos e vídeos
+          dependem do plano — todo o resto está incluído em todos eles. Para
+          valores e troca de plano, fale com o suporte.
         </p>
 
         {loadingPlans ? (

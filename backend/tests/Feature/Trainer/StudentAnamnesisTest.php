@@ -193,6 +193,74 @@ class StudentAnamnesisTest extends TestCase
 		$this->assertDatabaseHas('student_anamnesis_attachments', ['id' => $photoId]);
 	}
 
+	/**
+	 * Em produção ainda não há storage persistente: o arquivo seria aceito e
+	 * perdido no deploy seguinte. O bloqueio precisa estar no servidor, não só
+	 * na tela — ver config/uploads.php.
+	 */
+	public function test_uploads_are_refused_when_disabled(): void
+	{
+		Storage::fake('public');
+		config(['uploads.anamnesis_media' => false]);
+
+		$trainer = User::factory()->create(['role' => 'trainer']);
+		$student = $this->createStudent($trainer);
+
+		$this->actingAs($trainer)->postJson(
+			"/api/trainer/students/{$student->id}/anamnesis/photos",
+			['photo' => UploadedFile::fake()->image('evolucao.jpg')],
+		)->assertStatus(503);
+
+		$this->actingAs($trainer)->postJson(
+			"/api/trainer/students/{$student->id}/anamnesis/videos",
+			['video' => UploadedFile::fake()->create('evolucao.mp4', 1_024, 'video/mp4')],
+		)->assertStatus(503);
+
+		$this->assertDatabaseCount('student_anamnesis_attachments', 0);
+	}
+
+	public function test_anamnesis_reports_whether_uploads_are_enabled(): void
+	{
+		$trainer = User::factory()->create(['role' => 'trainer']);
+		$student = $this->createStudent($trainer);
+
+		$this->actingAs($trainer)
+			->getJson("/api/trainer/students/{$student->id}/anamnesis")
+			->assertOk()
+			->assertJsonPath('uploads_enabled', true);
+
+		config(['uploads.anamnesis_media' => false]);
+
+		$this->actingAs($trainer)
+			->getJson("/api/trainer/students/{$student->id}/anamnesis")
+			->assertOk()
+			->assertJsonPath('uploads_enabled', false);
+	}
+
+	/**
+	 * Desabilitar o envio não pode esconder nem apagar o que já foi enviado.
+	 */
+	public function test_existing_media_stays_visible_when_uploads_are_disabled(): void
+	{
+		Storage::fake('public');
+
+		$trainer = User::factory()->create(['role' => 'trainer']);
+		$student = $this->createStudent($trainer);
+
+		$this->actingAs($trainer)->postJson(
+			"/api/trainer/students/{$student->id}/anamnesis/photos",
+			['photo' => UploadedFile::fake()->image('foto.jpg')],
+		)->assertCreated();
+
+		config(['uploads.anamnesis_media' => false]);
+
+		$this->actingAs($trainer)
+			->getJson("/api/trainer/students/{$student->id}/anamnesis")
+			->assertOk()
+			->assertJsonCount(1, 'photos')
+			->assertJsonPath('uploads_enabled', false);
+	}
+
 	public function test_student_cannot_access_anamnesis(): void
 	{
 		$studentUser = User::factory()->create(['role' => 'student']);

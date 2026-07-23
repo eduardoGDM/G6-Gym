@@ -1,8 +1,13 @@
 /**
- * Helpers de exibição de plano, compartilhados entre o painel do admin e o
- * card do personal.
+ * Helpers de exibição de plano, compartilhados entre o painel do admin e as
+ * telas do personal.
  */
 
+/**
+ * Preço formatado. **Uso restrito ao painel do admin** — o personal não vê
+ * valores em lugar nenhum, e o endpoint `/trainer/plan(s)` sequer devolve
+ * `price_cents`. Ver docs/regras-planos.md.
+ */
 export const formatPlanPrice = (priceCents) => {
   if (!priceCents) return "Grátis";
 

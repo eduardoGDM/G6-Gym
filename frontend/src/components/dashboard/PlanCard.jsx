@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { CreditCard } from "lucide-react";
 
 import trainerPlanService from "../../services/TrainerPlanService";
-import { formatPlanPrice, formatUsage, isOverLimit } from "../../utils/plan";
+import { formatUsage, isOverLimit } from "../../utils/plan";
 import Skeleton from "../loading/Skeleton";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
@@ -65,10 +65,9 @@ export default function PlanCard() {
               <p className="text-xl font-semibold tracking-tight text-foreground">
                 {plan?.name || "Sem plano"}
               </p>
-              {plan ? (
-                <Badge variant="outline">
-                  {formatPlanPrice(plan.price_cents)}
-                </Badge>
+              {/* Sem preço: valores só aparecem no painel do admin. */}
+              {plan?.student_limit === null ? (
+                <Badge variant="outline">Ilimitado</Badge>
               ) : null}
             </div>
             {endsAt ? (

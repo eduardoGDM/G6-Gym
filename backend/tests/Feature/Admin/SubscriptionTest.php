@@ -36,13 +36,26 @@ class SubscriptionTest extends TestCase
 
 		$response->assertOk();
 		$response->assertJsonCount(4, 'data');
-		$response->assertJsonPath('data.0.code', 'free');
+
 		// Free é demonstração, não ferramenta de trabalho.
-		$response->assertJsonPath('data.0.student_limit', 1);
-		$response->assertJsonPath('data.1.code', 'essencial');
-		$response->assertJsonPath('data.1.price_cents', 6990);
-		$response->assertJsonPath('data.3.code', 'ilimitado');
-		// Ilimitado não tem teto de alunos.
+		$response->assertJsonPath('data.0.code', 'free');
+		$response->assertJsonPath('data.0.student_limit', 3);
+
+		// Standard é o degrau de margem: capacidade real sem mídia, que é o
+		// único custo marginal do sistema.
+		$response->assertJsonPath('data.1.code', 'standard');
+		$response->assertJsonPath('data.1.price_cents', 2990);
+		$response->assertJsonPath('data.1.student_limit', 20);
+		$response->assertJsonPath('data.1.features.photos', false);
+		$response->assertJsonPath('data.1.features.videos', false);
+
+		$response->assertJsonPath('data.2.code', 'essencial');
+		$response->assertJsonPath('data.2.price_cents', 5990);
+		$response->assertJsonPath('data.2.student_limit', 50);
+
+		// Pro absorveu o antigo Ilimitado: é o teto e não tem limite de alunos.
+		$response->assertJsonPath('data.3.code', 'pro');
+		$response->assertJsonPath('data.3.price_cents', 9990);
 		$response->assertJsonPath('data.3.student_limit', null);
 	}
 
@@ -151,8 +164,8 @@ class SubscriptionTest extends TestCase
 
 		$response->assertOk();
 		$response->assertJsonPath('data.0.plan.code', 'free');
-		$response->assertJsonPath('data.0.plan.student_limit', 1);
-		// 4 alunos num plano de 1: exatamente o estouro que queremos enxergar.
+		$response->assertJsonPath('data.0.plan.student_limit', 3);
+		// 4 alunos num plano de 3: exatamente o estouro que queremos enxergar.
 		$response->assertJsonPath('data.0.students_count', 4);
 	}
 

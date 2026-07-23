@@ -29,6 +29,27 @@ class StudentAnamnesisAttachment extends Model
 		'url',
 	];
 
+	/**
+	 * Se o envio de novas mídias está habilitado neste ambiente.
+	 *
+	 * Fica aqui, e não espalhado pelos controllers, porque três pontos precisam
+	 * da mesma resposta: os dois endpoints de upload e a leitura da anamnese,
+	 * que informa a tela para ela avisar o personal antes de ele tentar enviar.
+	 *
+	 * Ver config/uploads.php.
+	 */
+	public static function uploadsEnabled(): bool
+	{
+		return (bool) config('uploads.anamnesis_media');
+	}
+
+	/** Mensagem única exibida quando o envio está desabilitado. */
+	public static function uploadsDisabledMessage(): string
+	{
+		return 'O envio de fotos e vídeos ainda não está disponível nesta versão. '
+			. 'Os demais dados da anamnese são salvos normalmente.';
+	}
+
 	public function studentAnamnesis(): BelongsTo
 	{
 		return $this->belongsTo(StudentAnamnesis::class);

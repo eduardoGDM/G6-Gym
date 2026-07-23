@@ -64,12 +64,16 @@ class PlanController extends Controller
 		return response()->json($plans);
 	}
 
+	/**
+	 * O preço **não** é exposto ao personal: a contratação não acontece pelo
+	 * sistema e a negociação é feita pelo suporte. Omitir aqui, e não apenas
+	 * esconder na tela, evita que o valor vaze pela resposta da API.
+	 */
 	private function presentPlan(Plan $plan): array
 	{
 		return [
 			'code' => $plan->code,
 			'name' => $plan->name,
-			'price_cents' => $plan->price_cents,
 			'student_limit' => $plan->student_limit,
 			'features' => [
 				'physical_assessment' => $plan->allows_physical_assessment,
