@@ -1,7 +1,7 @@
 import * as yup from "yup";
 
 import { CPF_REGEX, PHONE_REGEX } from "./regex";
-import { isNotInFuture } from "./validators";
+import { isNotInFuture, isValidCpf } from "./validators";
 
 export const studentSchema = yup.object({
   name: yup
@@ -37,7 +37,8 @@ export const studentSchema = yup.object({
     .string()
     .trim()
     .required("O CPF é obrigatório")
-    .matches(CPF_REGEX, "O CPF deve estar no formato 000.000.000-00"),
+    .matches(CPF_REGEX, "O CPF deve estar no formato 000.000.000-00")
+    .test("cpf-check-digits", "O CPF informado é inválido", isValidCpf),
   phone: yup
     .string()
     .trim()
@@ -71,12 +72,7 @@ export const studentSchema = yup.object({
     .notRequired()
     .min(0, "A altura deve ser maior ou igual a 0")
     .max(3, "A altura deve ser menor ou igual a 3"),
-  current_weight: yup
-    .number()
-    .transform((value, originalValue) => (originalValue === "" ? null : value))
-    .nullable()
-    .notRequired()
-    .min(0, "O peso deve ser maior ou igual a 0")
-    .max(500, "O peso deve ser menor ou igual a 500"),
+  // O peso saiu do cadastro do aluno: ele é registrado na avaliação física
+  // (physicalAssessmentSchema), que mantém o histórico.
   observations: yup.string().trim().nullable().notRequired(),
 });

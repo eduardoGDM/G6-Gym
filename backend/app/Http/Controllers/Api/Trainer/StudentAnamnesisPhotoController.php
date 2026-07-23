@@ -26,6 +26,14 @@ class StudentAnamnesisPhotoController extends Controller
 
 	public function store(StoreStudentAnamnesisPhotoRequest $request, $student)
 	{
+		// Bloqueio no servidor, não só na tela: sem storage persistente o arquivo
+		// seria aceito e perdido no deploy seguinte. Ver config/uploads.php.
+		if (!StudentAnamnesisAttachment::uploadsEnabled()) {
+			return response()->json([
+				'message' => StudentAnamnesisAttachment::uploadsDisabledMessage(),
+			], 503);
+		}
+
 		$studentProfile = $this->scopeToTrainer(StudentProfile::query(), $request)->find($student);
 
 		if (!$studentProfile) {

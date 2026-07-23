@@ -26,6 +26,7 @@ const DailyCheckinsIndex = lazy(
 const History = lazy(() => import("../pages/student/History"));
 const HistoryDetail = lazy(() => import("../pages/student/HistoryDetail"));
 const MyWorkouts = lazy(() => import("../pages/student/MyWorkouts"));
+const StudentProfile = lazy(() => import("../pages/student/Profile"));
 const Workout = lazy(() => import("../pages/student/Workout"));
 
 const CheckinsIndex = lazy(() => import("../pages/trainer/Checkins/CheckinsIndex"));
@@ -42,6 +43,7 @@ const ExercisesNewEdit = lazy(
   () => import("../pages/trainer/Exercises/ExercisesNewEdit"),
 );
 const ExercisesShow = lazy(() => import("../pages/trainer/Exercises/ExercisesShow"));
+const TrainerPlans = lazy(() => import("../pages/trainer/Plans"));
 const StudentsIndex = lazy(() => import("../pages/trainer/Students/StudentsIndex"));
 const StudentsNewEdit = lazy(
   () => import("../pages/trainer/Students/StudentsNewEdit"),
@@ -140,6 +142,8 @@ export default function AppRoutes() {
 
           <Route path="checkins/daily" element={<TrainerDailyCheckinsIndex />} />
           <Route path="checkins/daily/:id" element={<TrainerDailyCheckinsShow />} />
+
+          <Route path="plans" element={<TrainerPlans />} />
         </Route>
 
         <Route
@@ -159,6 +163,7 @@ export default function AppRoutes() {
           <Route path="history" element={<History />} />
           <Route path="history/:id" element={<HistoryDetail />} />
           <Route path="daily-checkins" element={<DailyCheckinsIndex />} />
+          <Route path="profile" element={<StudentProfile />} />
         </Route>
 
         <Route

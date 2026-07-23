@@ -1,5 +1,11 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { ClipboardList, Images, Save, Video as VideoIcon } from "lucide-react";
+import {
+  ClipboardList,
+  Images,
+  Save,
+  TriangleAlert,
+  Video as VideoIcon,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 
 import ConfirmDialog from "../../../../components/common/ConfirmDialog";
@@ -44,6 +50,11 @@ export default function AnamnesisSection({ studentId, readOnly = false }) {
   const photos = data?.photos || [];
   const videos = data?.videos || [];
   const isDirty = observations !== (data?.observations || "");
+
+  // Em produção ainda não há storage persistente, então o backend recusa novos
+  // envios. A tela avisa antes para o personal não escolher um arquivo à toa —
+  // mídias já enviadas continuam visíveis normalmente.
+  const uploadsEnabled = data?.uploads_enabled !== false;
 
   const invalidate = () =>
     queryClient.invalidateQueries({ queryKey: ["student-anamnesis", studentId] });
@@ -191,13 +202,23 @@ export default function AnamnesisSection({ studentId, readOnly = false }) {
               ) : null}
             </section>
 
+            {!readOnly && !uploadsEnabled ? (
+              <div className="flex items-start gap-2.5 rounded-2xl border border-border/80 bg-muted/40 px-4 py-3">
+                <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                <p className="text-sm leading-6 text-muted-foreground">
+                  {data?.uploads_disabled_message ||
+                    "O envio de fotos e vídeos ainda não está disponível nesta versão. Os demais dados da anamnese são salvos normalmente."}
+                </p>
+              </div>
+            ) : null}
+
             <section className="space-y-3">
               <div className="flex items-center justify-between gap-3">
                 <SectionLabel className="flex items-center gap-2">
                   <Images className="h-4 w-4" />
                   Fotos
                 </SectionLabel>
-                {!readOnly ? (
+                {!readOnly && uploadsEnabled ? (
                   <ImageUploader onUpload={handleUploadPhoto} uploading={uploadingPhoto} />
                 ) : null}
               </div>
@@ -215,7 +236,7 @@ export default function AnamnesisSection({ studentId, readOnly = false }) {
                   <VideoIcon className="h-4 w-4" />
                   Vídeos
                 </SectionLabel>
-                {!readOnly ? (
+                {!readOnly && uploadsEnabled ? (
                   <VideoUploader onUpload={handleUploadVideo} uploading={uploadingVideo} />
                 ) : null}
               </div>

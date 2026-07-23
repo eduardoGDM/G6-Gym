@@ -1,4 +1,10 @@
-import { CalendarCheck, Dumbbell, History, LayoutDashboard } from "lucide-react";
+import {
+  CalendarCheck,
+  Dumbbell,
+  History,
+  LayoutDashboard,
+  UserRound,
+} from "lucide-react";
 import RoleLayout from "../components/layout/RoleLayout";
 import DailyCheckinReminder from "../components/student/DailyCheckinReminder";
 
@@ -11,6 +17,7 @@ const menuItems = [
     path: "/student/daily-checkins",
     icon: CalendarCheck,
   },
+  { label: "Meu Perfil", path: "/student/profile", icon: UserRound },
 ];
 
 export default function StudentLayout() {
@@ -20,6 +27,7 @@ export default function StudentLayout() {
       title="G6Fit"
       roleLabel="Aluno"
       banner={<DailyCheckinReminder />}
+      profilePath="/student/profile"
     />
   );
 }

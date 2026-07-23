@@ -2,6 +2,7 @@ import {
   BarChart3,
   BedDouble,
   CalendarCheck,
+  CreditCard,
   Dumbbell,
   LayoutDashboard,
   Users,
@@ -29,6 +30,7 @@ const menuItems = [
       },
     ],
   },
+  { label: "Planos", path: "/trainer/plans", icon: CreditCard },
 ];
 
 export default function PersonalLayout() {

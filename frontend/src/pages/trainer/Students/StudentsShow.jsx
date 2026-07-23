@@ -1,3 +1,4 @@
+import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, CalendarDays, Mail, Ruler, UserRound } from "lucide-react";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
@@ -15,9 +16,11 @@ import {
   CardHeader,
   CardTitle,
 } from "../../../components/ui/card";
+import physicalAssessmentsService from "../../../services/PhysicalAssessmentsService";
 import studentsService from "../../../services/StudentsService";
 import AnamnesisSection from "./components/AnamnesisSection";
 import ExerciseEvolutionSection from "./components/ExerciseEvolutionSection";
+import PhysicalAssessmentSection from "./components/PhysicalAssessmentSection";
 
 export default function StudentsShow() {
   const navigate = useNavigate();
@@ -43,6 +46,18 @@ export default function StudentsShow() {
   useEffect(() => {
     loadStudent();
   }, [id]);
+
+  // O peso atual não é mais um campo do cadastro: vem da avaliação física mais
+  // recente. A query compartilha a chave com PhysicalAssessmentSection, então a
+  // lista é buscada uma única vez.
+  const { data: assessments } = useQuery({
+    queryKey: ["student-physical-assessments", id],
+    queryFn: () => physicalAssessmentsService.list(id),
+    enabled: Boolean(id),
+  });
+
+  const latestAssessment = assessments?.[0] || null;
+  const latestWeight = latestAssessment?.measures?.weight?.value ?? null;
 
   return (
     <PageContainer>
@@ -138,7 +153,19 @@ export default function StudentsShow() {
                   </p>
                   <p>
                     <span className="font-medium">Peso atual:</span>{" "}
-                    {student.current_weight ?? "—"}
+                    {latestWeight ?? "—"}
+                    {latestAssessment ? (
+                      <span className="text-muted-foreground">
+                        {" "}
+                        (avaliação de{" "}
+                        {latestAssessment.assessment_date
+                          .slice(0, 10)
+                          .split("-")
+                          .reverse()
+                          .join("/")}
+                        )
+                      </span>
+                    ) : null}
                   </p>
                 </div>
               </div>
@@ -160,6 +187,7 @@ export default function StudentsShow() {
       {!loading && !error && student ? (
         <>
           <AnamnesisSection studentId={id} readOnly />
+          <PhysicalAssessmentSection studentId={id} readOnly />
           <ExerciseEvolutionSection studentId={id} />
         </>
       ) : null}

@@ -109,6 +109,23 @@ Possíveis erros: `401`.
 
 Prefixo: `/api/trainer` — middleware `role:trainer` (exceto o bloco de Anamnese, que aceita `role:trainer,admin`).
 
+## Plano do personal
+
+### GET /api/trainer/plan
+Objetivo: Plano vigente do personal autenticado — **somente leitura**, não há
+contratação nem troca pela aplicação (quem atribui é o admin, manualmente).
+Resposta (200): `{ plan, subscription, usage }`, com `plan: null` quando não há
+plano atribuído. `subscription.days_left` é `null` quando não há vencimento.
+`usage.students` conta as vagas ocupadas (CPF distinto, ver **RN-PLAN-004**).
+
+### GET /api/trainer/plans
+Objetivo: Catálogo completo da escada para o personal comparar os degraus,
+com `is_current` marcando o plano dele.
+Resposta (200): array de `{ code, name, price_cents, student_limit, features, is_current }`.
+
+> ⚠️ Nenhum limite é aplicado no código. `student_limit` é **informativo**:
+> serve para medir consumo real e calibrar a escada antes de existir enforcement.
+
 ## Alunos — `student-profiles` (apiResource)
 
 ### GET /api/trainer/student-profiles
@@ -128,12 +145,11 @@ Body:
   "birth_date": "1995-05-20",
   "gender": "Masculino",
   "height": 1.80,
-  "current_weight": 82.5,
   "photo": null,
   "observations": null
 }
 ```
-Validação: `name` req (≤255); `email` req/único; `password` req (≥6); `cpf` req/size 14/único; `phone` ≤20; `birth_date` data `before:today`; `gender` in(Masculino,Feminino,Outro); `height` 0–3; `current_weight` 0–500; `photo` ≤255; `observations` texto.
+Validação: `name` req (≤255); `email` req/único; `password` req (≥6); `cpf` req/size 14/único; `phone` ≤20; `birth_date` data `before:today`; `gender` in(Masculino,Feminino,Outro); `height` 0–3; `photo` ≤255; `observations` texto. O peso não faz parte do cadastro: ele é registrado na avaliação física.
 Resposta (201):
 ```json
 { "message": "Aluno criado com sucesso", "user": {…}, "profile": {…} }
@@ -289,6 +305,37 @@ Bloco de rotas de anamnese/mídias. Documentado aqui por existir nas rotas; cont
 > `role:trainer,admin`. Os detalhes de validação estão nos respectivos
 > Form Requests em `app/Http/Requests/Trainer/`.
 
+## Avaliação física (papel `role:trainer,admin`)
+
+Diferente da anamnese (registro único por aluno), a avaliação física é uma
+**série temporal**: N registros datados por aluno. Controller em
+`Api/Trainer/StudentPhysicalAssessmentController`.
+
+- **GET /api/trainer/students/{student}/physical-assessments** — lista da mais recente para a mais antiga.
+- **POST /api/trainer/students/{student}/physical-assessments** — cria uma avaliação.
+- **PUT /api/trainer/students/{student}/physical-assessments/{assessment}** — atualiza.
+- **DELETE /api/trainer/students/{student}/physical-assessments/{assessment}** — remove.
+
+Validação: `assessment_date` req/data/`before_or_equal:today`; `notes` texto;
+`weight` 0–500; `height` 0–3; `fat_percentage` 0–100; `muscle_mass` 0–500;
+circunferências (`neck`, `shoulder`, `chest`, `waist`, `abdomen`, `hip`,
+`left_arm`/`right_arm` relaxado, `left_arm_contracted`/`right_arm_contracted`,
+`left_forearm`/`right_forearm`, `left_thigh`/`right_thigh`,
+`left_calf`/`right_calf`) 0–300. Nenhuma medida é obrigatória isoladamente, mas
+uma avaliação **sem nenhuma medida** é rejeitada com `422`.
+
+Resposta (`PhysicalAssessmentResource`): cada medida vem como
+`{ "value": 88.0, "delta": -2.0 }`, onde `delta` é a variação em relação à
+avaliação anterior. Além de `measures`, o bloco `derived` traz `imc`,
+`waist_hip_ratio`, `fat_mass` e `lean_mass` — **calculados na leitura**, nunca
+gravados. O IMC usa `height` da avaliação e, na ausência dela, a altura do
+cadastro do aluno.
+
+> `muscle_mass` é um valor **digitado** (balança de bioimpedância) e não se
+> confunde com `lean_mass` (massa magra = peso − massa gorda).
+
+Erros: `404` (`Aluno não encontrado` / `Avaliação física não encontrada`), `422`.
+
 ---
 
 # Student
@@ -375,6 +422,19 @@ Erros: `404` (`Check-in Diário não encontrado`), `422`.
 - **GET /api/student/dashboard/recent-workouts** — últimos 5 check-ins (`id, workout_name, date, exercises_count`).
 - **GET /api/student/dashboard/evolution** — `{ top_exercise, max_weight, total_checkins, total_exercises_performed }`.
 
+## Perfil do aluno
+
+Somente leitura: quem mantém o cadastro é o personal. Controller em
+`Api/Student/ProfileController`.
+
+- **GET /api/student/profile** — `{ id, name, email, cpf, phone, birth_date, gender, height, latest_weight, latest_weight_date, trainer }`.
+  `latest_weight` vem da avaliação física mais recente **que registrou peso** (uma
+  avaliação pode conter só circunferências); `null` quando não há nenhuma.
+- **GET /api/student/physical-assessments** — histórico do próprio aluno, mesmo
+  `PhysicalAssessmentResource` da tela do personal (com `measures`/`derived` e os deltas).
+
+Erros: `404` (`Perfil de student não encontrado`), `403` (papel).
+
 ---
 
 # Admin
@@ -399,6 +459,26 @@ Erro: `404` (`Personal não encontrado`).
 Objetivo: Lista paginada de alunos (com trainer derivado do último treino).
 Parâmetros: `name`, `email`, `trainer`, `per_page`.
 Resposta (200): coleção paginada `StudentResource`.
+
+## GET /api/admin/plans
+Objetivo: Catálogo de planos (escada por capacidade de alunos), ordenado por `sort_order`.
+Resposta (200): `PlanResource` — `{ code, name, price_cents, student_limit, features, sort_order }`.
+`student_limit: null` = ilimitado. Os planos são **seeded pela migration**, não há CRUD.
+
+## PUT /api/admin/trainers/{trainer}/subscription
+Objetivo: **Atribuição manual** de plano a um personal (não há gateway de pagamento).
+Body: `{ plan_code, ends_at?, notes? }`. Validação: `plan_code` req/`exists:plans,code`;
+`ends_at` data futura (em branco = sem vencimento); `notes` texto.
+Comportamento: encerra a assinatura ativa (`canceled`) e cria uma nova, **em transação** —
+o histórico de troca de plano é preservado. Grava `source: manual` e `assigned_by`.
+Resposta (200): `{ message, subscription }`. Erros: `404` (não é personal), `422`.
+
+## DELETE /api/admin/trainers/{trainer}/subscription
+Objetivo: Cancela a assinatura ativa do personal (fica sem plano).
+Resposta (200): `{ message }`. Erro `404` (sem plano ativo / não é personal).
+
+## GET /api/admin/trainers/{trainer}/subscriptions
+Objetivo: Histórico de assinaturas do personal (mais recente primeiro).
 
 ## PATCH /api/admin/students/{id}/status
 Objetivo: Ativa/desativa um aluno.

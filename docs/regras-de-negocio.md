@@ -120,14 +120,24 @@ Regra: Campos **opcionais** do aluno e suas restrições:
 - `birth_date` (data, deve ser anterior a hoje — `before:today`)
 - `gender` (apenas `Masculino`, `Feminino` ou `Outro`)
 - `height` (numérico, 0–3; `decimal(4,2)`)
-- `current_weight` (numérico, 0–500; `decimal(5,2)`)
 - `photo` (string/caminho, máx. 255)
 - `observations` (texto livre)
 Validação/Onde: `StudentProfileController::store`/`update`, migration `create_student_profiles_table`.
 
 **RN-STUDENT-005**
-Regra: O `cpf` é **único** em toda a base e possui tamanho fixo de 14 caracteres (formato com máscara, ex.: `000.000.000-00`). Não há validação de dígito verificador de CPF, apenas tamanho e unicidade.
-Validação/Onde: `StudentProfileController::store` (`size:14|unique`), migration (`string('cpf', 14)->unique()`).
+Regra: O `cpf` é **único** em toda a base, tem tamanho fixo de 14 caracteres
+(formato com máscara, ex.: `000.000.000-00`) e é validado pelo **dígito
+verificador** — sequências repetidas (`111.111.111-11`) são rejeitadas. A
+validação existe porque o CPF é a chave da vaga do plano (**RN-PLAN-004**, em
+`docs/regras-planos.md`): um
+CPF inventado seria uma vaga fantasma ocupando capacidade.
+Validação/Onde: `StudentProfileController::isValidCpf` (store e update), migration
+(`string('cpf', 14)->unique()`), espelhado no front em
+`Students/utils/validators.js::isValidCpf`.
+
+> ⚠️ A unicidade do CPF é a nível de coluna e **não ignora soft delete**: um aluno
+> removido continua segurando o CPF, então o mesmo CPF não pode ser recadastrado
+> depois. Reforça o anti-fraude, mas impede o retorno legítimo de um ex-aluno.
 
 **RN-STUDENT-006**
 Regra: O `email` do aluno é único em `users`. Na edição, a unicidade ignora o próprio registro do usuário.
@@ -159,6 +169,34 @@ Onde: `app/Models/StudentProfile.php`.
 **RN-STUDENT-011**
 Regra: O papel `student` acessa o próprio perfil resolvendo `user->studentProfile`. Endpoints de aluno que dependem do perfil retornam **HTTP 404** (`Perfil de student não encontrado`) quando o usuário não possui `student_profiles`.
 Onde: `resolveProfile()` em controllers de `Api/Student/*`.
+
+**RN-STUDENT-012 (Peso do aluno)**
+Regra: O peso **não** é um campo do cadastro do aluno. Ele é registrado em cada
+avaliação física (`physical_assessments.weight`), e o "peso atual" é sempre o da
+avaliação mais recente — uma única fonte da verdade, preservando o histórico e a
+variação entre avaliações. A `height` permanece no cadastro (referência que muda
+raramente) e a avaliação pode sobrescrevê-la pontualmente.
+Onde: migration `drop_current_weight_from_student_profiles_table` (converte cada
+peso já cadastrado em uma avaliação inicial antes do drop),
+`StudentPhysicalAssessmentController`.
+
+**RN-STUDENT-013 (Avaliação física)**
+Regra: A avaliação física é uma **série temporal** (N registros datados por
+aluno), não um instantâneo. Apenas `assessment_date` é obrigatório, mas uma
+avaliação **sem nenhuma medida** é rejeitada. Os valores derivados (IMC, relação
+cintura/quadril, massa gorda e massa magra) são calculados **na leitura** e nunca
+gravados; `muscle_mass` é um dado digitado da balança e não se confunde com a
+massa magra derivada. Cada medida é devolvida com a variação (`delta`) em
+relação à avaliação imediatamente anterior.
+Onde: `StudentPhysicalAssessmentController`, `PhysicalAssessmentResource`,
+`app/Models/PhysicalAssessment.php`.
+
+**RN-STUDENT-014 (Perfil do aluno)**
+Regra: O aluno consulta o próprio cadastro e o histórico das suas avaliações
+físicas em **somente leitura**. Nenhum dado do cadastro é editável pelo aluno —
+quem responde pelos dados é o personal.
+Onde: `Api/Student/ProfileController` (`show`/`physicalAssessments`),
+`pages/student/Profile.jsx`.
 
 > ⚠️ Inconsistência de escopo conhecida: parte dos controllers de trainer usa o
 > FK `trainer_id`, enquanto outros (check-ins, dashboard, ficha, anamnese)
@@ -387,8 +425,25 @@ Regra: O admin lista trainers e alunos (com filtros por nome/e-mail, paginado) e
 Onde: `Admin/TrainerController::updateStatus`, `Admin/StudentController::updateStatus`.
 
 **RN-ADMIN-003**
-Regra: Na listagem admin, a contagem de alunos de um trainer é derivada de `count(distinct workouts.student_profile_id)`; o "trainer" exibido para um aluno é derivado do `latestWorkout.trainer`.
+Regra: Na listagem admin, a contagem de alunos de um trainer é o número de
+`student_profiles` vinculados a ele (`trainer_id`, ignorando soft-deletados) —
+que é a base cobrada pelo plano. **Mudou em 24/07/2026**: antes era
+`count(distinct workouts.student_profile_id)`, o que zerava a contagem de quem
+tinha aluno cadastrado sem treino montado. O "trainer" exibido para um aluno
+continua derivado do `latestWorkout.trainer`.
 Onde: `Admin/TrainerController::index`, `Admin/StudentController::index`.
+
+## Planos e assinatura
+
+➜ **As regras de monetização vivem em [`docs/regras-planos.md`](regras-planos.md).**
+
+Lá estão a escada de planos, o trial, a contagem de vaga (**RN-PLAN-004**, citada
+na RN-STUDENT-005), a regra de bloqueio e o histórico de assinatura — junto com a
+distinção entre o que já está no código e o que ainda é só decisão.
+
+Em uma linha, para quem está lendo o código: **hoje nada é bloqueado por plano.**
+O limite é informativo e há teste travando esse contrato
+(`Trainer\PlanTest::test_plan_does_not_block_creating_students_beyond_the_limit`).
 
 ---
 

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Trainer;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Trainer\UpdateStudentAnamnesisRequest;
 use App\Models\StudentAnamnesis;
+use App\Models\StudentAnamnesisAttachment;
 use App\Models\StudentProfile;
 use Illuminate\Http\Request;
 
@@ -41,6 +42,12 @@ class StudentAnamnesisController extends Controller
 			'observations' => $anamnesis?->observations,
 			'photos' => $anamnesis?->photos ?? [],
 			'videos' => $anamnesis?->videos ?? [],
+
+			// A tela usa isso para avisar o personal antes de ele escolher um
+			// arquivo, em vez de deixá-lo enviar e receber erro. Mídias já
+			// existentes continuam visíveis mesmo com o envio desabilitado.
+			'uploads_enabled' => StudentAnamnesisAttachment::uploadsEnabled(),
+			'uploads_disabled_message' => StudentAnamnesisAttachment::uploadsDisabledMessage(),
 		]);
 	}
 
