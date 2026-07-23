@@ -195,4 +195,62 @@ class WorkoutCheckinTest extends TestCase
             \App\Models\WorkoutCheckin::where('student_profile_id', $workout->student_profile_id)->count(),
         );
     }
+
+    public function test_student_can_delete_own_checkin_along_with_its_exercises_and_sets(): void
+    {
+        [$studentUser, $workout, $exercise] = $this->createStudentWithWorkout();
+
+        $created = $this->actingAs($studentUser)->postJson('/api/student/checkins', [
+            'workout_id' => $workout->id,
+            'performed_at' => now()->toDateString(),
+            'exercises' => [
+                [
+                    'exercise_id' => $exercise->id,
+                    'sets' => [
+                        ['set_number' => 1, 'performed_repetitions' => 12, 'performed_weight' => 40],
+                    ],
+                ],
+            ],
+        ])->json('data');
+
+        $checkinExerciseId = $created['exercises'][0]['id'];
+
+        $response = $this->actingAs($studentUser)->deleteJson("/api/student/checkins/{$created['id']}");
+
+        $response->assertOk();
+        $response->assertJsonPath('message', 'Check-in removido com sucesso');
+
+        $this->assertDatabaseMissing('workout_checkins', ['id' => $created['id']]);
+
+        // Exclusão definitiva: o cascadeOnDelete das migrations tem que levar
+        // exercícios e séries junto, senão sobram órfãos no histórico.
+        $this->assertDatabaseMissing('workout_checkin_exercises', ['workout_checkin_id' => $created['id']]);
+        $this->assertDatabaseMissing('workout_checkin_exercise_sets', ['workout_checkin_exercise_id' => $checkinExerciseId]);
+    }
+
+    public function test_student_cannot_delete_a_checkin_from_another_student(): void
+    {
+        [$studentUser, $workout, $exercise] = $this->createStudentWithWorkout();
+
+        $created = $this->actingAs($studentUser)->postJson('/api/student/checkins', [
+            'workout_id' => $workout->id,
+            'performed_at' => now()->toDateString(),
+            'exercises' => [
+                [
+                    'exercise_id' => $exercise->id,
+                    'sets' => [
+                        ['set_number' => 1, 'performed_repetitions' => 12, 'performed_weight' => 40],
+                    ],
+                ],
+            ],
+        ])->json('data');
+
+        [$otherStudentUser] = $this->createStudentWithWorkout();
+
+        $response = $this->actingAs($otherStudentUser)->deleteJson("/api/student/checkins/{$created['id']}");
+
+        $response->assertNotFound();
+
+        $this->assertDatabaseHas('workout_checkins', ['id' => $created['id']]);
+    }
 }

@@ -1,8 +1,11 @@
-import { ArrowLeft, PenLine } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
+import { ArrowLeft, PenLine, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { useNavigate, useParams } from "react-router-dom";
 
+import ConfirmDialog from "../../components/common/ConfirmDialog";
+import { crudToast } from "../../components/common/crudToast";
 import PageContainer from "../../components/common/PageContainer";
 import PageTitle from "../../components/common/PageTitle";
 import ErrorState from "../../components/loading/ErrorState";
@@ -10,6 +13,7 @@ import ListSkeleton from "../../components/loading/ListSkeleton";
 import { Badge } from "../../components/ui/badge";
 import { Button } from "../../components/ui/button";
 import { Card, CardContent } from "../../components/ui/card";
+import { useConfirmDialog } from "../../hooks/useConfirmDialog";
 import workoutCheckinsService from "../../services/WorkoutCheckinsService";
 
 const formatDate = (value) => {
@@ -18,12 +22,25 @@ const formatDate = (value) => {
   return `${day}/${month}/${year}`;
 };
 
+// A exclusão é definitiva e o check-in alimenta histórico, evolução e streak —
+// por isso o aluno revalida tudo que perde antes de confirmar.
+const AFFECTED_QUERY_KEYS = [
+  ["student-history"],
+  ["student-dashboard-summary"],
+  ["student-dashboard-recent-workouts"],
+  ["student-dashboard-evolution"],
+  ["student-gamification-summary"],
+  ["exercise-history"],
+];
+
 export default function HistoryDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [checkin, setCheckin] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const confirmDelete = useConfirmDialog();
 
   const loadCheckin = () => {
     let active = true;
@@ -52,6 +69,25 @@ export default function HistoryDetail() {
   };
 
   useEffect(() => loadCheckin(), [id]);
+
+  const runDelete = async (checkinId) => {
+    try {
+      await crudToast(workoutCheckinsService.remove(checkinId), {
+        action: "delete",
+        entity: "Check-in",
+      });
+
+      await Promise.all(
+        AFFECTED_QUERY_KEYS.map((queryKey) =>
+          queryClient.invalidateQueries({ queryKey }),
+        ),
+      );
+
+      navigate("/student/history");
+    } catch {
+      // erro já exibido pelo crudToast
+    }
+  };
 
   return (
     <PageContainer>
@@ -83,6 +119,17 @@ export default function HistoryDetail() {
             >
               <PenLine className="h-4 w-4" />
               Editar check-in
+            </Button>
+          ) : null}
+
+          {checkin ? (
+            <Button
+              variant="destructive"
+              onClick={() => confirmDelete.request(checkin.id)}
+              disabled={confirmDelete.loading}
+            >
+              <Trash2 className="h-4 w-4" />
+              Excluir check-in
             </Button>
           ) : null}
         </div>
@@ -183,6 +230,21 @@ export default function HistoryDetail() {
           </div>
         </div>
       )}
+
+      <ConfirmDialog
+        open={confirmDelete.open}
+        title="Excluir check-in"
+        description={
+          checkin
+            ? `Isso apaga definitivamente o check-in de ${formatDate(checkin.performed_at)}, com todos os exercícios e séries registrados. A exclusão não pode ser desfeita e seu personal deixa de ver este treino.`
+            : undefined
+        }
+        confirmLabel="Excluir definitivamente"
+        variant="destructive"
+        loading={confirmDelete.loading}
+        onConfirm={() => confirmDelete.confirm(runDelete)}
+        onCancel={confirmDelete.cancel}
+      />
     </PageContainer>
   );
 }

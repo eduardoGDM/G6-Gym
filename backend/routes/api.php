@@ -112,6 +112,7 @@ Route::middleware('auth:sanctum')->group(function () {
 			Route::get('/checkins/{id}', [WorkoutCheckinController::class, 'show']);
 			Route::post('/checkins', [WorkoutCheckinController::class, 'store']);
 			Route::put('/checkins/{id}', [WorkoutCheckinController::class, 'update']);
+			Route::delete('/checkins/{id}', [WorkoutCheckinController::class, 'destroy']);
 
 			Route::get('/daily-checkins/reminder', [DailyCheckinController::class, 'reminder']);
 			Route::get('/daily-checkins', [DailyCheckinController::class, 'index']);
