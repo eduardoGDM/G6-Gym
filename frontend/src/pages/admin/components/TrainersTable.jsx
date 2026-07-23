@@ -1,14 +1,18 @@
 import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Search, UserRoundX } from "lucide-react";
+import { CreditCard, Search, UserRoundX } from "lucide-react";
 import { useState } from "react";
 import toast from "react-hot-toast";
 
+import ActionIconButton from "../../../components/common/ActionIconButton";
 import DataTable from "../../../components/common/DataTable";
 import { Badge } from "../../../components/ui/badge";
 import { CardContent, CardHeader, CardTitle } from "../../../components/ui/card";
 import { Input } from "../../../components/ui/input";
 import { useDebouncedValue } from "../../../hooks/useDebouncedValue";
+import adminPlansService from "../../../services/AdminPlansService";
 import adminTrainersService from "../../../services/AdminTrainersService";
+import { formatUsage, isOverLimit } from "../../../utils/plan";
+import PlanAssignDialog from "./PlanAssignDialog";
 import StatusSwitch from "./StatusSwitch";
 
 const PER_PAGE = 10;
@@ -23,6 +27,8 @@ export default function TrainersTable() {
   const queryClient = useQueryClient();
   const [filters, setFilters] = useState({ name: "", email: "" });
   const [page, setPage] = useState(1);
+  const [planTrainer, setPlanTrainer] = useState(null);
+  const [savingPlan, setSavingPlan] = useState(false);
 
   const debouncedFilters = useDebouncedValue(filters, 500);
 
@@ -73,6 +79,38 @@ export default function TrainersTable() {
     }
   };
 
+  const handleAssignPlan = async (payload) => {
+    try {
+      setSavingPlan(true);
+      const { message } = await adminPlansService.assign(planTrainer.id, payload);
+      toast.success(message || "Plano atribuído com sucesso");
+      await queryClient.invalidateQueries({ queryKey: ["admin-trainers"] });
+      setPlanTrainer(null);
+    } catch (error) {
+      toast.error(
+        error.response?.data?.message || "Não foi possível atribuir o plano.",
+      );
+    } finally {
+      setSavingPlan(false);
+    }
+  };
+
+  const handleRemovePlan = async (trainer) => {
+    try {
+      setSavingPlan(true);
+      await adminPlansService.remove(trainer.id);
+      toast.success("Plano removido com sucesso");
+      await queryClient.invalidateQueries({ queryKey: ["admin-trainers"] });
+      setPlanTrainer(null);
+    } catch (error) {
+      toast.error(
+        error.response?.data?.message || "Não foi possível remover o plano.",
+      );
+    } finally {
+      setSavingPlan(false);
+    }
+  };
+
   const columns = [
     {
       key: "name",
@@ -94,10 +132,35 @@ export default function TrainersTable() {
       render: (trainer) => trainer.email,
     },
     {
-      key: "students_count",
-      label: "Alunos",
-      className: "hidden md:table-cell",
-      render: (trainer) => trainer.students_count,
+      key: "plan",
+      label: "Plano",
+      render: (trainer) => {
+        const overLimit = isOverLimit(
+          trainer.students_count,
+          trainer.plan?.student_limit,
+        );
+
+        return (
+          <div className="flex flex-col gap-1">
+            <Badge variant={trainer.plan ? "default" : "outline"}>
+              {trainer.plan?.name || "Sem plano"}
+            </Badge>
+            <span
+              className={
+                overLimit
+                  ? "text-xs font-semibold text-destructive"
+                  : "text-xs text-muted-foreground"
+              }
+            >
+              {formatUsage(
+                trainer.students_count,
+                trainer.plan ? trainer.plan.student_limit : undefined,
+              )}{" "}
+              alunos
+            </span>
+          </div>
+        );
+      },
     },
     {
       key: "status",
@@ -118,27 +181,35 @@ export default function TrainersTable() {
       key: "actions",
       label: "Ações",
       render: (trainer) => (
-        <StatusSwitch
-          checked={trainer.is_active}
-          confirmTitle={trainer.is_active ? "Desativar personal?" : "Ativar personal?"}
-          confirmMessage={`Deseja realmente ${
-            trainer.is_active ? "desativar" : "ativar"
-          } o personal ${trainer.name}?`}
-          onConfirm={(next) => handleToggleStatus(trainer, next)}
-        />
+        <div className="flex items-center gap-2">
+          <ActionIconButton
+            icon={CreditCard}
+            tooltip="Atribuir plano"
+            onClick={() => setPlanTrainer(trainer)}
+          />
+          <StatusSwitch
+            checked={trainer.is_active}
+            confirmTitle={trainer.is_active ? "Desativar personal?" : "Ativar personal?"}
+            confirmMessage={`Deseja realmente ${
+              trainer.is_active ? "desativar" : "ativar"
+            } o personal ${trainer.name}?`}
+            onConfirm={(next) => handleToggleStatus(trainer, next)}
+          />
+        </div>
       ),
     },
   ];
 
   return (
-    <DataTable
+    <>
+      <DataTable
       columns={columns}
       rows={trainers}
       loading={isLoading}
       fetching={isFetching}
       error={isError}
       onRetry={refetch}
-      actionsCount={1}
+      actionsCount={2}
       emptyIcon={UserRoundX}
       emptyTitle="Nenhum personal encontrado"
       pagination={{
@@ -178,6 +249,18 @@ export default function TrainersTable() {
           </CardContent>
         </>
       }
-    />
+      />
+
+      {planTrainer ? (
+        <PlanAssignDialog
+          key={planTrainer.id}
+          trainer={planTrainer}
+          saving={savingPlan}
+          onClose={() => setPlanTrainer(null)}
+          onSubmit={handleAssignPlan}
+          onRemove={handleRemovePlan}
+        />
+      ) : null}
+    </>
   );
 }

@@ -46,7 +46,6 @@ class SuperSeeder extends Seeder
 			'birth_date' => '2000-01-01',
 			'gender' => 'Masculino',
 			'height' => 1.80,
-			'current_weight' => 80.5,
 			'photo' => null,
 			'observations' => 'Aluno de teste',
 		]);

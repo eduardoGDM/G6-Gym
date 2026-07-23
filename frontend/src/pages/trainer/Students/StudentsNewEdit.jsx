@@ -24,6 +24,7 @@ import { Select } from "../../../components/ui/select";
 import { Textarea } from "../../../components/ui/textarea";
 import studentsService from "../../../services/StudentsService";
 import AnamnesisSection from "./components/AnamnesisSection";
+import PhysicalAssessmentSection from "./components/PhysicalAssessmentSection";
 import {
   formatCpf,
   formatDecimal,
@@ -63,7 +64,6 @@ export default function StudentsNewEdit() {
       birth_date: "",
       gender: "",
       height: "",
-      current_weight: "",
       observations: "",
     },
   });
@@ -71,7 +71,6 @@ export default function StudentsNewEdit() {
   const cpfField = register("cpf");
   const phoneField = register("phone");
   const heightField = register("height");
-  const weightField = register("current_weight");
   const todayISO = getTodayISO();
 
   const pageTitle = useMemo(
@@ -103,7 +102,6 @@ export default function StudentsNewEdit() {
           birth_date: data.birth_date || "",
           gender: data.gender || "",
           height: data.height ?? "",
-          current_weight: data.current_weight ?? "",
           observations: data.observations || "",
         });
       } catch (error) {
@@ -129,7 +127,6 @@ export default function StudentsNewEdit() {
         birth_date: emptyToNull(data.birth_date),
         gender: emptyToNull(data.gender),
         height: data.height,
-        current_weight: data.current_weight,
         observations: emptyToNull(data.observations),
       };
 
@@ -323,40 +320,19 @@ export default function StudentsNewEdit() {
                 </Field>
               </div>
 
-              <div className="grid gap-6 md:grid-cols-2">
-                <Field
-                  label="Peso atual (kg)"
-                  htmlFor="current_weight"
-                  error={errors.current_weight?.message}
-                >
-                  <Input
-                    id="current_weight"
-                    type="number"
-                    inputMode="decimal"
-                    step="0.01"
-                    min="0"
-                    max="500"
-                    placeholder="72.5"
-                    {...weightField}
-                    onBlur={(event) => {
-                      event.target.value = formatDecimal(event.target.value);
-                      weightField.onBlur(event);
-                    }}
-                  />
-                </Field>
-
-                <Field
-                  label="Observações"
-                  htmlFor="observations"
-                  error={errors.observations?.message}
-                >
-                  <Textarea
-                    id="observations"
-                    placeholder="Observações do aluno"
-                    {...register("observations")}
-                  />
-                </Field>
-              </div>
+              {/* O peso não fica mais no cadastro: ele é registrado na avaliação
+                  física, que mantém o histórico e calcula a variação. */}
+              <Field
+                label="Observações"
+                htmlFor="observations"
+                error={errors.observations?.message}
+              >
+                <Textarea
+                  id="observations"
+                  placeholder="Observações do aluno"
+                  {...register("observations")}
+                />
+              </Field>
 
               <div className="flex flex-col gap-3 border-t border-border/80 pt-6 md:flex-row md:justify-end">
                 <Button
@@ -385,11 +361,14 @@ export default function StudentsNewEdit() {
       </Card>
 
       {isEdit && !initialLoading ? (
-        <AnamnesisSection studentId={id} />
+        <>
+          <AnamnesisSection studentId={id} />
+          <PhysicalAssessmentSection studentId={id} />
+        </>
       ) : !isEdit ? (
         <div className="mt-6 rounded-2xl border border-dashed border-border/80 bg-card/60 p-6 text-center text-sm text-muted-foreground">
-          A seção de Anamnese (observações, fotos e vídeos) ficará disponível
-          após a criação do cadastro do aluno.
+          As seções de Anamnese e Avaliação Física ficarão disponíveis após a
+          criação do cadastro do aluno.
         </div>
       ) : null}
     </PageContainer>

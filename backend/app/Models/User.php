@@ -44,6 +44,27 @@ class User extends Authenticatable
 		return $this->hasMany(Workout::class, 'trainer_id');
 	}
 
+	public function subscriptions(): HasMany
+	{
+		return $this->hasMany(Subscription::class, 'trainer_id');
+	}
+
+	/**
+	 * Assinatura vigente do personal. Um personal sem assinatura simplesmente
+	 * não tem plano atribuído — não há enforcement associado a isso hoje.
+	 */
+	public function currentSubscription(): HasOne
+	{
+		return $this->hasOne(Subscription::class, 'trainer_id')
+			->ofMany(['id' => 'max'], fn ($query) => $query->current());
+	}
+
+	/** Alunos ativos do personal, base da contagem de vaga do plano. */
+	public function studentsAsTrainer(): HasMany
+	{
+		return $this->hasMany(StudentProfile::class, 'trainer_id');
+	}
+
 	public function isTrainer(): bool
 	{
 		return $this->role === 'trainer';

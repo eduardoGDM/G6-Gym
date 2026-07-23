@@ -10,6 +10,7 @@ import { useNavigate } from "react-router-dom";
 
 import PageContainer from "../../components/common/PageContainer";
 import PageTitle from "../../components/common/PageTitle";
+import PlanCard from "../../components/dashboard/PlanCard";
 import RecentActivityTable from "../../components/dashboard/RecentActivityTable";
 import StatCard from "../../components/dashboard/StatCard";
 import trainerDashboardService from "../../services/TrainerDashboardService";
@@ -81,6 +82,10 @@ export default function Dashboard() {
         eyebrow={`${getGreeting()}, ${user?.name?.split(" ")[0] || ""} 👋`}
         title="Bem-vindo novamente ao G6Fit"
       />
+
+      <div className="mb-4">
+        <PlanCard />
+      </div>
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {stats.map((stat, index) => (

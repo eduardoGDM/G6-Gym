@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\Trainer\StudentExerciseEvolutionController;
 use App\Http\Controllers\Api\Trainer\StudentAnamnesisController;
 use App\Http\Controllers\Api\Trainer\StudentAnamnesisPhotoController;
 use App\Http\Controllers\Api\Trainer\StudentAnamnesisVideoController;
+use App\Http\Controllers\Api\Trainer\StudentPhysicalAssessmentController;
 use App\Http\Controllers\Api\Trainer\WorkoutCheckinController as TrainerWorkoutCheckinController;
 use App\Http\Controllers\Api\Trainer\DailyCheckinController as TrainerDailyCheckinController;
 use App\Http\Controllers\Api\Trainer\DashboardController as TrainerDashboardController;
@@ -20,11 +21,15 @@ use App\Http\Controllers\Api\Student\WorkoutController as StudentWorkoutControll
 use App\Http\Controllers\Api\Student\WorkoutCheckinController;
 use App\Http\Controllers\Api\Student\ExerciseHistoryController;
 use App\Http\Controllers\Api\Student\DailyCheckinController;
+use App\Http\Controllers\Api\Student\ProfileController as StudentSelfProfileController;
 use App\Http\Controllers\Api\Student\DashboardController as StudentDashboardController;
 use App\Http\Controllers\Api\Student\GamificationController as StudentGamificationController;
 use App\Http\Controllers\Api\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Api\Admin\TrainerController as AdminTrainerController;
 use App\Http\Controllers\Api\Admin\StudentController as AdminStudentController;
+use App\Http\Controllers\Api\Admin\PlanController as AdminPlanController;
+use App\Http\Controllers\Api\Admin\SubscriptionController as AdminSubscriptionController;
+use App\Http\Controllers\Api\Trainer\PlanController as TrainerPlanController;
 use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
 
 Route::prefix('auth')->group(function () {
@@ -41,6 +46,9 @@ Route::middleware('auth:sanctum')->group(function () {
 	Route::prefix('trainer')
 		->middleware('role:trainer')
 		->group(function () {
+			Route::get('plan', [TrainerPlanController::class, 'show']);
+			Route::get('plans', [TrainerPlanController::class, 'index']);
+
 			Route::get('dashboard/summary', [TrainerDashboardController::class, 'summary']);
 			Route::get('dashboard/recent-workout-checkins', [TrainerDashboardController::class, 'recentWorkoutCheckins']);
 			Route::get('dashboard/recent-daily-checkins', [TrainerDashboardController::class, 'recentDailyCheckins']);
@@ -75,6 +83,11 @@ Route::middleware('auth:sanctum')->group(function () {
 
 			Route::post('students/{student}/anamnesis/videos', [StudentAnamnesisVideoController::class, 'store']);
 			Route::delete('students/{student}/anamnesis/videos/{video}', [StudentAnamnesisVideoController::class, 'destroy']);
+
+			Route::get('students/{student}/physical-assessments', [StudentPhysicalAssessmentController::class, 'index']);
+			Route::post('students/{student}/physical-assessments', [StudentPhysicalAssessmentController::class, 'store']);
+			Route::put('students/{student}/physical-assessments/{assessment}', [StudentPhysicalAssessmentController::class, 'update']);
+			Route::delete('students/{student}/physical-assessments/{assessment}', [StudentPhysicalAssessmentController::class, 'destroy']);
 		});
 
 	Route::prefix('student')
@@ -85,6 +98,9 @@ Route::middleware('auth:sanctum')->group(function () {
 			Route::get('/dashboard/evolution', [StudentDashboardController::class, 'evolution']);
 
 			Route::get('/gamification/summary', [StudentGamificationController::class, 'summary']);
+
+			Route::get('/profile', [StudentSelfProfileController::class, 'show']);
+			Route::get('/physical-assessments', [StudentSelfProfileController::class, 'physicalAssessments']);
 
 			Route::get('/my-workouts', [StudentWorkoutController::class, 'index']);
 			Route::get('/workout/{id}', [StudentWorkoutController::class, 'show']);
@@ -110,6 +126,11 @@ Route::middleware('auth:sanctum')->group(function () {
 
 			Route::get('trainers', [AdminTrainerController::class, 'index']);
 			Route::patch('trainers/{id}/status', [AdminTrainerController::class, 'updateStatus']);
+
+			Route::get('plans', [AdminPlanController::class, 'index']);
+			Route::get('trainers/{trainer}/subscriptions', [AdminSubscriptionController::class, 'index']);
+			Route::put('trainers/{trainer}/subscription', [AdminSubscriptionController::class, 'update']);
+			Route::delete('trainers/{trainer}/subscription', [AdminSubscriptionController::class, 'destroy']);
 
 			Route::get('students', [AdminStudentController::class, 'index']);
 			Route::patch('students/{id}/status', [AdminStudentController::class, 'updateStatus']);

@@ -4,9 +4,9 @@ namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Admin\TrainerResource;
+use App\Models\StudentProfile;
 use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 
 class TrainerController extends Controller
 {
@@ -24,11 +24,13 @@ class TrainerController extends Controller
 
 		$trainers = User::query()
 			->where('role', 'trainer')
+			->with('currentSubscription.plan')
 			->select('users.*')
+			// Vagas ocupadas do plano: CPF distinto, contando quem foi removido
+			// há menos de 30 dias. Antes contávamos alunos com treino via
+			// `workouts`, o que zerava o número de quem só tinha cadastro.
 			->selectSub(
-				DB::table('workouts')
-					->selectRaw('count(distinct student_profile_id)')
-					->whereColumn('workouts.trainer_id', 'users.id'),
+				StudentProfile::usedSlotsSubquery('users.id'),
 				'students_count'
 			)
 			->when($name, function ($query) use ($name) {

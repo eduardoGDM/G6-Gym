@@ -1,5 +1,11 @@
 import { Menu, UserCircle2 } from "lucide-react";
+import { Link } from "react-router-dom";
+
 import { cn } from "../../lib/utils";
+import useAuthStore from "../../store/authStore";
+
+const USER_CHIP_CLASSES =
+  "flex items-center gap-2.5 rounded-full border border-border bg-card py-1.5 pl-1.5 pr-2 transition-colors hover:bg-accent sm:pr-4";
 
 export default function Topbar({
   onMenuClick,
@@ -7,7 +13,24 @@ export default function Topbar({
   subtitle = "",
   isDesktop,
   roleLabel = "Personal",
+  profilePath,
 }) {
+  const user = useAuthStore((state) => state.user);
+  const userName = user?.name || "Usuário";
+
+  const userChip = (
+    <>
+      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/15 text-primary">
+        <UserCircle2 className="h-5 w-5" />
+      </div>
+
+      <div className="hidden leading-tight sm:block">
+        <p className="text-sm font-semibold text-foreground">{userName}</p>
+        <p className="text-xs text-muted-foreground">{roleLabel}</p>
+      </div>
+    </>
+  );
+
   return (
     <header className="sticky top-0 z-30 border-b border-border bg-background/80 backdrop-blur-xl">
       <div
@@ -39,16 +62,18 @@ export default function Topbar({
         </div>
 
         <div className="flex items-center gap-2 sm:gap-3">
-          <div className="flex items-center gap-2.5 rounded-full border border-border bg-card py-1.5 pl-1.5 pr-2 transition-colors hover:bg-accent sm:pr-4">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/15 text-primary">
-              <UserCircle2 className="h-5 w-5" />
-            </div>
-
-            <div className="hidden leading-tight sm:block">
-              <p className="text-sm font-semibold text-foreground">Usuario</p>
-              <p className="text-xs text-muted-foreground">{roleLabel}</p>
-            </div>
-          </div>
+          {/* Só vira link quando o papel tem uma tela de perfil (hoje, o aluno). */}
+          {profilePath ? (
+            <Link
+              to={profilePath}
+              aria-label={`Perfil de ${userName}`}
+              className={USER_CHIP_CLASSES}
+            >
+              {userChip}
+            </Link>
+          ) : (
+            <div className={USER_CHIP_CLASSES}>{userChip}</div>
+          )}
         </div>
       </div>
     </header>

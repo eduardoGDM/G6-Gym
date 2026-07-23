@@ -8,7 +8,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class StudentProfile extends Model
 {
@@ -20,6 +22,16 @@ class StudentProfile extends Model
 	 */
 	public const MAX_REST_GAP_DAYS = 1;
 
+	/**
+	 * Dias que uma vaga continua ocupada depois que o aluno é removido.
+	 *
+	 * Sem essa retenção, o personal poderia remover e recadastrar alunos em
+	 * sequência para caber num plano menor do que realmente usa. Não limitamos a
+	 * quantidade de treinos por isso: puniria justamente o coach que faz
+	 * periodização, que é o cliente-alvo.
+	 */
+	public const SLOT_RELEASE_DAYS = 30;
+
 	protected $table = 'student_profiles';
 
 	protected $fillable = [
@@ -30,7 +42,6 @@ class StudentProfile extends Model
 		'birth_date',
 		'gender',
 		'height',
-		'current_weight',
 		'photo',
 		'observations',
 	];
@@ -38,8 +49,47 @@ class StudentProfile extends Model
 	protected $casts = [
 		'birth_date' => 'date',
 		'height' => 'decimal:2',
-		'current_weight' => 'decimal:2',
 	];
+
+	/**
+	 * Base da contagem de vagas: alunos que ainda ocupam capacidade do plano —
+	 * os ativos e os removidos há menos de SLOT_RELEASE_DAYS.
+	 *
+	 * Toda contagem de vaga nasce daqui, para que a regra exista num lugar só.
+	 * A vaga é contada por **CPF distinto** (a coluna já é única globalmente),
+	 * de modo que a identidade da pessoa é o que ocupa o lugar.
+	 */
+	private static function slotBaseQuery(): QueryBuilder
+	{
+		return DB::table('student_profiles')->where(function ($query) {
+			$query->whereNull('student_profiles.deleted_at')
+				->orWhere(
+					'student_profiles.deleted_at',
+					'>=',
+					Carbon::now()->subDays(self::SLOT_RELEASE_DAYS),
+				);
+		});
+	}
+
+	/** Vagas ocupadas por um personal, contadas no momento do cadastro do aluno. */
+	public static function usedSlotsFor(int $trainerId): int
+	{
+		return (int) self::slotBaseQuery()
+			->where('student_profiles.trainer_id', $trainerId)
+			->distinct()
+			->count('student_profiles.cpf');
+	}
+
+	/**
+	 * Mesma contagem, como subquery correlacionada — evita N+1 em listagens
+	 * paginadas (ex.: painel do admin).
+	 */
+	public static function usedSlotsSubquery(string $trainerColumn): QueryBuilder
+	{
+		return self::slotBaseQuery()
+			->selectRaw('count(distinct student_profiles.cpf)')
+			->whereColumn('student_profiles.trainer_id', $trainerColumn);
+	}
 
 	public function user(): BelongsTo
 	{
@@ -61,9 +111,15 @@ class StudentProfile extends Model
 		return $this->hasOne(Workout::class)->latestOfMany();
 	}
 
+	/**
+	 * Avaliações físicas da mais recente para a mais antiga: é essa ordem que
+	 * a tela usa e que permite comparar cada avaliação com a anterior.
+	 */
 	public function physicalAssessments(): HasMany
 	{
-		return $this->hasMany(PhysicalAssessment::class);
+		return $this->hasMany(PhysicalAssessment::class)
+			->orderByDesc('assessment_date')
+			->orderByDesc('id');
 	}
 
 	public function workoutCheckins(): HasMany
