@@ -2,7 +2,6 @@ import {
   BarChart3,
   BedDouble,
   CalendarCheck,
-  CreditCard,
   Dumbbell,
   LayoutDashboard,
   Users,
@@ -30,7 +29,8 @@ const menuItems = [
       },
     ],
   },
-  { label: "Planos", path: "/trainer/plans", icon: CreditCard },
+  // Planos ocultos do front do personal — quem atribui plano hoje é o admin.
+  // { label: "Planos", path: "/trainer/plans", icon: CreditCard },
 ];
 
 export default function PersonalLayout() {
