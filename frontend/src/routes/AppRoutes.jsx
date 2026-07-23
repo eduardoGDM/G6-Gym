@@ -43,7 +43,7 @@ const ExercisesNewEdit = lazy(
   () => import("../pages/trainer/Exercises/ExercisesNewEdit"),
 );
 const ExercisesShow = lazy(() => import("../pages/trainer/Exercises/ExercisesShow"));
-const TrainerPlans = lazy(() => import("../pages/trainer/Plans"));
+// const TrainerPlans = lazy(() => import("../pages/trainer/Plans"));
 const StudentsIndex = lazy(() => import("../pages/trainer/Students/StudentsIndex"));
 const StudentsNewEdit = lazy(
   () => import("../pages/trainer/Students/StudentsNewEdit"),
@@ -143,7 +143,8 @@ export default function AppRoutes() {
           <Route path="checkins/daily" element={<TrainerDailyCheckinsIndex />} />
           <Route path="checkins/daily/:id" element={<TrainerDailyCheckinsShow />} />
 
-          <Route path="plans" element={<TrainerPlans />} />
+          {/* Planos ocultos do front do personal — ver TrainerLayout.
+          <Route path="plans" element={<TrainerPlans />} /> */}
         </Route>
 
         <Route
