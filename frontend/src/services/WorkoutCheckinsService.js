@@ -52,6 +52,14 @@ const workoutCheckinsService = {
     );
     return data.data;
   },
+
+  async remove(id) {
+    const { data } = await sanctumRequest(
+      "delete",
+      `/student/checkins/${id}`,
+    );
+    return data;
+  },
 };
 
 export default workoutCheckinsService;

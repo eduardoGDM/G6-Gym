@@ -318,4 +318,40 @@ class WorkoutCheckinController extends Controller
 			]);
 		}
 	}
+
+	/**
+	 * Exclusão definitiva do check-in do próprio aluno.
+	 *
+	 * Os exercícios (workout_checkin_exercises) e as séries (workout_checkin_exercise_sets)
+	 * saem junto por cascadeOnDelete declarado nas migrations — não há soft delete,
+	 * o registro não é recuperável.
+	 *
+	 * O escopo por student_profile_id é o que impede um aluno excluir o check-in de outro.
+	 */
+	public function destroy(Request $request, $id)
+	{
+		$profile = $this->resolveProfile($request);
+
+		if (!$profile) {
+			return response()->json([
+				'message' => 'Perfil de student não encontrado'
+			], 404);
+		}
+
+		$checkin = WorkoutCheckin::where('student_profile_id', $profile->id)
+			->where('id', $id)
+			->first();
+
+		if (!$checkin) {
+			return response()->json([
+				'message' => 'Check-in não encontrado'
+			], 404);
+		}
+
+		$checkin->delete();
+
+		return response()->json([
+			'message' => 'Check-in removido com sucesso'
+		]);
+	}
 }
