@@ -8,7 +8,7 @@ export default function Logo({ compact = false, roleLabel }) {
       </div>
 
       {!compact ? (
-        <div className="min-w-0 leading-tight">
+        <div className="min-w-0 leading-tight p-1">
           <div className="flex items-center gap-2">
             <p className="truncate text-base font-bold tracking-tight text-foreground">
               G6Fit

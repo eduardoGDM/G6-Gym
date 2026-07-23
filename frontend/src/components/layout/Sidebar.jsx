@@ -70,15 +70,15 @@ export default function Sidebar({
       >
         <div
           className={cn(
-            "flex shrink-0 items-center border-b border-border px-6",
-            isDesktop ? "min-h-[72px]" : "min-h-[64px]",
+            "flex shrink-0 items-center border-b border-border px-6 py-4",
+            isDesktop ? "min-h-[76px]" : "min-h-[68px]",
           )}
         >
           <Logo roleLabel={roleLabel} />
         </div>
 
         <div className="flex-1 overflow-y-auto px-3 py-4">
-          <nav className="space-y-1">
+          <nav className="space-y-1.5">
             {menuItems.map((item) => (
               <MenuItem
                 key={item.label}

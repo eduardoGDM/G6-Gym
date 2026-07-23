@@ -36,7 +36,7 @@ export default function Topbar({
       <div
         className={cn(
           "flex items-center justify-between gap-4 px-4 sm:px-6 lg:px-8",
-          isDesktop ? "min-h-[72px]" : "min-h-[64px]",
+          isDesktop ? "min-h-[60px]" : "min-h-[56px]",
         )}
       >
         <div className="flex min-w-0 items-center gap-3">

@@ -58,7 +58,7 @@ function MenuGroup({ item, onClick }) {
       </button>
 
       {open ? (
-        <div className="mt-1 ml-4 space-y-1 border-l border-border pl-3">
+        <div className="mt-1.5 ml-4 space-y-1.5 border-l border-border pl-3">
           {item.children.map((child) => {
             const selected = isActivePath(
               location.pathname,
