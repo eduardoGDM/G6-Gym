@@ -5,7 +5,7 @@ import { cn } from "../../lib/utils";
 import useAuthStore from "../../store/authStore";
 
 const USER_CHIP_CLASSES =
-  "flex items-center gap-2.5 rounded-full border border-border bg-card py-1.5 pl-1.5 pr-2 transition-colors hover:bg-accent sm:pr-4";
+  "flex items-center gap-2.5 rounded-full border border-border bg-card py-1.5 pl-1.5 pr-2 transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60 focus-visible:ring-offset-2 focus-visible:ring-offset-background sm:pr-4";
 
 export default function Topbar({
   onMenuClick,
@@ -32,33 +32,39 @@ export default function Topbar({
   );
 
   return (
-    <header className="sticky top-0 z-30 border-b border-border bg-background/80 backdrop-blur-xl">
+    <header className="sticky top-0 z-30 border-border bg-background/80 backdrop-blur-xl">
       <div
         className={cn(
-          "flex items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8",
-          isDesktop ? "min-h-[72px]" : "min-h-[64px]",
+          "flex items-center justify-between gap-4 px-4 sm:px-6 lg:px-8",
+          isDesktop ? "min-h-[60px]" : "min-h-[56px]",
         )}
       >
-        <div className="flex items-center gap-3">
+        <div className="flex min-w-0 items-center gap-3">
           {!isDesktop ? (
             <button
               type="button"
               onClick={onMenuClick}
-              className="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-border bg-card text-foreground transition-colors hover:bg-accent"
+              className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-border bg-card text-foreground transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
               aria-label="Abrir menu"
             >
               <Menu className="h-5 w-5" />
             </button>
           ) : null}
 
-          <div>
-            <p className="text-lg font-bold tracking-tight text-foreground sm:text-xl">
-              {title}
-            </p>
-            {isDesktop ? (
-              <p className="text-xs text-muted-foreground">{subtitle}</p>
-            ) : null}
-          </div>
+          {/* No desktop a marca já vive na sidebar; só exibimos aqui no mobile,
+              onde a sidebar fica fora da tela. */}
+          {!isDesktop ? (
+            <div className="min-w-0 leading-tight">
+              <p className="truncate text-lg font-bold tracking-tight text-foreground">
+                {title}
+              </p>
+              {subtitle ? (
+                <p className="truncate text-xs text-muted-foreground">
+                  {subtitle}
+                </p>
+              ) : null}
+            </div>
+          ) : null}
         </div>
 
         <div className="flex items-center gap-2 sm:gap-3">

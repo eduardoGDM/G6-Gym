@@ -4,7 +4,13 @@ import {
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
-import { CalendarDays, ClipboardList, Pencil, X } from "lucide-react";
+import {
+  CalendarDays,
+  ClipboardList,
+  MessageSquare,
+  Pencil,
+  X,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import toast from "react-hot-toast";
@@ -211,6 +217,25 @@ export default function DailyCheckinsIndex() {
       label: "Resumo das observações",
       className: "hidden sm:table-cell",
       render: (checkin) => summarizeNotes(checkin),
+    },
+    {
+      key: "comments",
+      label: "Comentários do personal",
+      render: (checkin) =>
+        checkin.comments?.length ? (
+          <div className="flex max-w-xs flex-col gap-1.5 whitespace-normal">
+            {checkin.comments.map((comment) => (
+              <div key={comment.id} className="flex items-start gap-2">
+                <MessageSquare className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                <span className="text-sm text-foreground/90">
+                  {comment.body}
+                </span>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <span className="text-muted-foreground">—</span>
+        ),
     },
     {
       key: "actions",

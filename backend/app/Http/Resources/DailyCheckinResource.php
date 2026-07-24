@@ -19,6 +19,7 @@ class DailyCheckinResource extends JsonResource
 			'diet_rating' => $this->diet_rating,
 			'diet_level' => DailyCheckin::ratingLevel($this->diet_rating),
 			'diet_notes' => $this->diet_notes,
+			'comments' => CommentResource::collection($this->whenLoaded('comments')),
 			'student_profile' => $this->whenLoaded('studentProfile', function () {
 				return [
 					'id' => $this->studentProfile->id,

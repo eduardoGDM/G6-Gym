@@ -35,6 +35,7 @@ class WorkoutCheckinResource extends JsonResource
 			}),
 			'exercises' => WorkoutCheckinExerciseResource::collection($this->whenLoaded('exercises')),
 			'exercises_count' => $this->whenCounted('exercises'),
+			'comments' => CommentResource::collection($this->whenLoaded('comments')),
 			'created_at' => $this->created_at,
 			'updated_at' => $this->updated_at,
 		];

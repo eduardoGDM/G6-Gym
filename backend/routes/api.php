@@ -16,6 +16,7 @@ use App\Http\Controllers\Api\Trainer\StudentAnamnesisVideoController;
 use App\Http\Controllers\Api\Trainer\StudentPhysicalAssessmentController;
 use App\Http\Controllers\Api\Trainer\WorkoutCheckinController as TrainerWorkoutCheckinController;
 use App\Http\Controllers\Api\Trainer\DailyCheckinController as TrainerDailyCheckinController;
+use App\Http\Controllers\Api\Trainer\CheckinCommentController;
 use App\Http\Controllers\Api\Trainer\DashboardController as TrainerDashboardController;
 use App\Http\Controllers\Api\Student\WorkoutController as StudentWorkoutController;
 use App\Http\Controllers\Api\Student\WorkoutCheckinController;
@@ -66,10 +67,15 @@ Route::middleware('auth:sanctum')->group(function () {
 
 			Route::get('checkins/students', [TrainerWorkoutCheckinController::class, 'students']);
 			Route::get('checkins/{id}', [TrainerWorkoutCheckinController::class, 'show']);
+			Route::post('checkins/{id}/comments', [CheckinCommentController::class, 'storeOnWorkoutCheckin']);
 			Route::get('checkins', [TrainerWorkoutCheckinController::class, 'index']);
 
 			Route::get('daily-checkins/{id}', [TrainerDailyCheckinController::class, 'show']);
+			Route::post('daily-checkins/{id}/comments', [CheckinCommentController::class, 'storeOnDailyCheckin']);
 			Route::get('daily-checkins', [TrainerDailyCheckinController::class, 'index']);
+
+			Route::patch('checkin-comments/{id}', [CheckinCommentController::class, 'update']);
+			Route::delete('checkin-comments/{id}', [CheckinCommentController::class, 'destroy']);
 		});
 
 	Route::prefix('trainer')

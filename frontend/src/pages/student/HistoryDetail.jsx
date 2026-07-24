@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { useNavigate, useParams } from "react-router-dom";
 
+import CheckinComments from "../../components/checkins/CheckinComments";
 import ConfirmDialog from "../../components/common/ConfirmDialog";
 import { crudToast } from "../../components/common/crudToast";
 import PageContainer from "../../components/common/PageContainer";
@@ -151,6 +152,8 @@ export default function HistoryDetail() {
         </Card>
       ) : (
         <div className="space-y-4">
+          <CheckinComments comments={checkin.comments || []} readOnly />
+
           {checkin.notes ? (
             <Card className="border-border/80 bg-card/80">
               <CardContent className="p-6">

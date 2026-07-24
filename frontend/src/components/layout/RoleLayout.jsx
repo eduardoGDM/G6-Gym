@@ -49,7 +49,7 @@ export default function RoleLayout({
           profilePath={profilePath}
         />
 
-        <main className="px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+        <main className="px-4 pt-0 pb-6 sm:px-6 lg:px-8 lg:pt-0 lg:pb-8">
           {banner}
           <Outlet />
         </main>

@@ -56,7 +56,6 @@ export const workoutExerciseSeriesSchema = yup.object({
     .nullable()
     .notRequired()
     .oneOf([...ADVANCED_TECHNIQUES, null], "Técnica avançada inválida"),
-  tempo: yup.string().trim().nullable().notRequired(),
   cadence: yup
     .string()
     .trim()

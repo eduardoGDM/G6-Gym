@@ -77,5 +77,4 @@ export const buildConfigSummary = (series) => ({
   techniques: uniqueValues(series, "advanced_technique"),
   cadence: uniqueValues(series, "cadence"),
   rest: uniqueValues(series, "rest_time").map((value) => `${value}s`),
-  tempo: uniqueValues(series, "tempo"),
 });

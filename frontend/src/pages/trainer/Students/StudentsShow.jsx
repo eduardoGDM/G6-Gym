@@ -16,11 +16,45 @@ import {
   CardHeader,
   CardTitle,
 } from "../../../components/ui/card";
+import { cn } from "../../../lib/utils";
 import physicalAssessmentsService from "../../../services/PhysicalAssessmentsService";
 import studentsService from "../../../services/StudentsService";
 import AnamnesisSection from "./components/AnamnesisSection";
 import ExerciseEvolutionSection from "./components/ExerciseEvolutionSection";
 import PhysicalAssessmentSection from "./components/PhysicalAssessmentSection";
+import { formatDate } from "./utils";
+
+// Card de agrupamento de dados: mesmo padrão visual (borda, raio, padding e
+// cabeçalho com ícone) para todas as seções da tela.
+function InfoCard({ icon: Icon, title, className, children }) {
+  return (
+    <section
+      className={cn(
+        "space-y-4 rounded-2xl border border-border/80 bg-background/60 p-5",
+        className,
+      )}
+    >
+      <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+        <Icon className="h-4 w-4 shrink-0" />
+        {title}
+      </div>
+      {children}
+    </section>
+  );
+}
+
+// Par label/valor com hierarquia clara: label discreto acima, valor em
+// destaque abaixo. `break-words` evita que e-mails/valores longos estourem.
+function InfoRow({ label, value }) {
+  return (
+    <div className="flex min-w-0 flex-col gap-0.5">
+      <dt className="text-xs font-medium text-muted-foreground">{label}</dt>
+      <dd className="break-words text-sm font-medium text-foreground">
+        {value === null || value === undefined || value === "" ? "—" : value}
+      </dd>
+    </div>
+  );
+}
 
 export default function StudentsShow() {
   const navigate = useNavigate();
@@ -98,87 +132,59 @@ export default function StudentsShow() {
               Aluno não encontrado.
             </div>
           ) : (
-            <div className="grid gap-6 md:grid-cols-2 animate-in fade-in slide-in-from-bottom-2 duration-300">
-              <div className="space-y-4 rounded-2xl border border-border/80 bg-background/60 p-5">
-                <div className="flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-                  <UserRound className="h-4 w-4" />
-                  Dados básicos
-                </div>
-                <div className="space-y-3 text-sm text-foreground">
-                  <p>
-                    <span className="font-medium">Nome:</span>{" "}
-                    {student.user?.name || "—"}
-                  </p>
-                  <p>
-                    <span className="font-medium">E-mail:</span>{" "}
-                    {student.user?.email || "—"}
-                  </p>
-                  <p>
-                    <span className="font-medium">CPF:</span>{" "}
-                    {student.cpf || "—"}
-                  </p>
-                  <p>
-                    <span className="font-medium">Sexo:</span>{" "}
-                    {student.gender || "—"}
-                  </p>
-                </div>
-              </div>
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 animate-in fade-in slide-in-from-bottom-2 duration-300">
+              <InfoCard icon={UserRound} title="Dados básicos">
+                <dl className="grid gap-4 sm:grid-cols-2">
+                  <InfoRow label="Nome" value={student.user?.name} />
+                  <InfoRow label="E-mail" value={student.user?.email} />
+                  <InfoRow label="CPF" value={student.cpf} />
+                  <InfoRow label="Sexo" value={student.gender} />
+                </dl>
+              </InfoCard>
 
-              <div className="space-y-4 rounded-2xl border border-border/80 bg-background/60 p-5">
-                <div className="flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-                  <Mail className="h-4 w-4" />
-                  Contato
-                </div>
-                <div className="space-y-3 text-sm text-foreground">
-                  <p>
-                    <span className="font-medium">Telefone:</span>{" "}
-                    {student.phone || "—"}
-                  </p>
-                  <p>
-                    <span className="font-medium">Data de nascimento:</span>{" "}
-                    {student.birth_date || "—"}
-                  </p>
-                </div>
-              </div>
+              <InfoCard icon={Mail} title="Contato">
+                <dl className="grid gap-4 sm:grid-cols-2">
+                  <InfoRow label="Telefone" value={student.phone} />
+                  <InfoRow
+                    label="Data de nascimento"
+                    value={formatDate(student.birth_date)}
+                  />
+                </dl>
+              </InfoCard>
 
-              <div className="space-y-4 rounded-2xl border border-border/80 bg-background/60 p-5">
-                <div className="flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-                  <Ruler className="h-4 w-4" />
-                  Medidas físicas
-                </div>
-                <div className="space-y-3 text-sm text-foreground">
-                  <p>
-                    <span className="font-medium">Altura:</span>{" "}
-                    {student.height ?? "—"}
-                  </p>
-                  <p>
-                    <span className="font-medium">Peso atual:</span>{" "}
-                    {latestWeight ?? "—"}
-                    {latestAssessment ? (
-                      <span className="text-muted-foreground">
-                        {" "}
-                        (avaliação de{" "}
-                        {latestAssessment.assessment_date
-                          .slice(0, 10)
-                          .split("-")
-                          .reverse()
-                          .join("/")}
-                        )
-                      </span>
-                    ) : null}
-                  </p>
-                </div>
-              </div>
+              <InfoCard icon={Ruler} title="Medidas físicas">
+                <dl className="grid gap-4 sm:grid-cols-2">
+                  <InfoRow label="Altura" value={student.height} />
+                  <InfoRow
+                    label="Peso atual"
+                    value={
+                      latestWeight === null || latestWeight === undefined ? (
+                        "—"
+                      ) : (
+                        <>
+                          {latestWeight}
+                          {latestAssessment ? (
+                            <span className="block text-xs font-normal text-muted-foreground">
+                              avaliação de{" "}
+                              {formatDate(latestAssessment.assessment_date)}
+                            </span>
+                          ) : null}
+                        </>
+                      )
+                    }
+                  />
+                </dl>
+              </InfoCard>
 
-              <div className="space-y-4 rounded-2xl border border-border/80 bg-background/60 p-5">
-                <div className="flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-                  <CalendarDays className="h-4 w-4" />
-                  Observações
-                </div>
-                <p className="text-sm leading-6 text-foreground">
+              <InfoCard
+                icon={CalendarDays}
+                title="Observações"
+                className="sm:col-span-2 lg:col-span-3"
+              >
+                <p className="max-h-56 overflow-y-auto whitespace-pre-line break-words text-sm leading-6 text-foreground">
                   {student.observations || "Nenhuma observação cadastrada."}
                 </p>
-              </div>
+              </InfoCard>
             </div>
           )}
         </CardContent>

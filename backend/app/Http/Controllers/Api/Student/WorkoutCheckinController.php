@@ -26,7 +26,7 @@ class WorkoutCheckinController extends Controller
 		'exercises.*.sets.*.notes' => 'nullable|string',
 	];
 
-	private const CHECKIN_RELATIONS = ['workout', 'exercises.exercise.muscleGroup', 'exercises.sets'];
+	private const CHECKIN_RELATIONS = ['workout', 'exercises.exercise.muscleGroup', 'exercises.sets', 'comments.trainer'];
 
 	private function resolveProfile(Request $request)
 	{

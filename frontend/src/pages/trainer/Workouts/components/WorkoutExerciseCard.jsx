@@ -16,7 +16,6 @@ const emptySeries = {
   rir: "",
   type: DEFAULT_SERIES_TYPE,
   advanced_technique: "",
-  tempo: "",
   cadence: "",
   duration: "",
   notes: "",

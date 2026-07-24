@@ -70,19 +70,15 @@ export default function Sidebar({
       >
         <div
           className={cn(
-            "flex shrink-0 items-center justify-between gap-3 border-b border-border px-4",
-            isDesktop ? "min-h-[72px]" : "min-h-[64px]",
+            "flex shrink-0 items-center border-b border-border px-6 py-4",
+            isDesktop ? "min-h-[76px]" : "min-h-[68px]",
           )}
         >
-          <Logo />
-
-          <span className="shrink-0 rounded-full border border-primary/20 bg-primary/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-primary">
-            {roleLabel}
-          </span>
+          <Logo roleLabel={roleLabel} />
         </div>
 
-        <div className="flex-1 overflow-y-auto px-4 py-4">
-          <nav className="space-y-1">
+        <div className="flex-1 overflow-y-auto px-3 py-4">
+          <nav className="space-y-1.5">
             {menuItems.map((item) => (
               <MenuItem
                 key={item.label}
@@ -93,11 +89,11 @@ export default function Sidebar({
           </nav>
         </div>
 
-        <div className="shrink-0 border-t border-border px-4 pt-4 pb-[calc(3rem+env(safe-area-inset-bottom))]">
+        <div className="shrink-0 border-t border-border px-3 pt-3 pb-[calc(2rem+env(safe-area-inset-bottom))]">
           <button
             onClick={handleLogout}
             disabled={loadingLogout}
-            className="flex w-full items-center gap-3 rounded-xl border border-transparent px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:border-destructive/30 hover:bg-destructive/10 hover:text-destructive disabled:cursor-not-allowed disabled:opacity-50"
+            className="flex w-full items-center gap-3 rounded-xl border border-transparent px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:border-destructive/30 hover:bg-destructive/10 hover:text-destructive focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-destructive/50 focus-visible:ring-offset-2 focus-visible:ring-offset-card disabled:cursor-not-allowed disabled:opacity-50"
           >
             <LogOut className="h-4 w-4 shrink-0" />
             {loadingLogout ? "Saindo..." : "Sair da conta"}
