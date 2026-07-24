@@ -3,6 +3,9 @@
 
 @theme {
   --font-sans: Inter, ui-sans-serif, system-ui, sans-serif;
+  /* Mono usada em números (notas, datas de carimbo). Cai no stack do sistema
+     enquanto a JetBrains Mono não for empacotada. */
+  --font-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
 
   /* ── Identidade G6Fit — Tema Vermelho ──────────────────────────── */
   /* Neutros (ramp escuro) */
@@ -53,6 +56,21 @@
 
   /* Glow lento e sutil — usado no fundo da tela de login. */
   --animate-glow: glow 7s ease-in-out infinite;
+
+  /* Mola curta — feedback ao incrementar valores (dial do check-in). */
+  --animate-spring-pop: spring-pop 0.42s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes spring-pop {
+  0% {
+    transform: scale(0.82);
+  }
+  55% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+  }
 }
 
 @keyframes glow {

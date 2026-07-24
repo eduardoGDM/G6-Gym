@@ -171,3 +171,6 @@ docs/architecture.md
 docs/backend.md
 
 docs/frontend.md
+
+docs/design-cards.md — linguagem visual dos cards e painéis. Consultar sempre
+que criar ou refatorar tela.
