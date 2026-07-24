@@ -195,7 +195,7 @@ Body:
       "order": 1,
       "notes": "Aquecer antes",
       "series": [
-        { "order": 1, "repetitions": 12, "weight": 40, "rest_time": 60, "rir": 2, "tempo": "2-0-2", "cadence": null, "duration": null, "notes": null }
+        { "order": 1, "repetitions": 12, "weight": 40, "rest_time": 60, "rir": 2, "cadence": "2-0-2", "duration": null, "notes": null }
       ]
     }
   ]
@@ -294,7 +294,8 @@ Resposta (200): arquivo PDF (`Content-Type: application/pdf`), nome `ficha-trein
 
 Bloco de rotas de anamnese/mídias. Documentado aqui por existir nas rotas; controllers em `Api/Trainer/StudentAnamnesis*`.
 
-- **GET /api/trainer/students/{student}/anamnesis** — retorna a anamnese do aluno.
+- **GET /api/trainer/students/{student}/anamnesis** — retorna a anamnese do aluno,
+  incluindo `uploads_enabled` e `uploads_disabled_message` (ver **RN-STUDENT-015**).
 - **PUT /api/trainer/students/{student}/anamnesis** — atualiza a anamnese (validado por `UpdateStudentAnamnesisRequest`).
 - **POST /api/trainer/students/{student}/anamnesis/photos** — envia foto (`StoreStudentAnamnesisPhotoRequest`).
 - **DELETE /api/trainer/students/{student}/anamnesis/photos/{photo}** — remove foto.
@@ -304,6 +305,10 @@ Bloco de rotas de anamnese/mídias. Documentado aqui por existir nas rotas; cont
 > Observação: diferentemente do restante do módulo trainer, este bloco aceita
 > `role:trainer,admin`. Os detalhes de validação estão nos respectivos
 > Form Requests em `app/Http/Requests/Trainer/`.
+
+> ⚠️ Os dois endpoints de **envio** (fotos e vídeos) respondem **503** em
+> produção enquanto não houver storage persistente (**RN-STUDENT-015**). Os de
+> leitura e remoção seguem funcionando normalmente.
 
 ## Avaliação física (papel `role:trainer,admin`)
 

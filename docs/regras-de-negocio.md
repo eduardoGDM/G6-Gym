@@ -198,6 +198,27 @@ quem responde pelos dados é o personal.
 Onde: `Api/Student/ProfileController` (`show`/`physicalAssessments`),
 `pages/student/Profile.jsx`.
 
+**RN-STUDENT-015 (Upload de mídia por ambiente)**
+Regra: O envio de **fotos e vídeos da anamnese** fica habilitado em
+desenvolvimento e nos testes, e **desabilitado em produção** enquanto não houver
+storage persistente. Motivo: o disco de produção é efêmero — o arquivo seria
+aceito, apareceria na tela e sumiria no deploy seguinte, e o personal só
+descobriria a perda depois.
+
+Comportamento quando desabilitado:
+- Os endpoints de upload respondem **HTTP 503** com mensagem em português; o
+  bloqueio é no servidor, não apenas na interface.
+- `GET .../anamnesis` devolve `uploads_enabled: false` e a mensagem, para a tela
+  avisar **antes** de o personal escolher um arquivo.
+- **Mídias já enviadas continuam visíveis e removíveis** — desabilitar o envio
+  nunca esconde nem apaga o que existe.
+
+Para liberar em produção assim que houver S3/R2: `ANAMNESIS_UPLOADS_ENABLED=true`
+no ambiente, sem alterar código.
+Onde: `config/uploads.php`, `StudentAnamnesisAttachment::uploadsEnabled()`,
+`StudentAnamnesisPhotoController`/`VideoController::store`,
+`components/AnamnesisSection.jsx`.
+
 > ⚠️ Inconsistência de escopo conhecida: parte dos controllers de trainer usa o
 > FK `trainer_id`, enquanto outros (check-ins, dashboard, ficha, anamnese)
 > escopam o aluno via `workouts.trainer_id`. Ver **API-001** no relatório.
@@ -409,6 +430,52 @@ Onde: `Student/DailyCheckinController::reminder`.
 **RN-DAILY-005 (Escopo do trainer)**
 Regra: O trainer só vê check-ins diários de alunos que possuem **ao menos um treino criado por ele** (`whereHas('studentProfile.workouts', trainer_id)`).
 Onde: `Trainer/DailyCheckinController::scopeToTrainer`, `Trainer/DashboardController`.
+
+---
+
+## Comentários do personal nos check-ins (Comments)
+
+Entidade: `Comment` — resposta do personal ancorada em um check-in específico.
+Abre o caminho de volta na consultoria: o aluno registra o check-in e o personal
+comenta em cima dele; o aluno lê a conversa.
+
+Origem: `Api/Trainer/CheckinCommentController.php`, `app/Models/Comment.php`,
+`app/Http/Resources/CommentResource.php`, migration `create_comments_table`.
+
+**RN-COMMENT-001 (Alvo polimórfico)**
+Regra: Um comentário aponta para um alvo polimórfico (`commentable_type` +
+`commentable_id`). Hoje os alvos são `DailyCheckin` e `WorkoutCheckin`
+(`morphMany` em cada), mas o mesmo mecanismo atende novos pontos de contato
+(vídeos/fotos, linha do tempo) sem novas colunas nem tabelas por tipo.
+Onde: migration `create_comments_table` (`morphs('commentable')`), `Comment::commentable`,
+`DailyCheckin::comments`, `WorkoutCheckin::comments`.
+
+**RN-COMMENT-002 (Só o personal escreve)**
+Regra: Apenas o `trainer` cria/edita/exclui comentários; o `student` apenas lê.
+Cada comentário guarda o autor em `trainer_id`. Um trainer só comenta em check-in
+de aluno **vinculado a ele** (`whereHas('studentProfile', trainer_id)`), e só
+edita/exclui os **próprios** comentários (escopo por `trainer_id`); fora disso,
+**HTTP 404**. O corpo (`body`) é obrigatório, máx. 2000 caracteres.
+Onde: `CheckinCommentController` (`storeOnDailyCheckin`, `storeOnWorkoutCheckin`,
+`update`, `destroy`), rotas sob `role:trainer` em `routes/api.php`.
+
+**RN-COMMENT-003 (Múltiplos comentários por check-in)**
+Regra: Um check-in pode ter **vários** comentários (thread), ordenados do mais
+antigo para o mais recente. Eles são devolvidos embutidos no próprio check-in
+(`comments` no resource, com nome do personal e data), carregados via
+`with('comments.trainer')` nos endpoints de detalhe do check-in (trainer e
+student) e na listagem de check-in diário do aluno.
+Onde: `DailyCheckinResource`/`WorkoutCheckinResource` (`comments`),
+`Trainer/DailyCheckinController::show`, `Trainer/WorkoutCheckinController::CHECKIN_RELATIONS`,
+`Student/WorkoutCheckinController::CHECKIN_RELATIONS`, `Student/DailyCheckinController::index`.
+
+**RN-COMMENT-004 (Exclusão)**
+Regra: Como o vínculo com o check-in é **polimórfico** (sem FK no banco), apagar
+o check-in não cascateia sozinho: os models `WorkoutCheckin`/`DailyCheckin`
+removem os comentários no evento `deleting` para não deixar órfãos (relevante
+porque o aluno pode excluir o check-in de treino). Já a FK `comments.trainer_id`
+usa `cascadeOnDelete` — remover o usuário do personal remove seus comentários.
+Onde: `WorkoutCheckin::booted`/`DailyCheckin::booted`, migration `create_comments_table`.
 
 ---
 

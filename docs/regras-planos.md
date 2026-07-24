@@ -40,22 +40,67 @@ comercial. Tudo o mais está em todos os planos, inclusive no Free.
 Princípio que separa o que trava do que não trava: **travar capacidade e custo
 marginal; nunca travar engajamento, onboarding ou o diferencial de prescrição.**
 
+### Contexto competitivo (levantado em 24/07/2026)
+
+Capacidade é commodity neste mercado e tem teto de preço conhecido:
+
+- **MFIT Personal** — grátis 1 aluno; R$10,90/mês 3 alunos; **R$39,90/mês
+  ilimitado**. Inclui anamnese, avaliação física, prescrição, cobrança integrada
+  e +1.800 vídeos de exercícios.
+- **Tecnofit Personal** — **gratuito até 10 alunos ativos**, com prescrição
+  ilimitada, avaliação física e app do aluno. Planos pagos a partir de R$189/mês
+  (produto de studio, outro segmento).
+
+Consequência: o concorrente direto **faz mais e cobra menos**. A escada precisa
+ser competitiva por construção, e o `Standard` (RN-PLAN-002) é a resposta —
+**mídia é o único custo marginal real do sistema**, então um plano sem foto nem
+vídeo custa quase nada para servir e pode ser agressivo no preço sem queimar
+margem.
+
+> ⚠️ **Hipótese não validada:** a tese de que o diferencial do produto é
+> *aderência e acompanhamento* (check-in diário de sono/dieta, streak, dashboard
+> de pendentes, histórico de execução real) — e não prescrição de treino, que
+> está comoditizada. Os preços abaixo assumem isso. Validar com os personais de
+> teste antes de tratar como definitivo.
+
 ---
 
 ## RN-PLAN-002 — A escada
 
-| | Free | Essencial | Pro | Ilimitado |
+| | Free | Standard | Essencial | Pro |
 |---|---|---|---|---|
-| Preço/mês | R$0 | R$69,90 | R$129,90 | R$199,90 |
-| Alunos | **1** | 15 | 40 | sem limite |
-| Fotos na anamnese | — | ✅ | ✅ | ✅ |
-| Vídeos na anamnese | — | — | ✅ | ✅ |
+| Preço/mês | R$0 | R$29,90 | R$59,90 | R$99,90 |
+| Alunos | 3 | 20 | 50 | sem limite |
+| Fotos na anamnese | — | — | ✅ | ✅ |
+| Vídeos na anamnese | — | — | — | ✅ |
 
 Diferença entre degraus, resumida:
 
-- **Free → Essencial:** 1 → 15 alunos, + fotos
-- **Essencial → Pro:** 15 → 40 alunos, + vídeos
-- **Pro → Ilimitado:** 40 → ∞ alunos (nenhuma feature nova)
+- **Free → Standard:** 3 → 20 alunos (nenhuma feature nova)
+- **Standard → Essencial:** 20 → 50 alunos, + fotos
+- **Essencial → Pro:** 50 → ∞ alunos, + vídeos
+
+### A lógica dos números
+
+**Free em 3 alunos.** O free do MFIT dá 1 aluno; com 3 ganhamos a comparação na
+porta de entrada, e segue insuficiente para tocar o negócio.
+
+**Standard em 20 por R$29,90.** É o degrau que faz o trabalho pesado: mais barato
+que o ilimitado do concorrente (R$39,90) e cobre a faixa onde vive a maioria dos
+personais solo. Sem mídia, o custo de servir é quase zero.
+
+**Essencial em 50 por R$59,90.** O salto de preço é pago por capacidade mais que
+dobrada **somada** às fotos — não por foto sozinha, que não vale R$30.
+
+**Pro ilimitado por R$99,90.** Vídeo tem o maior custo de storage e banda do
+sistema, então é o único recurso que justifica o topo.
+
+### O antigo plano "Ilimitado" foi absorvido pelo Pro
+
+Cinco degraus é demais para um produto que ainda não vendeu, e o teto de
+R$199,90 não sobrevivia ao lado de um concorrente que dá ilimitado por R$39,90.
+Migration `2026_07_25_000002_restructure_plans_add_standard` move as assinaturas
+antes de remover o plano.
 
 ### Em todos os planos, inclusive o Free
 
@@ -65,17 +110,12 @@ gorda/magra e variação entre avaliações); check-in de treino; check-in diár
 sono e dieta; gráficos de evolução de exercício; streak e gamificação; **ficha
 em PDF**; perfil do aluno.
 
-### Por que o Free tem 1 aluno e não 3
-
-Com 3, um personal iniciante roda o negócio de graça para sempre. Com 1 fica
-inequívoco que é demonstração, não ferramenta de trabalho.
-
 ### Por que a avaliação física está no Free
 
 Parece contraintuitivo soltar o gancho de conversão, mas **gancho que ninguém vê
 não fisga**: o personal precisa registrar uma avaliação e ver o delta para querer
-isso nos 15 alunos dele. Com o Free em 1 aluno, quem cobra é a capacidade — o que
-é coerente com a RN-PLAN-001.
+isso na base inteira dele. Quem cobra é a capacidade — o que é coerente com a
+RN-PLAN-001.
 
 ### Por que o PDF não é travado
 
@@ -84,18 +124,36 @@ para o aluno final. Travar só faz o personal mandar a ficha no WhatsApp na mão
 
 ---
 
+## RN-PLAN-009 — Preço não é exposto ao personal
+
+Regra: **Valores aparecem somente no painel do admin.** O personal enxerga o
+nome do plano, a capacidade de alunos e o que cada degrau libera — nunca o preço.
+
+Motivo: a contratação não acontece pelo sistema (não há gateway) e a negociação
+é feita pelo suporte. Mostrar tabela de preços numa tela que não vende gera a
+pergunta "como eu assino?" sem resposta, e engessa a negociação caso a caso
+durante a fase de teste.
+
+Implementação: `Api/Trainer/PlanController::presentPlan()` **omite**
+`price_cents` da resposta — o valor não trafega até o cliente, em vez de ser
+apenas escondido no CSS. Há teste travando esse contrato
+(`Trainer\PlanTest::test_price_is_never_exposed_to_the_trainer`).
+
+`formatPlanPrice()` em `frontend/src/utils/plan.js` fica de uso restrito ao
+painel do admin.
+
 ## RN-PLAN-003 — Trial
 
 Regra: **30 dias de Essencial, sem cartão de crédito.**
 
 Trinta dias porque o produto é **série temporal**: delta de avaliação física,
 evolução de carga, histórico de check-in. Nada disso existe em 7 ou 14 dias —
-trial curto entrega tela vazia. Além disso, carregar 15 alunos (anamnese +
-avaliação + treino montado) é trabalho de horas, feito por quem ainda está
-atendendo os próprios clientes.
+trial curto entrega tela vazia. Além disso, carregar a base real (anamnese +
+avaliação + treino montado por aluno) é trabalho de horas, feito por quem ainda
+está atendendo os próprios clientes.
 
-Sem cartão porque, num ticket de R$69,90 e sem marca estabelecida, exigir cartão
-antes de o produto provar valor derruba o cadastro.
+Sem cartão porque, num ticket abaixo de R$60 e sem marca estabelecida, exigir
+cartão antes de o produto provar valor derruba o cadastro.
 
 **Hoje o trial roda manualmente:** o admin atribui Essencial com `ends_at` em 30
 dias. O `Subscription::scopeCurrent()` já trata o vencimento — expirada, a
@@ -177,8 +235,8 @@ A base inteira permanece visível e os alunos seguem logando e treinando
 normalmente. Aplica-se a RN-PLAN-005: o que trava é produzir coisa nova.
 
 O limite vale **na criação, nunca retroativamente**. Um personal que caiu para o
-Free com 15 alunos cadastrados não perde nenhum deles — perde o direito de
-adicionar o 16º e de montar treino novo.
+Free com 30 alunos cadastrados não perde nenhum deles — perde o direito de
+adicionar o 31º e de montar treino novo.
 
 Consequência deliberada: a conversa de venda deixa de ser "assine" e vira "sua
 base está montada, destrave para continuar".
@@ -209,13 +267,15 @@ Onde: `app/Models/Subscription.php`, `Admin/SubscriptionController::update`.
 
 ## RN-PLAN-008 — Escopo de lançamento
 
-Regra: Self-service apenas **Free, Essencial e Pro**.
+Regra: Os quatro degraus (Free, Standard, Essencial, Pro) valem no lançamento.
 
-O Ilimitado fica na página de preços como "acima de 40 alunos, fale com a gente",
-sem checkout. Quem passa de 40 alunos já opera como assessoria — segmento
-multi-trainer que foi **descartado** por complexidade. Como âncora de preço ele
-funciona igual sem cobrança automatizada, e não gasta o recurso escasso (tempo de
-integração de billing) no cliente errado.
+O antigo plano Ilimitado, que ficaria fora do self-service como âncora, **deixou
+de existir** — foi absorvido pelo Pro (RN-PLAN-002). Quem passa de 50 alunos já
+opera como assessoria, segmento multi-trainer **descartado** por complexidade,
+mas o Pro sem teto atende esse caso sem precisar de um degrau próprio.
+
+Enquanto não há gateway, todos os planos são atribuídos manualmente pelo admin
+(RN-PLAN-003), então "self-service" ainda não se aplica a nenhum deles.
 
 ---
 
