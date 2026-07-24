@@ -29,6 +29,22 @@ const trainerDashboardService = {
     );
     return data;
   },
+
+  async weeklyEvolution() {
+    const { data } = await sanctumRequest(
+      "get",
+      "/trainer/dashboard/weekly-evolution",
+    );
+    return data;
+  },
+
+  async activeStudents() {
+    const { data } = await sanctumRequest(
+      "get",
+      "/trainer/dashboard/active-students",
+    );
+    return data;
+  },
 };
 
 export default trainerDashboardService;

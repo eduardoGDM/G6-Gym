@@ -3,9 +3,9 @@ import { cn } from "../../lib/utils";
 // Mapeia o nível vindo do backend (good/attention/bad) para a cor do indicador.
 // A regra de negócio (faixas 0–10) vive no backend; aqui só traduzimos em cor.
 const LEVEL_STYLES = {
-  good: { dot: "bg-emerald-500", label: "Bom" },
-  attention: { dot: "bg-amber-500", label: "Atenção" },
-  bad: { dot: "bg-red-500", label: "Ruim" },
+  good: { dot: "bg-success", label: "Bom" },
+  attention: { dot: "bg-warning", label: "Atenção" },
+  bad: { dot: "bg-destructive", label: "Ruim" },
 };
 
 const SIZES = {

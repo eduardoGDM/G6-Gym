@@ -11,15 +11,15 @@ function App() {
         toastOptions={{
           duration: 4000,
           style: {
-            background: "#17171d",
-            color: "#f8fafc",
-            border: "1px solid #2a2a35",
+            background: "#181b22",
+            color: "#f9fafb",
+            border: "1px solid #262b36",
           },
           success: {
-            iconTheme: { primary: "#7c3aed", secondary: "#f8fafc" },
+            iconTheme: { primary: "#22c55e", secondary: "#f9fafb" },
           },
           error: {
-            iconTheme: { primary: "#ef4444", secondary: "#f8fafc" },
+            iconTheme: { primary: "#ef4444", secondary: "#f9fafb" },
           },
         }}
       />

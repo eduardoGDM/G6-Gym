@@ -47,7 +47,7 @@ function HistorySet({ set }) {
   const weight = formatWeight(set.performed_weight);
 
   return (
-    <div className="space-y-3 rounded-xl border border-border/60 bg-card/60 p-4">
+    <div className="space-y-3 rounded-xl border border-border/60 bg-surface p-4">
       <div className="flex items-center justify-between gap-2">
         <span className="text-sm font-semibold text-foreground">
           Série {set.set_number}

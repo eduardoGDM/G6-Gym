@@ -1,6 +1,6 @@
 export default function PageTitle({ title, description, eyebrow }) {
   return (
-    <div className="mb-6 space-y-2">
+    <div className="mb-6 space-y-2 mt-8">
       {eyebrow ? (
         <p className="text-xs font-semibold uppercase tracking-[0.28em] text-primary/80">
           {eyebrow}

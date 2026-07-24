@@ -86,7 +86,7 @@ export default function DataTable({
   return (
     <div
       className={cn(
-        "overflow-hidden rounded-2xl border border-border/80 bg-card/80 shadow-card",
+        "overflow-hidden rounded-xl border border-border/80 bg-card shadow-card",
         className,
       )}
       {...rest}
@@ -118,21 +118,37 @@ export default function DataTable({
             <Table>
               <TableHeader>
                 <TableRow hoverable={false}>
-                  {columns.map((column) => (
-                    <TableHead key={column.key} className={column.className}>
-                      {column.label}
-                    </TableHead>
-                  ))}
+                  {columns.map((column) => {
+                    const isActions = /actions?$/i.test(column.key);
+                    return (
+                      <TableHead
+                        key={column.key}
+                        className={cn(isActions && "text-center", column.className)}
+                      >
+                        {column.label}
+                      </TableHead>
+                    );
+                  })}
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {rows.map((row) => (
                   <TableRow key={row[rowKey]}>
-                    {columns.map((column) => (
-                      <TableCell key={column.key} className={column.className}>
-                        {column.render ? column.render(row) : (row[column.key] ?? "—")}
-                      </TableCell>
-                    ))}
+                    {columns.map((column) => {
+                      const isActions = /actions?$/i.test(column.key);
+                      const content = column.render
+                        ? column.render(row)
+                        : (row[column.key] ?? "—");
+                      return (
+                        <TableCell key={column.key} className={column.className}>
+                          {isActions ? (
+                            <div className="flex justify-center">{content}</div>
+                          ) : (
+                            content
+                          )}
+                        </TableCell>
+                      );
+                    })}
                   </TableRow>
                 ))}
               </TableBody>

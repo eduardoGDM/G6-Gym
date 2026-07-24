@@ -5,14 +5,15 @@ import { cn } from "../../lib/utils";
 
 // Base compartilhada por todos os itens (pai, grupo e filho) para garantir
 // mesma altura, padding, raio e estados de hover/active/focus.
+// `relative` + `before:` desenham o indicador lateral vermelho do item ativo.
 const ITEM_BASE =
-  "flex w-full items-center gap-3 rounded-xl border px-3 py-2.5 text-sm font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60 focus-visible:ring-offset-2 focus-visible:ring-offset-card";
+  "relative flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60 focus-visible:ring-offset-2 focus-visible:ring-offset-card before:absolute before:left-0 before:top-1/2 before:h-5 before:w-[3px] before:-translate-y-1/2 before:rounded-r-full before:transition-colors";
 
 const ITEM_ACTIVE =
-  "border-primary/30 bg-primary/15 text-foreground shadow-subtle";
+  "bg-primary/15 text-foreground before:bg-primary";
 
 const ITEM_IDLE =
-  "border-transparent bg-transparent text-muted-foreground hover:border-border hover:bg-accent/70 hover:text-foreground";
+  "bg-transparent text-muted-foreground before:bg-transparent hover:bg-accent/70 hover:text-foreground";
 
 function isActivePath(pathname, path, end = false) {
   if (end) return pathname === path;
@@ -24,7 +25,7 @@ function ItemIcon({ Icon, active }) {
   return (
     <Icon
       className={cn(
-        "h-4 w-4 shrink-0",
+        "h-[18px] w-[18px] shrink-0",
         active ? "text-primary" : "text-muted-foreground",
       )}
     />

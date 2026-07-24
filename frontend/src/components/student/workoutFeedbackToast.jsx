@@ -33,7 +33,7 @@ export function showWorkoutFeedbackToast({ streak, sleep } = {}) {
         aria-live="polite"
       >
         <div className="flex items-start gap-3">
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-500">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-success/15 text-success">
             <CheckCircle2 className="h-5 w-5" />
           </span>
           <div className="flex-1 space-y-1.5">
