@@ -61,7 +61,7 @@ class DailyCheckinController extends Controller
 	{
 		$trainerId = $request->user()->id;
 
-		$checkin = $this->scopeToTrainer(DailyCheckin::with('studentProfile.user'), $trainerId)
+		$checkin = $this->scopeToTrainer(DailyCheckin::with(['studentProfile.user', 'comments.trainer']), $trainerId)
 			->where('id', $id)
 			->first();
 

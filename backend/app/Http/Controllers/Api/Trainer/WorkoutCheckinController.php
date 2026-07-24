@@ -15,6 +15,7 @@ class WorkoutCheckinController extends Controller
 		'workout.trainer',
 		'exercises.exercise.muscleGroup',
 		'exercises.sets',
+		'comments.trainer',
 	];
 
 	/**

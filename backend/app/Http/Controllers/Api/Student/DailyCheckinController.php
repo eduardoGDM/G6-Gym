@@ -39,7 +39,8 @@ class DailyCheckinController extends Controller
 		$date = $request->input('date');
 		$perPage = (int) $request->input('per_page', 10);
 
-		$checkins = DailyCheckin::where('student_profile_id', $profile->id)
+		$checkins = DailyCheckin::with('comments.trainer')
+			->where('student_profile_id', $profile->id)
 			->when($date, fn ($query) => $query->whereDate('date', $date))
 			->orderBy('date', 'desc')
 			->orderBy('created_at', 'desc')

@@ -4,10 +4,12 @@ import { useEffect } from "react";
 import toast from "react-hot-toast";
 import { useNavigate, useParams } from "react-router-dom";
 
+import CheckinComments from "../../../components/checkins/CheckinComments";
 import PageContainer from "../../../components/common/PageContainer";
 import PageTitle from "../../../components/common/PageTitle";
 import DetailsSkeleton from "../../../components/loading/DetailsSkeleton";
 import ErrorState from "../../../components/loading/ErrorState";
+import checkinCommentsService from "../../../services/CheckinCommentsService";
 import { Badge } from "../../../components/ui/badge";
 import { Button } from "../../../components/ui/button";
 import { Card, CardContent } from "../../../components/ui/card";
@@ -152,6 +154,18 @@ export default function CheckinsShow() {
               </p>
             </CardContent>
           </Card>
+
+          <CheckinComments
+            comments={checkin.comments || []}
+            onCreate={(text) =>
+              checkinCommentsService.addToWorkoutCheckin(checkin.id, text)
+            }
+            onUpdate={(commentId, text) =>
+              checkinCommentsService.update(commentId, text)
+            }
+            onDelete={(commentId) => checkinCommentsService.remove(commentId)}
+            onChanged={refetch}
+          />
 
           <div className="space-y-4">
             {(checkin.exercises || []).map((item) => (
