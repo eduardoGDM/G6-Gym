@@ -12,7 +12,7 @@ function Select({ className, children, size = "default", ...props }) {
     <div className="relative">
       <select
         className={cn(
-          "flex w-full appearance-none rounded-xl border border-border bg-card text-sm text-foreground shadow-subtle transition-colors hover:border-border/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:cursor-not-allowed disabled:opacity-50 aria-[invalid=true]:border-destructive",
+          "flex w-full appearance-none rounded-lg border border-border bg-card text-sm text-foreground shadow-subtle transition-colors hover:border-border/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:cursor-not-allowed disabled:opacity-50 aria-[invalid=true]:border-destructive",
           styles.field,
           className,
         )}

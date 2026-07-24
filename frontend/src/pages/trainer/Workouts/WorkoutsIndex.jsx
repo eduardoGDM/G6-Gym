@@ -1,4 +1,8 @@
-import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  keepPreviousData,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import {
   Dumbbell,
   Eye,
@@ -54,7 +58,8 @@ export default function WorkoutsIndex() {
 
   const debouncedSearch = useDebouncedValue(search, 500);
 
-  const [lastDebouncedSearch, setLastDebouncedSearch] = useState(debouncedSearch);
+  const [lastDebouncedSearch, setLastDebouncedSearch] =
+    useState(debouncedSearch);
   if (debouncedSearch !== lastDebouncedSearch) {
     setLastDebouncedSearch(debouncedSearch);
     setPage(1);
@@ -161,10 +166,13 @@ export default function WorkoutsIndex() {
       key: "status",
       label: "Status",
       render: (workout) => (
-        <Badge className="gap-1.5" variant={workout.active ? "default" : "secondary"}>
+        <Badge
+          className="gap-1.5"
+          variant={workout.active ? "default" : "secondary"}
+        >
           <span
             className={`h-2 w-2 rounded-full ${
-              workout.active ? "bg-green-400" : "bg-gray-400"
+              workout.active ? "bg-success" : "bg-muted-foreground"
             }`}
           />
           {workout.active ? "Ativo" : "Inativo"}
@@ -235,7 +243,11 @@ export default function WorkoutsIndex() {
           />
         </div>
 
-        <Select className="sm:w-48" value={status} onChange={handleStatusChange}>
+        <Select
+          className="sm:w-48"
+          value={status}
+          onChange={handleStatusChange}
+        >
           {STATUS_OPTIONS.map((option) => (
             <option key={option.value} value={option.value}>
               {option.label}
@@ -255,7 +267,9 @@ export default function WorkoutsIndex() {
         actionsCount={4}
         emptyIcon={Dumbbell}
         emptyTitle={
-          debouncedSearch ? "Nenhum treino encontrado" : "Nenhum treino cadastrado"
+          debouncedSearch
+            ? "Nenhum treino encontrado"
+            : "Nenhum treino cadastrado"
         }
         emptyDescription={
           debouncedSearch
@@ -264,7 +278,10 @@ export default function WorkoutsIndex() {
         }
         emptyAction={
           !debouncedSearch ? (
-            <Button variant="outline" onClick={() => navigate("/trainer/workouts/new")}>
+            <Button
+              variant="outline"
+              onClick={() => navigate("/trainer/workouts/new")}
+            >
               <Plus className="h-4 w-4" />
               Cadastrar treino
             </Button>

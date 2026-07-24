@@ -30,7 +30,9 @@ export default function TableSkeleton({
               </TableHead>
             );
           })}
-          {actionsCount > 0 ? <TableHead>Ações</TableHead> : null}
+          {actionsCount > 0 ? (
+            <TableHead className="text-center">Ações</TableHead>
+          ) : null}
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -48,7 +50,7 @@ export default function TableSkeleton({
             })}
             {actionsCount > 0 ? (
               <TableCell>
-                <div className="flex flex-wrap items-center gap-2">
+                <div className="flex flex-wrap items-center justify-center gap-2">
                   {Array.from({ length: actionsCount }).map((_, actionIndex) => (
                     <Skeleton key={actionIndex} className="h-9 w-9 rounded-lg" />
                   ))}

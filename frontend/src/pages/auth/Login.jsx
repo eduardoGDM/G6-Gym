@@ -126,7 +126,7 @@ export default function Login() {
 
         {/* Marca */}
         <div className="relative flex items-center gap-3 duration-700 animate-in fade-in slide-in-from-top-2">
-          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-secondary text-primary-foreground shadow-lg shadow-primary/30">
+          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-primary-dark text-primary-foreground shadow-subtle">
             <Dumbbell className="h-5 w-5" />
           </div>
           <div className="leading-tight">
@@ -193,7 +193,7 @@ export default function Login() {
         <div className="mx-auto w-full max-w-sm duration-700 animate-in fade-in slide-in-from-bottom-4">
           {/* Hero compacto — Mobile/Tablet: identidade do G6 sem ocupar espaço. */}
           <div className="mb-8 flex flex-col items-center text-center lg:hidden">
-            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-secondary text-primary-foreground shadow-lg shadow-primary/30">
+            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-primary-dark text-primary-foreground shadow-subtle">
               <Dumbbell className="h-7 w-7" />
             </div>
             <p className="mt-4 text-xl font-bold tracking-tight text-foreground">

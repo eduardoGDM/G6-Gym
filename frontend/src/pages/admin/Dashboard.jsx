@@ -23,25 +23,21 @@ export default function Dashboard() {
       label: "Personais Ativos",
       value: summary?.active_trainers ?? 0,
       icon: UserRoundCheck,
-      tone: "from-primary/30 to-primary/10",
     },
     {
       label: "Alunos Ativos",
       value: summary?.active_students ?? 0,
       icon: GraduationCap,
-      tone: "from-emerald-500/25 to-emerald-500/10",
     },
     {
       label: "Total de Usuários",
       value: summary?.total_users ?? 0,
       icon: Users,
-      tone: "from-secondary/30 to-secondary/10",
     },
     {
       label: "Cadastros Hoje",
       value: summary?.registrations_today ?? 0,
       icon: CalendarPlus,
-      tone: "from-indigo-500/25 to-indigo-500/10",
     },
   ];
 
@@ -60,7 +56,6 @@ export default function Dashboard() {
             icon={stat.icon}
             label={stat.label}
             value={stat.value}
-            tone={stat.tone}
             loading={isLoadingSummary}
             delay={index * 60}
           />

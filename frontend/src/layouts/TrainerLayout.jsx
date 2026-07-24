@@ -8,22 +8,29 @@ import {
 } from "lucide-react";
 import RoleLayout from "../components/layout/RoleLayout";
 
-const menuItems = [
-  { label: "Dashboard", path: "/trainer", icon: LayoutDashboard, end: true },
-  { label: "Alunos", path: "/trainer/students", icon: Users },
-  { label: "Treinos", path: "/trainer/workouts", icon: Dumbbell },
-  { label: "Exercícios", path: "/trainer/exercises", icon: BarChart3 },
+// Agrupado por seção para refletir a hierarquia visual do design system.
+// Só entram destinos que já existem como rota — nada de links para telas
+// inexistentes (Relatórios, Importar IA etc. ficam de fora até virarem rota).
+const navGroups = [
   {
-    label: "Check-ins",
-    icon: CalendarCheck,
-    children: [
+    heading: "Principal",
+    items: [
+      { label: "Dashboard", path: "/trainer", icon: LayoutDashboard, end: true },
+      { label: "Alunos", path: "/trainer/students", icon: Users },
+      { label: "Treinos", path: "/trainer/workouts", icon: Dumbbell },
+      { label: "Exercícios", path: "/trainer/exercises", icon: BarChart3 },
+    ],
+  },
+  {
+    heading: "Acompanhamento",
+    items: [
       {
-        label: "Check-ins de Treino",
+        label: "Check-ins",
         path: "/trainer/checkins/workouts",
-        icon: Dumbbell,
+        icon: CalendarCheck,
       },
       {
-        label: "Check-ins de Dieta e Sono",
+        label: "Check-ins diários",
         path: "/trainer/checkins/daily",
         icon: BedDouble,
       },
@@ -35,6 +42,6 @@ const menuItems = [
 
 export default function PersonalLayout() {
   return (
-    <RoleLayout menuItems={menuItems} title="G6Fit" roleLabel="Personal" />
+    <RoleLayout navGroups={navGroups} title="G6Fit" roleLabel="Personal" />
   );
 }

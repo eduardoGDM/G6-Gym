@@ -137,19 +137,19 @@ const AUTOSAVE_INDICATOR = {
   [AUTOSAVE_STATUS.SAVED]: {
     icon: Check,
     label: "Salvo automaticamente",
-    className: "text-emerald-500",
+    className: "text-success",
     spin: false,
   },
   [AUTOSAVE_STATUS.OFFLINE]: {
     icon: CloudOff,
     label: "Sem conexão. Tentaremos salvar novamente.",
-    className: "text-amber-500",
+    className: "text-warning",
     spin: false,
   },
   [AUTOSAVE_STATUS.ERROR]: {
     icon: TriangleAlert,
     label: "Erro ao salvar",
-    className: "text-red-400",
+    className: "text-destructive",
     spin: false,
   },
 };
@@ -183,7 +183,18 @@ function PrescriptionInfo({ set }) {
     ? TECHNIQUE_DESCRIPTIONS[technique]
     : null;
 
+  // Ordem da prescrição (spec): Reps → Carga → RIR → Cadência → Técnica.
+  // Carga e reps prescritas ficam aqui como "alvo", evitando repeti-las
+  // embaixo de cada input.
   const items = [
+    { label: "Reps", value: set.planned_repetitions },
+    {
+      label: "Carga",
+      value:
+        set.planned_weight != null && set.planned_weight !== ""
+          ? `${set.planned_weight} kg`
+          : "",
+    },
     { label: "RIR", value: set.planned_rir },
     { label: "Cadência", value: set.planned_cadence },
   ].filter(
@@ -195,7 +206,10 @@ function PrescriptionInfo({ set }) {
 
   return (
     <div className="space-y-2">
-      <div className="flex flex-wrap gap-1.5">
+      <div className="flex flex-wrap items-center gap-1.5">
+        <span className="mr-0.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground/70">
+          Alvo
+        </span>
         {items.map((item) => (
           <span
             key={item.label}
@@ -253,7 +267,7 @@ function CheckinSet({ index, setIndex, set, control, register }) {
   const base = `exercises.${index}.sets.${setIndex}`;
 
   return (
-    <div className="space-y-4 rounded-xl border border-border/60 bg-card/60 p-4 sm:p-5">
+    <div className="space-y-4 rounded-xl border border-border/60 bg-card p-4 sm:p-5">
       <div className="flex items-center justify-between gap-2">
         <p className="text-sm font-semibold text-foreground sm:text-base">
           Série {set.set_number}
@@ -288,11 +302,6 @@ function CheckinSet({ index, setIndex, set, control, register }) {
               />
             )}
           />
-          {set.planned_weight ? (
-            <p className="text-xs text-muted-foreground mt-4">
-              Meta: {set.planned_weight} kg
-            </p>
-          ) : null}
         </div>
 
         <div className="space-y-1.5">
@@ -315,11 +324,6 @@ function CheckinSet({ index, setIndex, set, control, register }) {
               />
             )}
           />
-          {set.planned_repetitions ? (
-            <p className="text-xs text-muted-foreground mt-4">
-              Reps: {set.planned_repetitions}
-            </p>
-          ) : null}
         </div>
       </div>
 
@@ -338,7 +342,7 @@ function CheckinSet({ index, setIndex, set, control, register }) {
         {detailsOpen ? "Ocultar detalhes" : "Descanso e observação"}
       </button>
 
-      <div className={cn("space-y-8", !detailsOpen && "hidden", "md:block")}>
+      <div className={cn("space-y-4", !detailsOpen && "hidden", "md:block")}>
         <div className="space-y-1.5">
           <Label htmlFor={`${base}.performed_rest_time`}>Descanso (s)</Label>
           <Input
@@ -680,7 +684,7 @@ export default function Workout() {
                     {fields.map((field, index) => (
                       <Card
                         key={field.id}
-                        className="border-border/60 bg-background/40"
+                        className="border-border/60 bg-surface"
                       >
                         <CardContent className="space-y-5 p-4 sm:p-6">
                           <div className="flex flex-wrap items-center gap-2">

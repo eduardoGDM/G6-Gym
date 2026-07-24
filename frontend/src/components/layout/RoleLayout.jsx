@@ -6,7 +6,7 @@ import Topbar from "./TopBar";
 const DRAWER_WIDTH = 280;
 
 export default function RoleLayout({
-  menuItems,
+  navGroups,
   title,
   roleLabel,
   banner,
@@ -32,7 +32,7 @@ export default function RoleLayout({
   return (
     <div className="min-h-screen bg-background text-foreground">
       <Sidebar
-        menuItems={menuItems}
+        navGroups={navGroups}
         drawerWidth={DRAWER_WIDTH}
         mobileOpen={mobileOpen}
         onClose={() => setMobileOpen(false)}

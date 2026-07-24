@@ -55,25 +55,21 @@ export default function Dashboard() {
       label: "Treinos ativos",
       value: summary?.active_workouts ?? 0,
       icon: Dumbbell,
-      tone: "from-primary/30 to-primary/10",
     },
     {
       label: "Último treino",
       value: formatDate(summary?.last_workout_checkin),
       icon: CalendarDays,
-      tone: "from-secondary/30 to-secondary/10",
     },
     {
       label: "Nota média de Sono (30d)",
       value: summary?.avg_sleep_rating ?? "—",
       icon: Moon,
-      tone: "from-indigo-500/25 to-indigo-500/10",
     },
     {
       label: "Nota média da Dieta (30d)",
       value: summary?.avg_diet_rating ?? "—",
       icon: Salad,
-      tone: "from-emerald-500/25 to-emerald-500/10",
     },
   ];
 
@@ -118,7 +114,6 @@ export default function Dashboard() {
             icon={stat.icon}
             label={stat.label}
             value={stat.value}
-            tone={stat.tone}
             loading={isLoadingSummary}
             delay={index * 60}
           />
@@ -164,7 +159,7 @@ export default function Dashboard() {
             {evolutionItems.map((item) => (
               <div
                 key={item.label}
-                className="rounded-2xl border border-border bg-background/60 p-4"
+                className="rounded-lg border border-border bg-surface p-4"
               >
                 <p className="text-xs text-muted-foreground">{item.label}</p>
                 {isLoadingEvolution ? (

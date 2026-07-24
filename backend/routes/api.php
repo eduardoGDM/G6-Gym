@@ -54,6 +54,8 @@ Route::middleware('auth:sanctum')->group(function () {
 			Route::get('dashboard/recent-workout-checkins', [TrainerDashboardController::class, 'recentWorkoutCheckins']);
 			Route::get('dashboard/recent-daily-checkins', [TrainerDashboardController::class, 'recentDailyCheckins']);
 			Route::get('dashboard/pending-daily-checkins', [TrainerDashboardController::class, 'pendingDailyCheckins']);
+			Route::get('dashboard/weekly-evolution', [TrainerDashboardController::class, 'weeklyEvolution']);
+			Route::get('dashboard/active-students', [TrainerDashboardController::class, 'activeStudents']);
 
 			Route::apiResource('student-profiles', StudentProfileController::class);
 			Route::apiResource('workouts', WorkoutController::class);
