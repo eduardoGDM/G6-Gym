@@ -15,7 +15,7 @@ import {
   X,
 } from "lucide-react";
 import { useEffect, useState } from "react";
-import { Controller, useForm, useWatch } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import toast from "react-hot-toast";
 
 import DataTable from "../../../components/common/DataTable";
@@ -41,17 +41,6 @@ function formatDate(value) {
   if (!value) return "-";
   const [year, month, day] = value.slice(0, 10).split("-");
   return `${day}/${month}/${year}`;
-}
-
-function formatWeekday(value) {
-  if (!value) return "";
-  // Meio-dia evita que o fuso empurre a data para o dia anterior.
-  const date = new Date(`${value.slice(0, 10)}T12:00:00`);
-  if (Number.isNaN(date.getTime())) return "";
-
-  return date
-    .toLocaleDateString("pt-BR", { weekday: "long" })
-    .replace("-feira", "");
 }
 
 function summarizeNotes(checkin) {
@@ -99,10 +88,6 @@ export default function DailyCheckinsIndex() {
     resolver: yupResolver(dailyCheckinSchema),
     defaultValues: defaultFormValues,
   });
-
-  // useWatch (e não watch()) para o carimbo reagir à troca de data sem quebrar
-  // a memoização do React Compiler.
-  const selectedDate = useWatch({ control, name: "date" });
 
   const { data, isLoading, isFetching, isError, refetch } = useQuery({
     queryKey: [
@@ -276,7 +261,6 @@ export default function DailyCheckinsIndex() {
   const metrics = [
     {
       name: "sleep",
-      index: "01",
       icon: Moon,
       title: "Sono",
       ratingLabel: "Nota do sono",
@@ -284,7 +268,6 @@ export default function DailyCheckinsIndex() {
     },
     {
       name: "diet",
-      index: "02",
       icon: UtensilsCrossed,
       title: "Dieta",
       ratingLabel: "Nota da dieta",
@@ -294,76 +277,46 @@ export default function DailyCheckinsIndex() {
 
   return (
     <PageContainer>
-      {/* Painel de registro com leitura de placar: faixa da marca no topo,
-          métricas numeradas e a data em bloco reto. */}
-      <Card className="relative mt-8 overflow-hidden border-border/70 bg-card animate-in fade-in slide-in-from-bottom-3 duration-500">
-        <div aria-hidden="true" className="h-1.5 bg-primary" />
+      {/* Cabeçalho e data ficam fora do card, no mesmo padrão das demais
+          listagens (ver o bloco "Histórico" abaixo). O <form> envolve os dois
+          para o campo de data continuar dentro do formulário. */}
+      <form onSubmit={handleSubmit(onSubmit)}>
+        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <PageTitle
+            eyebrow="Acompanhamento"
+            title={isEdit ? "Editar check-in" : "Check-in Diário"}
+            description={
+              isEdit
+                ? "Atualize as notas e observações deste registro."
+                : "Avalie de 0 a 10 como foi seu sono e sua dieta ontem."
+            }
+          />
 
-        {/* Hachura diagonal no canto — referência a livery esportiva. */}
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute right-0 top-0 h-44 w-44 opacity-[0.06] [background-image:repeating-linear-gradient(135deg,var(--color-primary)_0,var(--color-primary)_3px,transparent_3px,transparent_11px)]"
-        />
+          <Field
+            label="Data"
+            htmlFor="date"
+            error={errors.date?.message}
+            className="sm:w-56"
+          >
+            <Input
+              id="date"
+              type="date"
+              className="min-w-0 max-w-full appearance-none"
+              {...register("date")}
+            />
+          </Field>
+        </div>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="relative">
-          <div className="flex flex-col gap-6 px-6 pb-7 pt-7 sm:flex-row sm:items-end sm:justify-between sm:px-8">
-            <div>
-              <p className="mb-2.5 font-mono text-[11px] uppercase tracking-[0.24em] text-primary">
-                Acompanhamento
-              </p>
-              <h1 className="text-3xl font-bold uppercase tracking-tight text-foreground sm:text-[2.5rem] sm:leading-[1.05]">
-                {isEdit ? "Editar check-in" : "Check-in diário"}
-              </h1>
-              <p className="mt-3 max-w-md text-sm leading-6 text-muted-foreground">
-                {isEdit
-                  ? "Atualize as notas e observações deste registro."
-                  : "Avalie de 0 a 10 como foi seu sono e sua dieta ontem."}
-              </p>
-            </div>
+        <Card className="relative overflow-hidden border-border/70 bg-card animate-in fade-in slide-in-from-bottom-3 duration-500">
+          <div aria-hidden="true" className="h-1.5 bg-primary" />
 
-            {/* O bloco inteiro é o controle de data: o input fica invisível por
-                cima, preservando o seletor nativo. */}
-            <div className="w-full shrink-0 space-y-2 sm:w-auto">
-              <label
-                htmlFor="date"
-                className="relative block rounded-lg border border-border bg-surface px-4 py-3 transition-colors duration-200 hover:border-primary/50 focus-within:border-primary focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 focus-within:ring-offset-background"
-              >
-                <span className="flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
-                  <CalendarDays className="h-3.5 w-3.5" aria-hidden="true" />
-                  Referente a
-                </span>
-                <span className="mt-1.5 flex items-baseline gap-2.5">
-                  <span className="font-mono text-2xl font-bold tabular-nums text-foreground">
-                    {formatDate(selectedDate)}
-                  </span>
-                  <span className="font-mono text-[11px] uppercase tracking-[0.16em] text-primary">
-                    {formatWeekday(selectedDate)}
-                  </span>
-                </span>
-                <Input
-                  id="date"
-                  type="date"
-                  aria-label="Data do check-in"
-                  className="absolute inset-0 h-full w-full cursor-pointer appearance-none border-0 p-0 opacity-0 shadow-none"
-                  onClick={(event) => {
-                    try {
-                      event.currentTarget.showPicker?.();
-                    } catch {
-                      // Navegador sem suporte: o input nativo continua funcionando.
-                    }
-                  }}
-                  {...register("date")}
-                />
-              </label>
-              {errors.date ? (
-                <p className="text-sm text-destructive">
-                  {errors.date.message}
-                </p>
-              ) : null}
-            </div>
-          </div>
+          {/* Hachura diagonal no canto — referência a livery esportiva. */}
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute right-0 top-0 h-44 w-44 opacity-[0.06] [background-image:repeating-linear-gradient(135deg,var(--color-primary)_0,var(--color-primary)_3px,transparent_3px,transparent_11px)]"
+          />
 
-          <div className="grid gap-4 px-6 sm:px-8 md:grid-cols-2">
+          <div className="relative grid gap-4 px-6 pt-6 sm:px-8 md:grid-cols-2">
             {metrics.map((metric) => {
               const Icon = metric.icon;
               const ratingError = errors[`${metric.name}_rating`];
@@ -379,15 +332,10 @@ export default function DailyCheckinsIndex() {
                     className="absolute inset-y-0 left-0 w-1 bg-primary/70"
                   />
 
-                  <div className="mb-5 flex items-center justify-between gap-3">
-                    <h2 className="flex items-center gap-2 text-sm font-bold uppercase tracking-[0.14em] text-foreground">
-                      <Icon
-                        className="h-4 w-4 text-primary"
-                        aria-hidden="true"
-                      />
-                      {metric.title}
-                    </h2>
-                  </div>
+                  <h2 className="mb-5 flex items-center gap-2 text-sm font-bold uppercase tracking-[0.14em] text-foreground">
+                    <Icon className="h-4 w-4 text-primary" aria-hidden="true" />
+                    {metric.title}
+                  </h2>
 
                   <Controller
                     control={control}
@@ -451,8 +399,8 @@ export default function DailyCheckinsIndex() {
               </Button>
             </div>
           </div>
-        </form>
-      </Card>
+        </Card>
+      </form>
 
       <div className="mt-8 mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <PageTitle
