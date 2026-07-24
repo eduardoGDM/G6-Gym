@@ -45,8 +45,14 @@ Raio: `rounded-xl` para cards e painéis, `rounded-lg` para inputs e botões.
 
 ## Anatomia do painel
 
-Quatro elementos formam a assinatura. Não precisam aparecer todos, mas quando
-aparecem seguem esta forma:
+**Cabeçalho de página fica fora do card.** Título, descrição e o campo
+principal (data, filtro) usam `PageTitle` + `Field`/`FilterField` no mesmo
+`flex ... sm:justify-between` de todas as listagens. O card começa direto no
+conteúdo. Quando o campo é do formulário, o `<form>` envolve o cabeçalho e o
+card — nunca deixar controle de formulário fora do `<form>`.
+
+Dentro do card, quatro elementos formam a assinatura. Não precisam aparecer
+todos, mas quando aparecem seguem esta forma:
 
 ### 1. Barra da marca no topo
 
@@ -80,21 +86,15 @@ painel e `pl-6` para o conteúdo não encostar.
   <span aria-hidden="true" className="absolute inset-y-0 left-0 w-1 bg-primary/70" />
 ```
 
-### 4. Numeração da métrica
+### 4. Título do painel
 
-Índice em mono no canto oposto ao título (`01`, `02`). Dá leitura de ficha
-técnica e ordena a varredura visual.
+Ícone `lucide-react` na cor da marca + texto em maiúsculas com tracking aberto.
 
 ```jsx
-<div className="mb-5 flex items-center justify-between gap-3">
-  <h2 className="flex items-center gap-2 text-sm font-bold uppercase tracking-[0.14em] text-foreground">
-    <Icon className="h-4 w-4 text-primary" aria-hidden="true" />
-    {titulo}
-  </h2>
-  <span className="font-mono text-[11px] tracking-[0.2em] text-muted-foreground/60">
-    {indice}
-  </span>
-</div>
+<h2 className="mb-5 flex items-center gap-2 text-sm font-bold uppercase tracking-[0.14em] text-foreground">
+  <Icon className="h-4 w-4 text-primary" aria-hidden="true" />
+  {titulo}
+</h2>
 ```
 
 ---
@@ -106,12 +106,11 @@ técnica e ordena a varredura visual.
 
 | Elemento | Classes |
 |---|---|
-| Título de card | `text-3xl font-bold uppercase tracking-tight sm:text-[2.5rem] sm:leading-[1.05]` |
-| Eyebrow | `font-mono text-[11px] uppercase tracking-[0.24em] text-primary` |
 | Título de painel | `text-sm font-bold uppercase tracking-[0.14em]` |
 | Micro-label | `font-mono text-[10px] uppercase tracking-[0.22em] text-muted-foreground` |
 | Número grande | `font-mono text-[44px] font-bold leading-none tracking-tight` |
-| Data em destaque | `font-mono text-2xl font-bold tabular-nums` |
+
+Título e descrição da página não entram nesta tabela: vêm do `PageTitle`.
 
 `tabular-nums` sempre que o número puder mudar em tela — evita o texto
 "pulando" de largura.

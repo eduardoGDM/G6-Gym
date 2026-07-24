@@ -31,7 +31,6 @@ import { Input } from "../../../components/ui/input";
 import { Textarea } from "../../../components/ui/textarea";
 import { useDebouncedValue } from "../../../hooks/useDebouncedValue";
 import dailyCheckinsService from "../../../services/DailyCheckinsService";
-import CheckinPulse from "./components/CheckinPulse";
 import RatingDial from "./components/RatingDial";
 import { dailyCheckinSchema, getYesterdayISO } from "./utils/schema";
 
@@ -373,11 +372,6 @@ export default function DailyCheckinsIndex() {
           </div>
 
           <div className="mt-6 flex flex-col gap-5 border-t border-border px-6 py-6 sm:px-8 md:flex-row md:items-center md:justify-between">
-            <CheckinPulse
-              values={pulseValues}
-              label="Sono · últimos registros"
-            />
-
             <div className="flex flex-col gap-3 sm:flex-row md:justify-end">
               {isEdit ? (
                 <Button
