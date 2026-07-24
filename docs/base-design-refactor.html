@@ -1,0 +1,1067 @@
+<!DOCTYPE html>
+<!--
+  Protótipo que serviu de base para a refatoração do Check-in Diário.
+  Registro histórico — NÃO é a referência de estilo vigente.
+
+  A tela final descartou o formato de bilhete, o carimbo rotacionado, as tags
+  com emoji, as partículas e a paleta dourada. A linguagem visual em vigor está
+  em docs/design-cards.md.
+-->
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>G6 · Check-in Diário</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+
+<style>
+/* ============================================================
+   1. TOKENS
+   ============================================================ */
+:root {
+  /* Superfícies --------------------------------------------- */
+  --bg-top: #1a1a2e;
+  --bg-bottom: #16213e;
+  --glass: rgba(255, 255, 255, 0.045);
+  --glass-strong: rgba(255, 255, 255, 0.075);
+  --hairline: rgba(255, 255, 255, 0.1);
+  --hairline-soft: rgba(255, 255, 255, 0.06);
+
+  /* Marca ---------------------------------------------------- */
+  --gold: #e6b31e;
+  --gold-bright: #ffd85e;
+  --copper: #b87333;
+  --gold-ghost: rgba(230, 179, 30, 0.14);
+
+  /* Brilho projetado ---------------------------------------- */
+  --halo-violet: rgba(103, 84, 214, 0.55);
+  --halo-blue: rgba(42, 92, 190, 0.45);
+
+  /* Texto ---------------------------------------------------- */
+  --fg: #f3f2ef;
+  --fg-muted: #a6adc4;
+  --fg-faint: #6f7793;
+
+  /* Tipografia ----------------------------------------------- */
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", monospace;
+
+  /* Forma ---------------------------------------------------- */
+  --r-card: 28px;
+  --r-panel: 20px;
+  --r-pill: 999px;
+  --notch: 17px;
+  --perf: 190px; /* recalculado por JS conforme a altura do cabeçalho */
+
+  /* Movimento ------------------------------------------------ */
+  --spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease: cubic-bezier(0.2, 0.7, 0.3, 1);
+
+  /* Relevo suave (neumorfismo discreto) ---------------------- */
+  --emboss: inset 0 1px 0 rgba(255, 255, 255, 0.12),
+            inset 0 -1px 0 rgba(0, 0, 0, 0.45);
+}
+
+/* ============================================================
+   2. BASE
+   ============================================================ */
+*, *::before, *::after { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  padding: clamp(24px, 6vw, 72px) 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-sans);
+  color: var(--fg);
+  background: linear-gradient(168deg, var(--bg-top) 0%, var(--bg-bottom) 100%);
+  background-attachment: fixed;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+button { font: inherit; color: inherit; border: 0; background: none; cursor: pointer; }
+
+:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+
+/* ============================================================
+   3. CENÁRIO — auroras + partículas estáticas
+   ============================================================ */
+.stage {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+/* Manchas de luz difusa: dão profundidade sem virar "wallpaper" */
+.stage::before,
+.stage::after {
+  content: "";
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(90px);
+}
+.stage::before {
+  width: 46vw; height: 46vw;
+  top: -14vw; left: -8vw;
+  background: radial-gradient(circle, rgba(120, 96, 224, 0.28), transparent 68%);
+}
+.stage::after {
+  width: 52vw; height: 52vw;
+  bottom: -20vw; right: -12vw;
+  background: radial-gradient(circle, rgba(230, 179, 30, 0.14), transparent 66%);
+}
+
+.particles { position: absolute; inset: 0; }
+
+.particle {
+  position: absolute;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 6px rgba(255, 255, 255, 0.55);
+}
+.particle--gold {
+  background: var(--gold-bright);
+  box-shadow: 0 0 8px rgba(255, 216, 94, 0.75);
+}
+
+/* ============================================================
+   4. BILHETE — pilha, halo e recorte
+   ============================================================ */
+.ticket-stack {
+  position: relative;
+  z-index: 1;
+  width: min(920px, 100%);
+}
+
+/* Camada fantasma: sugere que existem outros dias sob o de hoje */
+.ticket-ghost {
+  position: absolute;
+  left: 22px;
+  right: 22px;
+  top: 26px;
+  bottom: -18px;
+  border-radius: var(--r-card);
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid var(--hairline-soft);
+  transform: rotate(-0.55deg);
+}
+.ticket-ghost--far {
+  left: 42px;
+  right: 42px;
+  top: 42px;
+  transform: rotate(0.8deg);
+  opacity: 0.5;
+}
+
+/* Halo colorido separado do cartão para não ser cortado pela máscara */
+.ticket-halo {
+  position: absolute;
+  inset: 8% 4% -6%;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at 30% 40%, var(--halo-violet), transparent 62%),
+              radial-gradient(ellipse at 78% 70%, var(--halo-blue), transparent 60%);
+  filter: blur(58px);
+  opacity: 0.85;
+}
+
+.ticket {
+  position: relative;
+  border-radius: var(--r-card);
+  background: linear-gradient(150deg, var(--glass-strong), var(--glass) 42%, rgba(255, 255, 255, 0.02));
+  backdrop-filter: blur(26px) saturate(150%);
+  -webkit-backdrop-filter: blur(26px) saturate(150%);
+  box-shadow: var(--emboss);
+  overflow: hidden;
+
+  /* Furos laterais do "picote" recortados de verdade, não pintados */
+  --cut: radial-gradient(circle var(--notch) at 0 var(--perf), transparent 99%, #000 100%),
+         radial-gradient(circle var(--notch) at 100% var(--perf), transparent 99%, #000 100%);
+  -webkit-mask-image: var(--cut);
+  mask-image: var(--cut);
+  -webkit-mask-composite: source-in;
+  mask-composite: intersect;
+}
+
+/* Contorno desenhado por dentro para sobreviver à máscara */
+.ticket::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  border: 1px solid var(--hairline);
+  pointer-events: none;
+}
+
+/* ============================================================
+   5. CABEÇALHO + CARIMBO DE DATA
+   ============================================================ */
+.ticket__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 28px;
+  padding: clamp(26px, 4vw, 38px) clamp(24px, 4vw, 42px) 30px;
+}
+
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  margin: 0 0 14px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+.eyebrow::before {
+  content: "";
+  width: 22px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold));
+}
+
+.title {
+  margin: 0;
+  font-size: clamp(28px, 4.4vw, 40px);
+  font-weight: 800;
+  letter-spacing: -0.028em;
+  line-height: 1.05;
+  background: linear-gradient(96deg, #fff 30%, #cfd4e6);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.subtitle {
+  margin: 12px 0 0;
+  max-width: 34ch;
+  font-size: 14.5px;
+  line-height: 1.55;
+  color: var(--fg-muted);
+}
+
+/* O carimbo: rotacionado, tinta gasta, borda dupla tracejada */
+.stamp {
+  position: relative;
+  flex: none;
+  padding: 12px 18px 13px;
+  text-align: center;
+  color: var(--gold);
+  border: 1.5px dashed rgba(230, 179, 30, 0.55);
+  border-radius: 14px;
+  background: var(--gold-ghost);
+  transform: rotate(-3.2deg);
+  transition: transform 0.35s var(--spring);
+}
+.stamp::before {
+  content: "";
+  position: absolute;
+  inset: 4px;
+  border: 1px solid rgba(230, 179, 30, 0.28);
+  border-radius: 9px;
+  pointer-events: none;
+}
+.stamp:hover { transform: rotate(-1.4deg) scale(1.02); }
+
+.stamp__label {
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: rgba(230, 179, 30, 0.72);
+}
+
+.stamp__date {
+  display: block;
+  margin-top: 5px;
+  font-family: var(--font-mono);
+  font-size: 21px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  color: var(--gold-bright);
+  text-shadow: 0 0 18px rgba(230, 179, 30, 0.35);
+}
+
+.stamp__weekday {
+  margin-top: 3px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(230, 179, 30, 0.6);
+}
+
+/* Input de data invisível sobre o carimbo — o carimbo é o controle */
+.stamp__input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+  color-scheme: dark;
+}
+
+/* ============================================================
+   6. PICOTE
+   ============================================================ */
+.perforation {
+  position: relative;
+  height: 0;
+  border-top: 1.5px dashed rgba(255, 255, 255, 0.16);
+  margin: 0 calc(var(--notch) + 6px);
+}
+
+/* ============================================================
+   7. CORPO — grid 2x1
+   ============================================================ */
+.ticket__body {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+  padding: 0 clamp(18px, 3vw, 30px);
+  /* sobreposição leve: os painéis "invadem" o picote */
+  margin-top: -14px;
+}
+
+.panel {
+  position: relative;
+  padding: 24px 22px 22px;
+  border-radius: var(--r-panel);
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.018));
+  border: 1px solid var(--hairline-soft);
+  box-shadow: var(--emboss), 0 18px 34px -26px rgba(0, 0, 0, 0.9);
+  transition: border-color 0.3s var(--ease), transform 0.3s var(--ease);
+}
+.panel:hover { border-color: rgba(230, 179, 30, 0.28); transform: translateY(-2px); }
+
+.panel__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.panel__title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.panel__icon { font-size: 17px; filter: saturate(0.9); }
+
+/* Rótulo qualitativo que acompanha a nota */
+.panel__mood {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  padding: 5px 10px;
+  border-radius: var(--r-pill);
+  color: var(--fg-muted);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--hairline-soft);
+  transition: color 0.3s var(--ease), border-color 0.3s var(--ease);
+}
+.panel__mood[data-tone="high"] { color: var(--gold-bright); border-color: rgba(230, 179, 30, 0.4); }
+.panel__mood[data-tone="low"] { color: #d98f6b; border-color: rgba(217, 143, 107, 0.35); }
+
+/* ============================================================
+   8. DIAL CIRCULAR
+   ============================================================ */
+.dial {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+}
+
+.dial__ring {
+  position: relative;
+  width: 150px;
+  height: 150px;
+  flex: none;
+  border-radius: 50%;
+}
+
+/* Halo do dial cresce junto com a nota (variável --glow, via JS) */
+.dial__ring::after {
+  content: "";
+  position: absolute;
+  inset: 14px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(230, 179, 30, 0.3), transparent 70%);
+  opacity: var(--glow, 0.4);
+  transition: opacity 0.45s var(--ease);
+  pointer-events: none;
+}
+
+.dial__svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+
+.dial__track { fill: none; stroke: rgba(255, 255, 255, 0.07); stroke-width: 9; }
+
+.dial__progress {
+  fill: none;
+  stroke: url(#dialGradient);
+  stroke-width: 9;
+  stroke-linecap: round;
+  filter: drop-shadow(0 0 7px rgba(230, 179, 30, 0.5));
+  transition: stroke-dashoffset 0.5s var(--spring);
+}
+
+/* Marcações de escala a cada ponto */
+.dial__ticks { stroke: rgba(255, 255, 255, 0.16); stroke-width: 1.5; stroke-linecap: round; }
+
+.dial__readout {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.dial__value {
+  font-family: var(--font-mono);
+  font-size: 46px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  color: var(--fg);
+  text-shadow: 0 2px 22px rgba(230, 179, 30, 0.28);
+  transform-origin: center;
+}
+.dial__value.is-bumping { animation: spring-pop 0.42s var(--spring); }
+
+@keyframes spring-pop {
+  0%   { transform: scale(0.82); }
+  55%  { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+
+.dial__scale {
+  margin-top: 4px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  color: var(--fg-faint);
+}
+
+/* Botões de incremento com afundamento real ao pressionar */
+.step {
+  width: 46px;
+  height: 46px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  color: var(--gold);
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.02));
+  border: 1px solid var(--hairline);
+  box-shadow: var(--emboss), 0 8px 18px -10px rgba(0, 0, 0, 0.9);
+  transition: transform 0.16s var(--spring), background 0.25s var(--ease),
+              border-color 0.25s var(--ease), box-shadow 0.2s var(--ease);
+}
+.step:hover:not(:disabled) {
+  background: linear-gradient(160deg, rgba(230, 179, 30, 0.22), rgba(230, 179, 30, 0.05));
+  border-color: rgba(230, 179, 30, 0.45);
+}
+.step:active:not(:disabled) {
+  transform: scale(0.87);
+  box-shadow: inset 0 3px 8px rgba(0, 0, 0, 0.6);
+}
+.step:disabled { opacity: 0.28; cursor: not-allowed; }
+.step svg { width: 17px; height: 17px; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; }
+
+/* ============================================================
+   9. TAGS DE SENSAÇÃO + NOTA LIVRE
+   ============================================================ */
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin: 20px 0 12px;
+}
+
+.tag {
+  padding: 7px 13px;
+  font-size: 12.5px;
+  font-weight: 500;
+  border-radius: var(--r-pill);
+  color: var(--fg-muted);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px dashed rgba(255, 255, 255, 0.16);
+  transition: transform 0.18s var(--spring), color 0.2s var(--ease),
+              background 0.2s var(--ease), border-color 0.2s var(--ease);
+}
+.tag:hover { color: var(--fg); border-color: rgba(230, 179, 30, 0.4); }
+.tag:active { transform: scale(0.93); }
+.tag[aria-pressed="true"] {
+  color: #22201a;
+  background: linear-gradient(140deg, var(--gold-bright), var(--copper));
+  border-style: solid;
+  border-color: transparent;
+  box-shadow: 0 6px 16px -8px rgba(230, 179, 30, 0.8);
+}
+
+.note {
+  display: block;
+  width: 100%;
+  min-height: 62px;
+  padding: 12px 14px;
+  resize: vertical;
+  font: inherit;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--fg);
+  background: rgba(0, 0, 0, 0.16);
+  border: 1.5px dashed rgba(255, 255, 255, 0.15);
+  border-radius: 14px;
+  transition: border-color 0.25s var(--ease), background 0.25s var(--ease);
+}
+.note::placeholder { color: var(--fg-faint); }
+.note:focus {
+  outline: none;
+  border-style: solid;
+  border-color: rgba(230, 179, 30, 0.5);
+  background: rgba(0, 0, 0, 0.28);
+}
+
+/* ============================================================
+   10. RODAPÉ — eletrocardiograma + ação
+   ============================================================ */
+.ticket__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 26px clamp(24px, 4vw, 42px) 26px;
+  margin-top: 22px;
+  border-top: 1px solid var(--hairline-soft);
+}
+
+.pulse { flex: 1; min-width: 0; }
+
+.pulse__label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--fg-faint);
+}
+
+.pulse__svg { display: block; width: 100%; height: 44px; overflow: visible; }
+.pulse__line {
+  fill: none;
+  stroke: url(#pulseGradient);
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.pulse__base { stroke: rgba(255, 255, 255, 0.09); stroke-width: 1; stroke-dasharray: 3 5; }
+.pulse__dot { fill: var(--gold-bright); filter: drop-shadow(0 0 6px rgba(230, 179, 30, 0.9)); }
+
+.submit {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 15px 26px;
+  font-size: 14.5px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: #1c1a12;
+  border-radius: var(--r-pill);
+  background: linear-gradient(135deg, var(--gold-bright), var(--gold) 55%, var(--copper));
+  box-shadow: 0 14px 30px -14px rgba(230, 179, 30, 0.85),
+              inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  transition: transform 0.16s var(--spring), box-shadow 0.25s var(--ease), filter 0.25s var(--ease);
+}
+.submit:hover { filter: brightness(1.06); box-shadow: 0 18px 36px -14px rgba(230, 179, 30, 1); }
+.submit:active { transform: scale(0.95); box-shadow: 0 6px 14px -10px rgba(230, 179, 30, 0.8); }
+.submit svg { width: 17px; height: 17px; stroke: currentColor; stroke-width: 2.4; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+
+/* Faixa dourada inferior — a "borda destacada" do bilhete */
+.rail {
+  height: 6px;
+  background: linear-gradient(90deg, var(--copper), var(--gold-bright) 42%, var(--gold) 68%, var(--copper));
+  box-shadow: 0 0 26px rgba(230, 179, 30, 0.55);
+}
+
+/* ============================================================
+   11. CARIMBO DE CONFIRMAÇÃO
+   ============================================================ */
+.stamped {
+  position: absolute;
+  top: 96px;
+  right: clamp(24px, 6vw, 90px);
+  z-index: 3;
+  padding: 10px 20px;
+  font-family: var(--font-mono);
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  color: rgba(230, 179, 30, 0.9);
+  border: 2.5px solid rgba(230, 179, 30, 0.65);
+  border-radius: 8px;
+  transform: rotate(-11deg) scale(1.6);
+  opacity: 0;
+  pointer-events: none;
+}
+.ticket-stack.is-stamped .stamped {
+  animation: stamp-press 0.55s var(--spring) forwards;
+}
+
+@keyframes stamp-press {
+  0%   { opacity: 0; transform: rotate(-11deg) scale(1.7); }
+  60%  { opacity: 1; transform: rotate(-11deg) scale(0.94); }
+  100% { opacity: 0.92; transform: rotate(-11deg) scale(1); }
+}
+
+/* ============================================================
+   12. RESPONSIVO
+   ============================================================ */
+@media (max-width: 760px) {
+  .ticket__body { grid-template-columns: 1fr; }
+  .ticket__head { flex-direction: column; align-items: stretch; }
+  .stamp { align-self: flex-start; }
+  .ticket__foot { flex-direction: column; align-items: stretch; }
+  .submit { justify-content: center; }
+  .ticket-ghost, .ticket-ghost--far { display: none; }
+  .stamped { top: auto; bottom: 120px; }
+}
+
+@media (max-width: 420px) {
+  .dial { gap: 8px; }
+  .dial__ring { width: 128px; height: 128px; }
+  .dial__value { font-size: 38px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+</style>
+</head>
+
+<body>
+<div class="stage" aria-hidden="true">
+  <div class="particles" id="particles"></div>
+</div>
+
+<main class="ticket-stack" id="stack">
+  <div class="ticket-ghost ticket-ghost--far" aria-hidden="true"></div>
+  <div class="ticket-ghost" aria-hidden="true"></div>
+  <div class="ticket-halo" aria-hidden="true"></div>
+
+  <div class="stamped" aria-hidden="true">REGISTRADO</div>
+
+  <form class="ticket" id="form" novalidate>
+    <!-- CABEÇALHO ------------------------------------------------ -->
+    <header class="ticket__head" id="head">
+      <div>
+        <p class="eyebrow">Acompanhamento · Ritual matinal</p>
+        <h1 class="title">Novo Check-in Diário</h1>
+        <p class="subtitle">Avalie de 0 a 10 como foi seu sono e sua dieta ontem.</p>
+      </div>
+
+      <label class="stamp" for="date">
+        <span class="stamp__label">Referente a</span>
+        <span class="stamp__date" id="stampDate">--/--/----</span>
+        <span class="stamp__weekday" id="stampWeekday">---</span>
+        <input class="stamp__input" type="date" id="date" name="date" />
+      </label>
+    </header>
+
+    <div class="perforation" aria-hidden="true"></div>
+
+    <!-- CORPO ---------------------------------------------------- -->
+    <div class="ticket__body">
+      <!-- SONO -->
+      <section class="panel" data-metric="sleep">
+        <div class="panel__head">
+          <h2 class="panel__title"><span class="panel__icon">🌙</span> Sono</h2>
+          <span class="panel__mood" data-mood>—</span>
+        </div>
+
+        <div class="dial">
+          <button type="button" class="step" data-step="-1" aria-label="Diminuir nota do sono">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14" /></svg>
+          </button>
+
+          <div class="dial__ring"
+               role="spinbutton"
+               tabindex="0"
+               aria-label="Nota do sono"
+               aria-valuemin="0" aria-valuemax="10" aria-valuenow="5"
+               data-ring>
+            <svg class="dial__svg" viewBox="0 0 150 150" aria-hidden="true">
+              <defs>
+                <linearGradient id="dialGradient" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0%" stop-color="#b87333" />
+                  <stop offset="55%" stop-color="#e6b31e" />
+                  <stop offset="100%" stop-color="#ffd85e" />
+                </linearGradient>
+              </defs>
+              <g class="dial__ticks" data-ticks></g>
+              <circle class="dial__track" cx="75" cy="75" r="57" />
+              <circle class="dial__progress" cx="75" cy="75" r="57" data-progress />
+            </svg>
+            <div class="dial__readout">
+              <span class="dial__value" data-value>5</span>
+              <span class="dial__scale">/ 10</span>
+            </div>
+          </div>
+
+          <button type="button" class="step" data-step="1" aria-label="Aumentar nota do sono">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
+          </button>
+        </div>
+
+        <div class="tags" data-tags>
+          <button type="button" class="tag" aria-pressed="false">😴 Profundo</button>
+          <button type="button" class="tag" aria-pressed="false">🌙 Interrompido</button>
+          <button type="button" class="tag" aria-pressed="false">⚡ Acordei renovado</button>
+          <button type="button" class="tag" aria-pressed="false">🥱 Curto</button>
+        </div>
+
+        <textarea class="note" name="sleep_notes" rows="2"
+                  placeholder="Toque para adicionar uma observação sobre a noite…"></textarea>
+      </section>
+
+      <!-- DIETA -->
+      <section class="panel" data-metric="diet">
+        <div class="panel__head">
+          <h2 class="panel__title"><span class="panel__icon">🍽️</span> Dieta</h2>
+          <span class="panel__mood" data-mood>—</span>
+        </div>
+
+        <div class="dial">
+          <button type="button" class="step" data-step="-1" aria-label="Diminuir nota da dieta">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14" /></svg>
+          </button>
+
+          <div class="dial__ring"
+               role="spinbutton"
+               tabindex="0"
+               aria-label="Nota da dieta"
+               aria-valuemin="0" aria-valuemax="10" aria-valuenow="5"
+               data-ring>
+            <svg class="dial__svg" viewBox="0 0 150 150" aria-hidden="true">
+              <g class="dial__ticks" data-ticks></g>
+              <circle class="dial__track" cx="75" cy="75" r="57" />
+              <circle class="dial__progress" cx="75" cy="75" r="57" data-progress />
+            </svg>
+            <div class="dial__readout">
+              <span class="dial__value" data-value>5</span>
+              <span class="dial__scale">/ 10</span>
+            </div>
+          </div>
+
+          <button type="button" class="step" data-step="1" aria-label="Aumentar nota da dieta">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
+          </button>
+        </div>
+
+        <div class="tags" data-tags>
+          <button type="button" class="tag" aria-pressed="false">🥗 Limpa</button>
+          <button type="button" class="tag" aria-pressed="false">🍽️ Leve</button>
+          <button type="button" class="tag" aria-pressed="false">💧 Bem hidratado</button>
+          <button type="button" class="tag" aria-pressed="false">🍕 Escapei</button>
+        </div>
+
+        <textarea class="note" name="diet_notes" rows="2"
+                  placeholder="Toque para adicionar uma observação sobre as refeições…"></textarea>
+      </section>
+    </div>
+
+    <!-- RODAPÉ --------------------------------------------------- -->
+    <footer class="ticket__foot">
+      <div class="pulse">
+        <div class="pulse__label">Últimos 7 dias</div>
+        <svg class="pulse__svg" viewBox="0 0 320 44" preserveAspectRatio="none" aria-hidden="true">
+          <defs>
+            <linearGradient id="pulseGradient" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stop-color="rgba(184,115,51,0.15)" />
+              <stop offset="45%" stop-color="rgba(230,179,30,0.75)" />
+              <stop offset="100%" stop-color="#ffd85e" />
+            </linearGradient>
+          </defs>
+          <line class="pulse__base" x1="0" y1="22" x2="320" y2="22" />
+          <path class="pulse__line" id="pulsePath" d="" />
+          <circle class="pulse__dot" id="pulseDot" r="3" cx="0" cy="22" />
+        </svg>
+      </div>
+
+      <button type="submit" class="submit">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6L9 17l-5-5" /></svg>
+        Registrar check-in
+      </button>
+    </footer>
+
+    <div class="rail" aria-hidden="true"></div>
+  </form>
+</main>
+
+<script>
+/* ============================================================
+   1. PARTÍCULAS — geradas uma vez, com semente fixa (estáticas)
+   ============================================================ */
+function seeded(seed) {
+  return function () {
+    seed |= 0; seed = (seed + 0x6d2b79f5) | 0;
+    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+(function paintParticles() {
+  const random = seeded(20260723);
+  const layer = document.getElementById("particles");
+  const fragment = document.createDocumentFragment();
+
+  for (let i = 0; i < 90; i++) {
+    const dot = document.createElement("span");
+    const size = random() * 2.1 + 0.7;
+    dot.className = random() > 0.86 ? "particle particle--gold" : "particle";
+    dot.style.cssText =
+      `left:${(random() * 100).toFixed(2)}%;` +
+      `top:${(random() * 100).toFixed(2)}%;` +
+      `width:${size.toFixed(2)}px;height:${size.toFixed(2)}px;` +
+      `opacity:${(random() * 0.6 + 0.14).toFixed(2)}`;
+    fragment.appendChild(dot);
+  }
+  layer.appendChild(fragment);
+})();
+
+/* ============================================================
+   2. PICOTE — alinha os furos com a altura real do cabeçalho
+   ============================================================ */
+const head = document.getElementById("head");
+
+function alignPerforation() {
+  document.documentElement.style.setProperty("--perf", head.offsetHeight + "px");
+}
+alignPerforation();
+window.addEventListener("resize", alignPerforation);
+if (document.fonts) document.fonts.ready.then(alignPerforation);
+
+/* ============================================================
+   3. DATA — padrão: ontem (mesma regra do getYesterdayISO)
+   ============================================================ */
+const dateInput = document.getElementById("date");
+const stampDate = document.getElementById("stampDate");
+const stampWeekday = document.getElementById("stampWeekday");
+
+function toISO(date) {
+  const pad = (n) => String(n).padStart(2, "0");
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+}
+
+function renderStamp() {
+  const [year, month, day] = dateInput.value.split("-");
+  stampDate.textContent = `${day}/${month}/${year}`;
+  const weekday = new Date(`${dateInput.value}T12:00:00`)
+    .toLocaleDateString("pt-BR", { weekday: "long" });
+  stampWeekday.textContent = weekday.replace("-feira", "");
+}
+
+const yesterday = new Date();
+yesterday.setDate(yesterday.getDate() - 1);
+dateInput.value = toISO(yesterday);
+dateInput.max = toISO(new Date());
+renderStamp();
+dateInput.addEventListener("change", renderStamp);
+
+/* ============================================================
+   4. DIAIS
+   ============================================================ */
+const RADIUS = 57;
+const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
+
+const MOODS = [
+  { max: 3,  label: "Pesado",   tone: "low" },
+  { max: 5,  label: "Irregular", tone: "" },
+  { max: 7,  label: "Estável",  tone: "" },
+  { max: 10, label: "Excelente", tone: "high" },
+];
+
+function drawTicks(group) {
+  const namespace = "http://www.w3.org/2000/svg";
+  for (let i = 0; i <= 10; i++) {
+    // sem deslocamento: o SVG já é girado -90°, alinhando com o início do anel
+    const angle = (i / 10) * 2 * Math.PI;
+    const inner = 68, outer = 72;
+    const line = document.createElementNS(namespace, "line");
+    line.setAttribute("x1", (75 + Math.cos(angle) * inner).toFixed(2));
+    line.setAttribute("y1", (75 + Math.sin(angle) * inner).toFixed(2));
+    line.setAttribute("x2", (75 + Math.cos(angle) * outer).toFixed(2));
+    line.setAttribute("y2", (75 + Math.sin(angle) * outer).toFixed(2));
+    group.appendChild(line);
+  }
+}
+
+function createDial(panel) {
+  const ring = panel.querySelector("[data-ring]");
+  const progress = panel.querySelector("[data-progress]");
+  const output = panel.querySelector("[data-value]");
+  const mood = panel.querySelector("[data-mood]");
+  const steps = panel.querySelectorAll("[data-step]");
+  let value = 5;
+
+  drawTicks(panel.querySelector("[data-ticks]"));
+  progress.style.strokeDasharray = CIRCUMFERENCE;
+
+  function render(animate) {
+    const ratio = value / 10;
+    progress.style.strokeDashoffset = CIRCUMFERENCE * (1 - ratio);
+    ring.style.setProperty("--glow", (0.18 + ratio * 0.75).toFixed(2));
+    ring.setAttribute("aria-valuenow", value);
+    output.textContent = value;
+
+    const state = MOODS.find((item) => value <= item.max);
+    mood.textContent = state.label;
+    mood.dataset.tone = state.tone;
+
+    steps.forEach((button) => {
+      const delta = Number(button.dataset.step);
+      button.disabled = (delta > 0 && value === 10) || (delta < 0 && value === 0);
+    });
+
+    if (animate) {
+      output.classList.remove("is-bumping");
+      void output.offsetWidth; // reinicia a animação de mola
+      output.classList.add("is-bumping");
+    }
+  }
+
+  function setValue(next) {
+    const clamped = Math.min(10, Math.max(0, next));
+    if (clamped === value) return;
+    value = clamped;
+    render(true);
+  }
+
+  steps.forEach((button) => {
+    button.addEventListener("click", () => setValue(value + Number(button.dataset.step)));
+  });
+
+  // Teclado e roda do mouse sobre o dial
+  ring.addEventListener("keydown", (event) => {
+    const map = { ArrowUp: 1, ArrowRight: 1, ArrowDown: -1, ArrowLeft: -1 };
+    if (event.key in map) { event.preventDefault(); setValue(value + map[event.key]); }
+    if (event.key === "Home") { event.preventDefault(); setValue(0); }
+    if (event.key === "End") { event.preventDefault(); setValue(10); }
+  });
+
+  ring.addEventListener("wheel", (event) => {
+    event.preventDefault();
+    setValue(value + (event.deltaY < 0 ? 1 : -1));
+  }, { passive: false });
+
+  render(false);
+  return { get value() { return value; } };
+}
+
+const dials = {};
+document.querySelectorAll("[data-metric]").forEach((panel) => {
+  dials[panel.dataset.metric] = createDial(panel);
+});
+
+/* ============================================================
+   5. TAGS
+   ============================================================ */
+document.querySelectorAll("[data-tags] .tag").forEach((tag) => {
+  tag.addEventListener("click", () => {
+    const active = tag.getAttribute("aria-pressed") === "true";
+    tag.setAttribute("aria-pressed", String(!active));
+  });
+});
+
+function selectedTags(metric) {
+  const panel = document.querySelector(`[data-metric="${metric}"]`);
+  return Array.from(panel.querySelectorAll('.tag[aria-pressed="true"]'))
+    .map((tag) => tag.textContent.trim());
+}
+
+/* ============================================================
+   6. ELETROCARDIOGRAMA — histórico sutil dos 7 dias
+   ============================================================ */
+(function drawPulse() {
+  const history = [6, 7, 5, 8, 7, 9, 7]; // placeholder do histórico
+  const width = 320, height = 44, padding = 6;
+  const stepX = (width - padding * 2) / (history.length - 1);
+  const y = (v) => height - padding - (v / 10) * (height - padding * 2);
+
+  let d = `M ${padding} ${y(history[0]).toFixed(1)}`;
+
+  history.forEach((value, index) => {
+    if (index === 0) return;
+    const x0 = padding + stepX * (index - 1);
+    const x1 = padding + stepX * index;
+    const midX = (x0 + x1) / 2;
+
+    // batida: pequena queda, pico agudo e retorno — leitura de ECG
+    d += ` L ${(midX - stepX * 0.18).toFixed(1)} ${(y(value) + 4).toFixed(1)}`;
+    d += ` L ${midX.toFixed(1)} ${(y(value) - 9).toFixed(1)}`;
+    d += ` L ${(midX + stepX * 0.16).toFixed(1)} ${(y(value) + 3).toFixed(1)}`;
+    d += ` L ${x1.toFixed(1)} ${y(value).toFixed(1)}`;
+  });
+
+  document.getElementById("pulsePath").setAttribute("d", d);
+  const dot = document.getElementById("pulseDot");
+  dot.setAttribute("cx", width - padding);
+  dot.setAttribute("cy", y(history[history.length - 1]));
+})();
+
+/* ============================================================
+   7. ENVIO
+   ============================================================ */
+document.getElementById("form").addEventListener("submit", (event) => {
+  event.preventDefault();
+  const form = event.currentTarget;
+
+  const payload = {
+    date: dateInput.value,
+    sleep_rating: dials.sleep.value,
+    sleep_notes: form.sleep_notes.value.trim() || selectedTags("sleep").join(", ") || null,
+    diet_rating: dials.diet.value,
+    diet_notes: form.diet_notes.value.trim() || selectedTags("diet").join(", ") || null,
+  };
+
+  console.log("POST /api/student/daily-checkins", payload);
+
+  const stack = document.getElementById("stack");
+  stack.classList.remove("is-stamped");
+  void stack.offsetWidth;
+  stack.classList.add("is-stamped");
+});
+</script>
+</body>
+</html>
