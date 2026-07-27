@@ -7,6 +7,7 @@ use App\Models\MuscleGroup;
 use App\Models\StudentProfile;
 use App\Models\User;
 use App\Models\Workout;
+use App\Models\WorkoutCheckin;
 use App\Models\WorkoutExercise;
 use App\Models\WorkoutExerciseSeries;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -110,6 +111,40 @@ class ExerciseHistoryTest extends TestCase
         $this->assertSame('Drop Set', $set['advanced_technique']);
         $this->assertSame(10, $set['performed_repetitions']);
         $this->assertSame('30.00', $set['performed_weight']);
+    }
+
+    public function test_history_excludes_the_current_checkin_and_shows_the_two_before_it(): void
+    {
+        [$studentUser, $workout, $exercise] = $this->createStudentWithWorkout();
+
+        $today = now()->toDateString();
+        $newer = now()->subDays(3)->toDateString();
+        $older = now()->subDays(7)->toDateString();
+        $oldest = now()->subDays(11)->toDateString();
+
+        // Check-in em edição (autosave já gravou o de hoje no banco) + 3 anteriores.
+        $this->registerCheckin($studentUser, $workout, $exercise, $oldest);
+        $this->registerCheckin($studentUser, $workout, $exercise, $older);
+        $this->registerCheckin($studentUser, $workout, $exercise, $newer);
+        $this->registerCheckin($studentUser, $workout, $exercise, $today);
+
+        $currentCheckinId = WorkoutCheckin::whereDate('performed_at', $today)->value('id');
+
+        $response = $this->actingAs($studentUser)->getJson(
+            "/api/student/exercises/{$exercise->id}/history?exclude_checkin_id={$currentCheckinId}"
+        );
+
+        $response->assertOk();
+        $data = $response->json('data');
+
+        // O de hoje é ignorado e não ocupa vaga: sobram as 2 execuções anteriores.
+        $this->assertCount(2, $data);
+        $this->assertStringStartsWith($newer, $data[0]['performed_at']);
+        $this->assertStringStartsWith($older, $data[1]['performed_at']);
+        $this->assertNotContains(
+            $currentCheckinId,
+            array_column($data, 'checkin_id')
+        );
     }
 
     public function test_history_never_returns_other_students_data(): void

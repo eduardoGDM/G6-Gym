@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { useNavigate, useParams } from "react-router-dom";
 
+import ActionIconButton from "../../components/common/ActionIconButton";
 import CheckinComments from "../../components/checkins/CheckinComments";
 import ConfirmDialog from "../../components/common/ConfirmDialog";
 import { crudToast } from "../../components/common/crudToast";
@@ -12,7 +13,6 @@ import PageTitle from "../../components/common/PageTitle";
 import ErrorState from "../../components/loading/ErrorState";
 import ListSkeleton from "../../components/loading/ListSkeleton";
 import { Badge } from "../../components/ui/badge";
-import { Button } from "../../components/ui/button";
 import { Card, CardContent } from "../../components/ui/card";
 import { useConfirmDialog } from "../../hooks/useConfirmDialog";
 import workoutCheckinsService from "../../services/WorkoutCheckinsService";
@@ -92,7 +92,7 @@ export default function HistoryDetail() {
 
   return (
     <PageContainer>
-      <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+      <div className="mb-6 flex flex-col gap-4">
         <PageTitle
           eyebrow="Histórico"
           title={checkin?.workout?.name || "Check-in"}
@@ -101,37 +101,46 @@ export default function HistoryDetail() {
           }
         />
 
-        <div className="flex flex-col gap-3 sm:flex-row">
-          <Button
-            variant="outline"
+        {/* Barra de ações compacta: ícones agrupados num painel, cor apenas como
+            marcação de intenção (editar = marca, excluir = destrutivo). */}
+        <div className="flex w-fit shrink-0 items-center gap-0.5 self-start rounded-xl border border-border/70 bg-card/60 p-1 shadow-subtle">
+          <ActionIconButton
+            icon={ArrowLeft}
+            tooltip="Voltar ao histórico"
+            color="ghost"
+            className="h-9 w-9 text-muted-foreground hover:text-foreground"
             onClick={() => navigate("/student/history")}
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Voltar ao histórico
-          </Button>
+          />
 
           {checkin?.workout_id ? (
-            <Button
+            <ActionIconButton
+              icon={PenLine}
+              tooltip="Editar check-in"
+              color="ghost"
+              className="h-9 w-9 text-primary hover:bg-primary/10 hover:text-primary"
               onClick={() =>
                 navigate(
                   `/student/workout/${checkin.workout_id}?checkin_id=${checkin.id}`,
                 )
               }
-            >
-              <PenLine className="h-4 w-4" />
-              Editar check-in
-            </Button>
+            />
           ) : null}
 
           {checkin ? (
-            <Button
-              variant="destructive"
-              onClick={() => confirmDelete.request(checkin.id)}
-              disabled={confirmDelete.loading}
-            >
-              <Trash2 className="h-4 w-4" />
-              Excluir check-in
-            </Button>
+            <>
+              <span
+                aria-hidden="true"
+                className="mx-0.5 h-5 w-px bg-border/70"
+              />
+              <ActionIconButton
+                icon={Trash2}
+                tooltip="Excluir check-in"
+                color="ghost"
+                className="h-9 w-9 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                onClick={() => confirmDelete.request(checkin.id)}
+                loading={confirmDelete.loading}
+              />
+            </>
           ) : null}
         </div>
       </div>
@@ -205,12 +214,15 @@ export default function HistoryDetail() {
                               {set.performed_repetitions ?? "-"}
                             </p>
                           </div>
-                          <div>
-                            <p className="text-muted-foreground">Descanso</p>
-                            <p className="font-semibold text-foreground">
-                              {set.performed_rest_time ?? "-"} s
-                            </p>
-                          </div>
+                          {set.performed_rest_time !== null &&
+                          set.performed_rest_time !== undefined ? (
+                            <div>
+                              <p className="text-muted-foreground">Descanso</p>
+                              <p className="font-semibold text-foreground">
+                                {set.performed_rest_time} s
+                              </p>
+                            </div>
+                          ) : null}
                         </div>
 
                         {set.notes ? (
