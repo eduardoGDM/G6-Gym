@@ -841,6 +841,7 @@ export default function Workout() {
           exerciseId={historyExercise?.id}
           exerciseName={historyExercise?.name}
           muscleGroup={historyExercise?.muscleGroup}
+          excludeCheckinId={checkinId}
         />
       </div>
     </PageContainer>

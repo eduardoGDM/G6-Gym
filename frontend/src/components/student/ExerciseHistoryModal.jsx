@@ -119,12 +119,15 @@ export default function ExerciseHistoryModal({
   exerciseId,
   exerciseName,
   muscleGroup,
+  excludeCheckinId,
 }) {
   // Busca só quando a modal está aberta (enabled) — nada é carregado junto do
-  // treino. O endpoint já devolve apenas as últimas execuções do exercício.
+  // treino. O endpoint já devolve apenas as últimas execuções anteriores do
+  // exercício, ignorando o check-in em edição (excludeCheckinId).
   const { data, isFetching, isError, refetch } = useQuery({
-    queryKey: ["exercise-history", exerciseId],
-    queryFn: () => exerciseHistoryService.history(exerciseId),
+    queryKey: ["exercise-history", exerciseId, excludeCheckinId ?? null],
+    queryFn: () =>
+      exerciseHistoryService.history(exerciseId, { excludeCheckinId }),
     enabled: open && Boolean(exerciseId),
   });
 

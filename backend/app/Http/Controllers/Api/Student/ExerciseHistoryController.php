@@ -23,6 +23,11 @@ class ExerciseHistoryController extends Controller
 	 * exclusivamente o WorkoutCheckin do próprio aluno (nunca a prescrição atual
 	 * nem dados de outros usuários); os campos de prescrição vêm do snapshot
 	 * congelado no momento do check-in.
+	 *
+	 * O check-in em edição (exclude_checkin_id) é sempre removido do resultado:
+	 * como o autosave já grava o check-in atual no banco enquanto o aluno o
+	 * preenche, ele nunca deve competir com — nem esconder — as execuções
+	 * anteriores que este histórico existe para comparar.
 	 */
 	public function index(Request $request, $exercise)
 	{
@@ -42,8 +47,11 @@ class ExerciseHistoryController extends Controller
 			], 404);
 		}
 
+		$excludeCheckinId = $request->query('exclude_checkin_id');
+
 		$history = WorkoutCheckin::query()
 			->where('student_profile_id', $profile->id)
+			->when($excludeCheckinId, fn ($query) => $query->whereKeyNot($excludeCheckinId))
 			->whereHas('exercises', function ($query) use ($exerciseModel) {
 				$query->where('exercise_id', $exerciseModel->id)
 					->whereHas('sets', function ($sets) {
