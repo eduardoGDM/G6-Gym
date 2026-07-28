@@ -18,6 +18,7 @@ import Skeleton from "../../../../components/loading/Skeleton";
 import { Input } from "../../../../components/ui/input";
 import { Select } from "../../../../components/ui/select";
 import studentExerciseEvolutionService from "../../../../services/StudentExerciseEvolutionService";
+import ExerciseAutocomplete from "./ExerciseAutocomplete";
 
 const WEIGHT_COLOR = "#3987e5";
 const REPETITIONS_COLOR = "#d95926";
@@ -78,25 +79,18 @@ function EmptyState({ message }) {
 }
 
 export default function ExerciseEvolutionSection({ studentId }) {
-  const [muscleGroupId, setMuscleGroupId] = useState("");
   const [exerciseId, setExerciseId] = useState("");
   const [period, setPeriod] = useState("90");
   const [customStart, setCustomStart] = useState("");
   const [customEnd, setCustomEnd] = useState("");
 
-  // Filtros alimentados exclusivamente pelo histórico de check-ins do aluno:
-  // só listam grupos musculares/exercícios que já possuem execução registrada,
-  // nunca o cadastro geral de Exercise/MuscleGroup.
-  const { data: muscleGroups, isLoading: loadingMuscleGroups } = useQuery({
-    queryKey: ["trainer-student-checkin-muscle-groups", studentId],
-    queryFn: () => studentExerciseEvolutionService.getMuscleGroups(studentId),
-    enabled: Boolean(studentId),
-  });
-
+  // Filtro alimentado exclusivamente pelo histórico de check-ins do aluno: só
+  // lista exercícios que já possuem execução registrada, nunca o cadastro geral
+  // de Exercise.
   const { data: exercises, isLoading: loadingExercises } = useQuery({
-    queryKey: ["trainer-student-checkin-exercises", studentId, muscleGroupId],
-    queryFn: () => studentExerciseEvolutionService.getExercises(studentId, muscleGroupId),
-    enabled: Boolean(studentId && muscleGroupId),
+    queryKey: ["trainer-student-checkin-exercises", studentId],
+    queryFn: () => studentExerciseEvolutionService.getExercises(studentId),
+    enabled: Boolean(studentId),
   });
 
   const { startDate, endDate } = useMemo(
@@ -115,7 +109,6 @@ export default function ExerciseEvolutionSection({ studentId }) {
       "trainer-exercise-evolution",
       studentId,
       exerciseId,
-      muscleGroupId,
       startDate,
       endDate,
     ],
@@ -123,17 +116,11 @@ export default function ExerciseEvolutionSection({ studentId }) {
       studentExerciseEvolutionService.get({
         studentId,
         exerciseId,
-        muscleGroupId,
         startDate,
         endDate,
       }),
     enabled: Boolean(studentId && exerciseId && isCustomRangeReady),
   });
-
-  const handleMuscleGroupChange = (event) => {
-    setMuscleGroupId(event.target.value);
-    setExerciseId("");
-  };
 
   const points = evolution?.points || [];
   const summary = evolution?.summary;
@@ -142,7 +129,7 @@ export default function ExerciseEvolutionSection({ studentId }) {
     label: formatDate(point.performed_at),
   }));
 
-  const hasHistory = (muscleGroups || []).length > 0;
+  const hasHistory = (exercises || []).length > 0;
 
   return (
     <div className="mt-6 rounded-2xl border border-border/80 bg-card/90 shadow-card">
@@ -160,7 +147,7 @@ export default function ExerciseEvolutionSection({ studentId }) {
       </div>
 
       <div className="px-6 py-6 sm:px-8">
-        {loadingMuscleGroups ? (
+        {loadingExercises ? (
           <div className="space-y-6">
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
               {Array.from({ length: 4 }).map((_, index) => (
@@ -177,38 +164,13 @@ export default function ExerciseEvolutionSection({ studentId }) {
         ) : (
           <div className="space-y-6">
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-              <FilterField label="Grupo muscular">
-                <Select
-                  value={muscleGroupId}
-                  onChange={handleMuscleGroupChange}
-                  disabled={loadingMuscleGroups}
-                >
-                  <option value="">Selecione um grupo muscular</option>
-                  {(muscleGroups || []).map((group) => (
-                    <option key={group.id} value={group.id}>
-                      {group.name}
-                    </option>
-                  ))}
-                </Select>
-              </FilterField>
-
-              <FilterField label="Exercício">
-                <Select
+              <FilterField label="Exercício" className="sm:col-span-2">
+                <ExerciseAutocomplete
+                  exercises={exercises || []}
                   value={exerciseId}
-                  onChange={(event) => setExerciseId(event.target.value)}
-                  disabled={!muscleGroupId || loadingExercises}
-                >
-                  <option value="">
-                    {muscleGroupId
-                      ? "Selecione um exercício"
-                      : "Selecione um grupo muscular primeiro"}
-                  </option>
-                  {(exercises || []).map((exercise) => (
-                    <option key={exercise.id} value={exercise.id}>
-                      {exercise.name}
-                    </option>
-                  ))}
-                </Select>
+                  onChange={setExerciseId}
+                  loading={loadingExercises}
+                />
               </FilterField>
 
               <FilterField label="Período">
@@ -242,7 +204,7 @@ export default function ExerciseEvolutionSection({ studentId }) {
             </div>
 
             {!exerciseId ? (
-              <EmptyState message="Selecione um grupo muscular e um exercício para visualizar a evolução." />
+              <EmptyState message="Selecione um exercício para visualizar a evolução." />
             ) : loadingEvolution ? (
               <div className="space-y-6">
                 <Skeleton className="h-80 w-full rounded-2xl" />

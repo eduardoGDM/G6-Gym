@@ -39,14 +39,15 @@ class StudentExerciseEvolutionController extends Controller
 	}
 
 	/**
-	 * Lista apenas os exercícios de um grupo muscular que possuem histórico
-	 * executado (com carga registrada) para o aluno, nunca o cadastro geral
-	 * de Exercise/WorkoutExercise.
+	 * Lista os exercícios que possuem histórico executado (com carga registrada)
+	 * para o aluno, nunca o cadastro geral de Exercise/WorkoutExercise. Quando um
+	 * muscle_group_id é informado, restringe ao grupo; sem ele, lista todos os
+	 * exercícios executados (usado pelo autocomplete de busca por exercício).
 	 */
 	public function exercises(Request $request, $student)
 	{
 		$request->validate([
-			'muscle_group_id' => 'required|integer|exists:muscle_groups,id',
+			'muscle_group_id' => 'nullable|integer|exists:muscle_groups,id',
 		]);
 
 		$trainerId = $request->user()->id;
@@ -60,8 +61,10 @@ class StudentExerciseEvolutionController extends Controller
 		}
 
 		$exercises = $this->executedCheckinExercisesQuery($studentProfile->id)
-			->whereHas('exercise', function ($query) use ($muscleGroupId) {
-				$query->where('muscle_group_id', $muscleGroupId);
+			->when($muscleGroupId, function ($query) use ($muscleGroupId) {
+				$query->whereHas('exercise', function ($subQuery) use ($muscleGroupId) {
+					$subQuery->where('muscle_group_id', $muscleGroupId);
+				});
 			})
 			->get()
 			->pluck('exercise')
@@ -69,7 +72,14 @@ class StudentExerciseEvolutionController extends Controller
 			->unique('id')
 			->sortBy('name')
 			->values()
-			->map(fn ($exercise) => ['id' => $exercise->id, 'name' => $exercise->name]);
+			->map(fn ($exercise) => [
+				'id' => $exercise->id,
+				'name' => $exercise->name,
+				'muscle_group' => $exercise->muscleGroup ? [
+					'id' => $exercise->muscleGroup->id,
+					'name' => $exercise->muscleGroup->name,
+				] : null,
+			]);
 
 		return response()->json($exercises);
 	}
