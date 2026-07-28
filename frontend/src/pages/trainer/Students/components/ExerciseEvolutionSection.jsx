@@ -4,7 +4,6 @@ import { LineChart as LineChartIcon, TrendingUp } from "lucide-react";
 import { useMemo, useState } from "react";
 import {
   CartesianGrid,
-  Legend,
   Line,
   LineChart,
   ResponsiveContainer,
@@ -20,8 +19,20 @@ import { Select } from "../../../../components/ui/select";
 import studentExerciseEvolutionService from "../../../../services/StudentExerciseEvolutionService";
 import ExerciseAutocomplete from "./ExerciseAutocomplete";
 
-const WEIGHT_COLOR = "#3987e5";
-const REPETITIONS_COLOR = "#d95926";
+const WEIGHT_COLOR = "#ef4444";
+const SURFACE_COLOR = "#17171d";
+const DOT_MIN_RADIUS = 4;
+const DOT_MAX_RADIUS = 11;
+
+/**
+ * 1RM estimado (Epley): carga × (1 + reps/30). Normaliza a evolução de força
+ * independente de o aluno ter feito poucas reps pesadas ou muitas reps leves.
+ */
+function estimated1rm(weight, repetitions) {
+  if (weight === null || weight === undefined) return null;
+  const reps = repetitions || 1;
+  return Math.round(weight * (1 + reps / 30) * 10) / 10;
+}
 
 const PERIOD_OPTIONS = [
   { value: "30", label: "Últimos 30 dias" },
@@ -78,6 +89,31 @@ function EmptyState({ message }) {
   );
 }
 
+function ChartTooltipRow({ label, value }) {
+  return (
+    <p className="flex items-center justify-between gap-8">
+      <span className="text-muted-foreground">{label}</span>
+      <span className="font-medium text-foreground">{value}</span>
+    </p>
+  );
+}
+
+function ChartTooltip({ active, payload }) {
+  if (!active || !payload?.length) return null;
+  const point = payload[0].payload;
+
+  return (
+    <div className="rounded-xl border border-border bg-[#17171d] px-3.5 py-3 text-xs shadow-popover">
+      <p className="mb-2 text-sm font-semibold text-foreground">{point.label}</p>
+      <div className="space-y-1.5">
+        <ChartTooltipRow label="Carga" value={`${point.weight} kg`} />
+        <ChartTooltipRow label="Repetições" value={point.repetitions ?? "-"} />
+        <ChartTooltipRow label="1RM estimado" value={`${point.estimated_1rm} kg`} />
+      </div>
+    </div>
+  );
+}
+
 export default function ExerciseEvolutionSection({ studentId }) {
   const [exerciseId, setExerciseId] = useState("");
   const [period, setPeriod] = useState("90");
@@ -124,10 +160,38 @@ export default function ExerciseEvolutionSection({ studentId }) {
 
   const points = evolution?.points || [];
   const summary = evolution?.summary;
+
   const chartData = points.map((point) => ({
     ...point,
     label: formatDate(point.performed_at),
+    estimated_1rm: estimated1rm(point.weight, point.repetitions),
   }));
+
+  // Repetições codificadas no TAMANHO do ponto (não em um segundo eixo): mapeia
+  // a faixa de reps do exercício para um raio entre DOT_MIN e DOT_MAX.
+  const recordedReps = points
+    .map((point) => point.repetitions)
+    .filter((value) => value !== null && value !== undefined);
+  const minReps = recordedReps.length ? Math.min(...recordedReps) : 0;
+  const maxReps = recordedReps.length ? Math.max(...recordedReps) : 0;
+
+  const repRadius = (value) => {
+    if (value === null || value === undefined || recordedReps.length === 0) {
+      return DOT_MIN_RADIUS;
+    }
+    if (maxReps === minReps) return (DOT_MIN_RADIUS + DOT_MAX_RADIUS) / 2;
+    const ratio = (value - minReps) / (maxReps - minReps);
+    return DOT_MIN_RADIUS + ratio * (DOT_MAX_RADIUS - DOT_MIN_RADIUS);
+  };
+
+  // 1RM estimado atual e sua evolução no período (calculado no cliente a partir
+  // dos mesmos pontos do gráfico, sem alteração na API).
+  const firstE1rm = chartData[0]?.estimated_1rm ?? null;
+  const currentE1rm = chartData[chartData.length - 1]?.estimated_1rm ?? null;
+  const e1rmEvolution =
+    firstE1rm && currentE1rm && firstE1rm > 0
+      ? Math.round(((currentE1rm - firstE1rm) / firstE1rm) * 100 * 100) / 100
+      : null;
 
   const hasHistory = (exercises || []).length > 0;
 
@@ -222,7 +286,7 @@ export default function ExerciseEvolutionSection({ studentId }) {
                   className={`h-80 w-full transition-opacity ${fetchingEvolution ? "opacity-60" : ""}`}
                 >
                   <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={chartData} margin={{ top: 8, right: 16, left: 0, bottom: 8 }}>
+                    <LineChart data={chartData} margin={{ top: 12, right: 20, left: 0, bottom: 8 }}>
                       <CartesianGrid strokeDasharray="3 3" stroke="#2a2a35" vertical={false} />
                       <XAxis
                         dataKey="label"
@@ -232,12 +296,12 @@ export default function ExerciseEvolutionSection({ studentId }) {
                         axisLine={{ stroke: "#2a2a35" }}
                       />
                       <YAxis
-                        yAxisId="weight"
                         stroke={WEIGHT_COLOR}
                         tick={{ fill: "#b4b4c3", fontSize: 12 }}
                         tickLine={false}
                         axisLine={false}
                         width={44}
+                        domain={["dataMin - 5", "dataMax + 5"]}
                         label={{
                           value: "kg",
                           angle: -90,
@@ -246,58 +310,72 @@ export default function ExerciseEvolutionSection({ studentId }) {
                           fontSize: 12,
                         }}
                       />
-                      <YAxis
-                        yAxisId="repetitions"
-                        orientation="right"
-                        stroke={REPETITIONS_COLOR}
-                        tick={{ fill: "#b4b4c3", fontSize: 12 }}
-                        tickLine={false}
-                        axisLine={false}
-                        width={40}
-                        allowDecimals={false}
-                        label={{
-                          value: "reps",
-                          angle: 90,
-                          position: "insideRight",
-                          fill: "#898781",
-                          fontSize: 12,
-                        }}
-                      />
                       <Tooltip
-                        contentStyle={{
-                          background: "#17171d",
-                          border: "1px solid #2a2a35",
-                          borderRadius: 12,
-                          color: "#f8fafc",
-                        }}
-                        labelStyle={{ color: "#f8fafc", fontWeight: 600 }}
+                        content={<ChartTooltip />}
+                        cursor={{ stroke: "#2a2a35", strokeWidth: 1 }}
                       />
-                      <Legend wrapperStyle={{ color: "#b4b4c3", fontSize: 12 }} />
                       <Line
-                        yAxisId="weight"
                         type="monotone"
                         dataKey="weight"
-                        name="Peso (kg)"
+                        name="Carga (kg)"
                         stroke={WEIGHT_COLOR}
                         strokeWidth={2}
-                        dot={{ r: 4, fill: WEIGHT_COLOR }}
-                        activeDot={{ r: 6 }}
-                      />
-                      <Line
-                        yAxisId="repetitions"
-                        type="monotone"
-                        dataKey="repetitions"
-                        name="Repetições"
-                        stroke={REPETITIONS_COLOR}
-                        strokeWidth={2}
-                        dot={{ r: 4, fill: REPETITIONS_COLOR }}
-                        activeDot={{ r: 6 }}
+                        dot={(dotProps) => {
+                          const { cx, cy, payload, index } = dotProps;
+                          if (cx === null || cy === null) return null;
+                          return (
+                            <circle
+                              key={`dot-${index}`}
+                              cx={cx}
+                              cy={cy}
+                              r={repRadius(payload.repetitions)}
+                              fill={WEIGHT_COLOR}
+                              fillOpacity={0.9}
+                              stroke={SURFACE_COLOR}
+                              strokeWidth={2}
+                            />
+                          );
+                        }}
+                        activeDot={{ r: 6, stroke: SURFACE_COLOR, strokeWidth: 2 }}
                       />
                     </LineChart>
                   </ResponsiveContainer>
                 </div>
 
+                {/* Legenda do encoding por tamanho — as repetições estão no raio
+                    do ponto, não em um segundo eixo. */}
+                <div className="mt-3 flex flex-wrap items-center justify-center gap-2 text-xs text-muted-foreground">
+                  <span>Menos reps</span>
+                  <span className="flex items-center gap-1.5">
+                    <span
+                      className="inline-block rounded-full"
+                      style={{ width: 8, height: 8, background: WEIGHT_COLOR }}
+                    />
+                    <span
+                      className="inline-block rounded-full"
+                      style={{ width: 13, height: 13, background: WEIGHT_COLOR }}
+                    />
+                    <span
+                      className="inline-block rounded-full"
+                      style={{ width: 20, height: 20, background: WEIGHT_COLOR }}
+                    />
+                  </span>
+                  <span>Mais reps · tamanho do ponto = repetições da série de maior carga</span>
+                </div>
+
                 <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                  <MetricCard
+                    label="1RM estimado (atual)"
+                    value={formatWeight(currentE1rm)}
+                  />
+                  <MetricCard
+                    label="Evolução do 1RM"
+                    value={formatPercentage(e1rmEvolution)}
+                  />
+                  <MetricCard
+                    label="Evolução da carga"
+                    value={formatPercentage(summary?.weight_evolution_percentage)}
+                  />
                   <MetricCard
                     label="Maior carga registrada"
                     value={formatWeight(summary?.max_weight)}
@@ -307,20 +385,16 @@ export default function ExerciseEvolutionSection({ studentId }) {
                     value={summary?.max_repetitions ?? "-"}
                   />
                   <MetricCard
+                    label="Total de check-ins"
+                    value={summary?.total_checkins ?? "-"}
+                  />
+                  <MetricCard
                     label="Primeira execução"
                     value={formatDate(summary?.first_performed_at)}
                   />
                   <MetricCard
                     label="Última execução"
                     value={formatDate(summary?.last_performed_at)}
-                  />
-                  <MetricCard
-                    label="Total de check-ins"
-                    value={summary?.total_checkins ?? "-"}
-                  />
-                  <MetricCard
-                    label="Evolução da carga"
-                    value={formatPercentage(summary?.weight_evolution_percentage)}
                   />
                 </div>
               </div>
