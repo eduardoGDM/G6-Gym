@@ -3,6 +3,7 @@ import {
   Dumbbell,
   History,
   LayoutDashboard,
+  TrendingUp,
   UserRound,
 } from "lucide-react";
 import RoleLayout from "../components/layout/RoleLayout";
@@ -24,6 +25,7 @@ const navGroups = [
         path: "/student/daily-checkins",
         icon: CalendarCheck,
       },
+      { label: "Evolução", path: "/student/evolution", icon: TrendingUp },
       { label: "Histórico", path: "/student/history", icon: History },
     ],
   },

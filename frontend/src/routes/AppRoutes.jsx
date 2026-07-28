@@ -26,6 +26,7 @@ const DashboardStudent = lazy(() => import("../pages/student/Dashboard"));
 const DailyCheckinsIndex = lazy(
   () => import("../pages/student/DailyCheckins/DailyCheckinsIndex"),
 );
+const Evolution = lazy(() => import("../pages/student/Evolution"));
 const History = lazy(() => import("../pages/student/History"));
 const HistoryDetail = lazy(() => import("../pages/student/HistoryDetail"));
 const MyWorkouts = lazy(() => import("../pages/student/MyWorkouts"));
@@ -164,6 +165,7 @@ export default function AppRoutes() {
 
           <Route path="my-workouts" element={<MyWorkouts />} />
           <Route path="workout/:id" element={<Workout />} />
+          <Route path="evolution" element={<Evolution />} />
           <Route path="history" element={<History />} />
           <Route path="history/:id" element={<HistoryDetail />} />
           <Route path="daily-checkins" element={<DailyCheckinsIndex />} />

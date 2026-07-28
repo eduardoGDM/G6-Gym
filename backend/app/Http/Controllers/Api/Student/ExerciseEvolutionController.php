@@ -1,79 +1,44 @@
 <?php
 
-namespace App\Http\Controllers\Api\Trainer;
+namespace App\Http\Controllers\Api\Student;
 
 use App\Http\Controllers\Controller;
 use App\Models\Exercise;
-use App\Models\StudentProfile;
 use App\Models\WorkoutCheckin;
 use App\Models\WorkoutCheckinExercise;
 use Illuminate\Http\Request;
 
-class StudentExerciseEvolutionController extends Controller
+class ExerciseEvolutionController extends Controller
 {
 	/**
 	 * Tipos de série que o gráfico de evolução aceita filtrar. Por padrão o
-	 * gráfico usa a série "Válida" (carga de trabalho real), mas o usuário pode
+	 * gráfico usa a série "Válida" (carga de trabalho real), mas o aluno pode
 	 * optar por analisar Reconhecimento ou Aquecimento.
 	 */
 	private const SERIES_TYPES = ['Válida', 'Reconhecimento', 'Aquecimento'];
 	private const DEFAULT_SERIES_TYPE = 'Válida';
 
-	/**
-	 * Lista apenas os grupos musculares que possuem histórico executado (com
-	 * carga registrada) para o aluno, nunca o cadastro geral de MuscleGroup.
-	 */
-	public function muscleGroups(Request $request, $student)
+	private function resolveProfile(Request $request)
 	{
-		$trainerId = $request->user()->id;
-		$studentProfile = StudentProfile::where('trainer_id', $trainerId)->find($student);
-
-		if (!$studentProfile) {
-			return response()->json([
-				'message' => 'Aluno não encontrado',
-			], 404);
-		}
-
-		$muscleGroups = $this->executedCheckinExercisesQuery($studentProfile->id)
-			->get()
-			->pluck('exercise.muscleGroup')
-			->filter()
-			->unique('id')
-			->sortBy('name')
-			->values()
-			->map(fn ($group) => ['id' => $group->id, 'name' => $group->name]);
-
-		return response()->json($muscleGroups);
+		return $request->user()->studentProfile;
 	}
 
 	/**
-	 * Lista os exercícios que possuem histórico executado (com carga registrada)
-	 * para o aluno, nunca o cadastro geral de Exercise/WorkoutExercise. Quando um
-	 * muscle_group_id é informado, restringe ao grupo; sem ele, lista todos os
-	 * exercícios executados (usado pelo autocomplete de busca por exercício).
+	 * Lista os exercícios que o aluno autenticado já executou (com carga
+	 * registrada), nunca o cadastro geral de Exercise. Alimenta o autocomplete
+	 * de busca por exercício na tela de Evolução do aluno.
 	 */
-	public function exercises(Request $request, $student)
+	public function exercises(Request $request)
 	{
-		$request->validate([
-			'muscle_group_id' => 'nullable|integer|exists:muscle_groups,id',
-		]);
+		$profile = $this->resolveProfile($request);
 
-		$trainerId = $request->user()->id;
-		$muscleGroupId = $request->input('muscle_group_id');
-		$studentProfile = StudentProfile::where('trainer_id', $trainerId)->find($student);
-
-		if (!$studentProfile) {
+		if (!$profile) {
 			return response()->json([
-				'message' => 'Aluno não encontrado',
+				'message' => 'Perfil de student não encontrado',
 			], 404);
 		}
 
-		$exercises = $this->executedCheckinExercisesQuery($studentProfile->id)
-			->when($muscleGroupId, function ($query) use ($muscleGroupId) {
-				$query->whereHas('exercise', function ($subQuery) use ($muscleGroupId) {
-					$subQuery->where('muscle_group_id', $muscleGroupId);
-				});
-			})
+		$exercises = $this->executedCheckinExercisesQuery($profile->id)
 			->get()
 			->pluck('exercise')
 			->filter()
@@ -93,11 +58,10 @@ class StudentExerciseEvolutionController extends Controller
 	}
 
 	/**
-	 * Base de todos os filtros de evolução: apenas registros de
-	 * WorkoutCheckinExercise pertencentes a check-ins do aluno (já escopado ao
-	 * trainer autenticado pelo FK student_profiles.trainer_id) que possuam ao
-	 * menos uma série com carga (performed_weight) de fato registrada. Nunca
-	 * consulta Workout, WorkoutExercise ou o cadastro geral de Exercise como fonte.
+	 * Base dos filtros: apenas registros de WorkoutCheckinExercise pertencentes
+	 * a check-ins do próprio aluno que possuam ao menos uma série com carga
+	 * (performed_weight) registrada. Nunca consulta Workout/WorkoutExercise nem
+	 * o cadastro geral de Exercise como fonte.
 	 */
 	private function executedCheckinExercisesQuery(int $studentProfileId)
 	{
@@ -112,32 +76,29 @@ class StudentExerciseEvolutionController extends Controller
 	}
 
 	/**
-	 * Retorna a evolução de carga/repetições de um exercício para um aluno,
-	 * com base exclusivamente no histórico executado (WorkoutCheckin), nunca
-	 * na configuração atual do Workout.
+	 * Retorna a evolução de carga/repetições de um exercício para o aluno
+	 * autenticado, com base exclusivamente no histórico executado
+	 * (WorkoutCheckin), nunca na configuração atual do Workout.
 	 */
-	public function show(Request $request, $student, $exercise)
+	public function show(Request $request, $exercise)
 	{
 		$request->validate([
-			'muscle_group_id' => 'nullable|integer|exists:muscle_groups,id',
 			'series_type' => ['nullable', 'in:' . implode(',', self::SERIES_TYPES)],
 			'start_date' => 'nullable|date',
 			'end_date' => 'nullable|date|after_or_equal:start_date',
 		]);
 
-		$trainerId = $request->user()->id;
-		$muscleGroupId = $request->input('muscle_group_id');
+		$profile = $this->resolveProfile($request);
+
+		if (!$profile) {
+			return response()->json([
+				'message' => 'Perfil de student não encontrado',
+			], 404);
+		}
+
 		$seriesType = $request->input('series_type', self::DEFAULT_SERIES_TYPE);
 		$startDate = $request->input('start_date');
 		$endDate = $request->input('end_date');
-
-		$studentProfile = StudentProfile::where('trainer_id', $trainerId)->find($student);
-
-		if (!$studentProfile) {
-			return response()->json([
-				'message' => 'Aluno não encontrado',
-			], 404);
-		}
 
 		$exerciseModel = Exercise::with('muscleGroup')->find($exercise);
 
@@ -147,14 +108,8 @@ class StudentExerciseEvolutionController extends Controller
 			], 404);
 		}
 
-		if ($muscleGroupId && (int) $exerciseModel->muscle_group_id !== (int) $muscleGroupId) {
-			return response()->json([
-				'message' => 'O exercício informado não pertence ao grupo muscular selecionado',
-			], 422);
-		}
-
 		$checkins = WorkoutCheckin::query()
-			->where('student_profile_id', $studentProfile->id)
+			->where('student_profile_id', $profile->id)
 			->whereHas('exercises', function ($query) use ($exerciseModel) {
 				$query->where('exercise_id', $exerciseModel->id);
 			})

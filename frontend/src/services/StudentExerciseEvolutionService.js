@@ -9,13 +9,14 @@ const studentExerciseEvolutionService = {
     return data;
   },
 
-  async get({ studentId, exerciseId, startDate, endDate } = {}) {
+  async get({ studentId, exerciseId, seriesType, startDate, endDate } = {}) {
     const { data } = await sanctumRequest(
       "get",
       `/trainer/students/${studentId}/exercises/${exerciseId}/evolution`,
       {},
       {
         params: {
+          series_type: seriesType || undefined,
           start_date: startDate || undefined,
           end_date: endDate || undefined,
         },

@@ -21,6 +21,7 @@ use App\Http\Controllers\Api\Trainer\DashboardController as TrainerDashboardCont
 use App\Http\Controllers\Api\Student\WorkoutController as StudentWorkoutController;
 use App\Http\Controllers\Api\Student\WorkoutCheckinController;
 use App\Http\Controllers\Api\Student\ExerciseHistoryController;
+use App\Http\Controllers\Api\Student\ExerciseEvolutionController as StudentExerciseEvolutionSelfController;
 use App\Http\Controllers\Api\Student\DailyCheckinController;
 use App\Http\Controllers\Api\Student\ProfileController as StudentSelfProfileController;
 use App\Http\Controllers\Api\Student\DashboardController as StudentDashboardController;
@@ -115,6 +116,9 @@ Route::middleware('auth:sanctum')->group(function () {
 			Route::get('/workout/{id}', [StudentWorkoutController::class, 'show']);
 
 			Route::get('/exercises/{exercise}/history', [ExerciseHistoryController::class, 'index']);
+
+			Route::get('/evolution/exercises', [StudentExerciseEvolutionSelfController::class, 'exercises']);
+			Route::get('/evolution/exercises/{exercise}', [StudentExerciseEvolutionSelfController::class, 'show']);
 
 			Route::get('/checkins', [WorkoutCheckinController::class, 'index']);
 			Route::get('/checkins/by-date', [WorkoutCheckinController::class, 'byDate']);

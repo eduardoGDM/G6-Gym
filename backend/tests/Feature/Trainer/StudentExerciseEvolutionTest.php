@@ -66,6 +66,7 @@ class StudentExerciseEvolutionTest extends TestCase
 			WorkoutCheckinExerciseSet::create([
 				'workout_checkin_exercise_id' => $checkinExercise->id,
 				'set_number' => $index + 1,
+				'planned_type' => $set['type'] ?? 'Válida',
 				'performed_repetitions' => $set['repetitions'],
 				'performed_weight' => $set['weight'],
 			]);
@@ -104,6 +105,90 @@ class StudentExerciseEvolutionTest extends TestCase
 		$response->assertJsonPath('summary.total_checkins', 2);
 		$response->assertJsonPath('summary.first_performed_at', '2026-06-01');
 		$response->assertJsonPath('summary.last_performed_at', '2026-06-15');
+	}
+
+	public function test_evolution_defaults_to_valid_series_ignoring_warmups(): void
+	{
+		$trainer = User::factory()->create(['role' => 'trainer']);
+		[$studentProfile, $exercise, $workout] = $this->createStudentWithWorkout($trainer);
+
+		// Aquecimento com carga mais alta (60) + série Válida (45) no mesmo dia:
+		// sem informar series_type, o ponto do gráfico usa a Válida (padrão).
+		$this->createCheckinWithSets($studentProfile, $workout, $exercise, '2026-06-01', [
+			['weight' => 60, 'repetitions' => 5, 'type' => 'Aquecimento'],
+			['weight' => 45, 'repetitions' => 8, 'type' => 'Válida'],
+		]);
+
+		$response = $this->actingAs($trainer)->getJson(
+			"/api/trainer/students/{$studentProfile->id}/exercises/{$exercise->id}/evolution",
+		);
+
+		$response->assertOk();
+		$response->assertJsonCount(1, 'points');
+		$response->assertJsonPath('points.0.weight', 45);
+		$response->assertJsonPath('points.0.repetitions', 8);
+		$response->assertJsonPath('summary.max_weight', 45);
+	}
+
+	public function test_evolution_can_filter_by_selected_series_type(): void
+	{
+		$trainer = User::factory()->create(['role' => 'trainer']);
+		[$studentProfile, $exercise, $workout] = $this->createStudentWithWorkout($trainer);
+
+		$this->createCheckinWithSets($studentProfile, $workout, $exercise, '2026-06-01', [
+			['weight' => 60, 'repetitions' => 5, 'type' => 'Aquecimento'],
+			['weight' => 45, 'repetitions' => 8, 'type' => 'Válida'],
+		]);
+
+		$base = "/api/trainer/students/{$studentProfile->id}/exercises/{$exercise->id}/evolution";
+
+		$this->actingAs($trainer)->getJson("{$base}?series_type=Aquecimento")
+			->assertOk()
+			->assertJsonPath('points.0.weight', 60)
+			->assertJsonPath('points.0.repetitions', 5);
+
+		$this->actingAs($trainer)->getJson("{$base}?series_type=Válida")
+			->assertOk()
+			->assertJsonPath('points.0.weight', 45);
+	}
+
+	public function test_evolution_rejects_invalid_series_type(): void
+	{
+		$trainer = User::factory()->create(['role' => 'trainer']);
+		[$studentProfile, $exercise] = $this->createStudentWithWorkout($trainer);
+
+		$this->actingAs($trainer)
+			->getJson("/api/trainer/students/{$studentProfile->id}/exercises/{$exercise->id}/evolution?series_type=Invalida")
+			->assertStatus(422);
+	}
+
+	public function test_exercise_list_is_independent_of_series_type(): void
+	{
+		$trainer = User::factory()->create(['role' => 'trainer']);
+		[$studentProfile, $exercise, $workout] = $this->createStudentWithWorkout($trainer);
+
+		// Exercício executado só como Reconhecimento: continua aparecendo na lista
+		// (o tipo é escolhido depois), mas o gráfico padrão (Válida) fica vazio.
+		$this->createCheckinWithSets($studentProfile, $workout, $exercise, '2026-06-01', [
+			['weight' => 40, 'repetitions' => 10, 'type' => 'Reconhecimento'],
+		]);
+
+		$this->actingAs($trainer)
+			->getJson("/api/trainer/students/{$studentProfile->id}/checkins/exercises")
+			->assertOk()
+			->assertJsonCount(1)
+			->assertJsonPath('0.id', $exercise->id);
+
+		$base = "/api/trainer/students/{$studentProfile->id}/exercises/{$exercise->id}/evolution";
+
+		$this->actingAs($trainer)->getJson($base)
+			->assertOk()
+			->assertJsonCount(0, 'points');
+
+		$this->actingAs($trainer)->getJson("{$base}?series_type=Reconhecimento")
+			->assertOk()
+			->assertJsonCount(1, 'points')
+			->assertJsonPath('points.0.weight', 40);
 	}
 
 	public function test_trainer_can_filter_evolution_by_period(): void
