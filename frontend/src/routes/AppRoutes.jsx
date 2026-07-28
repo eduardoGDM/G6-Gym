@@ -18,6 +18,9 @@ import Login from "../pages/auth/Login";
 import LogoutPage from "../pages/auth/LogoutPage";
 
 const DashboardAdmin = lazy(() => import("../pages/admin/Dashboard"));
+const AdminTrainersNewEdit = lazy(
+  () => import("../pages/admin/Trainers/TrainersNewEdit"),
+);
 
 const DashboardStudent = lazy(() => import("../pages/student/Dashboard"));
 const DailyCheckinsIndex = lazy(
@@ -174,6 +177,7 @@ export default function AppRoutes() {
           }
         >
           <Route index element={<DashboardAdmin />} />
+          <Route path="trainers/new" element={<AdminTrainersNewEdit />} />
         </Route>
 
         <Route path="/logout" element={<LogoutPage />} />

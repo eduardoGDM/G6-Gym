@@ -136,6 +136,7 @@ Route::middleware('auth:sanctum')->group(function () {
 			Route::get('dashboard/summary', [AdminDashboardController::class, 'summary']);
 
 			Route::get('trainers', [AdminTrainerController::class, 'index']);
+			Route::post('trainers', [AdminTrainerController::class, 'store']);
 			Route::patch('trainers/{id}/status', [AdminTrainerController::class, 'updateStatus']);
 
 			Route::get('plans', [AdminPlanController::class, 'index']);

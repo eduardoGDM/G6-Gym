@@ -18,6 +18,11 @@ const adminTrainersService = {
     return data;
   },
 
+  async create(payload) {
+    const { data } = await sanctumRequest("post", "/admin/trainers", payload);
+    return data;
+  },
+
   async updateStatus(id, isActive) {
     const { data } = await sanctumRequest(
       "patch",

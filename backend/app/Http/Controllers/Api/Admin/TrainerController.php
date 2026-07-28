@@ -45,6 +45,30 @@ class TrainerController extends Controller
 		return TrainerResource::collection($trainers);
 	}
 
+	public function store(Request $request)
+	{
+		$request->validate([
+			'name' => 'required|string|max:255',
+			'email' => 'required|email|unique:users,email',
+			'password' => 'required|string|min:6',
+		]);
+
+		// role é sempre forçado para 'trainer' no servidor — nunca vem do
+		// cliente, para não permitir criar admin/aluno por este endpoint.
+		$trainer = User::create([
+			'name' => $request->name,
+			'email' => $request->email,
+			'password' => bcrypt($request->password),
+			'role' => 'trainer',
+			'is_active' => true,
+		]);
+
+		return response()->json([
+			'message' => 'Personal criado com sucesso',
+			'user' => $trainer,
+		], 201);
+	}
+
 	public function updateStatus(Request $request, $id)
 	{
 		$request->validate([
