@@ -81,7 +81,7 @@ export default function ExercisesNewEdit() {
             video_url: exercise.video_url || "",
           });
         }
-      } catch (error) {
+      } catch {
         toast.error("Não foi possível carregar os dados do exercício.");
       } finally {
         setInitialLoading(false);

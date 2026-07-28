@@ -117,14 +117,6 @@ export default function DailyCheckinsIndex() {
 
   const isEdit = Boolean(editingCheckin);
 
-  // Traço do rodapé: notas de sono dos registros mais recentes, do mais antigo
-  // para o mais novo (a API devolve em ordem decrescente de data).
-  const pulseValues = checkins
-    .slice(0, 7)
-    .map((checkin) => checkin.sleep_rating)
-    .filter((rating) => typeof rating === "number")
-    .reverse();
-
   const handleEdit = (checkin) => {
     setEditingCheckin(checkin);
     reset({

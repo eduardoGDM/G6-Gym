@@ -10,6 +10,7 @@ import { Card, CardContent } from "../../components/ui/card";
 import trainerPlanService from "../../services/TrainerPlanService";
 import { cn } from "../../lib/utils";
 import { formatUsage, isOverLimit } from "../../utils/plan";
+import { formatDate } from "../../lib/format";
 
 /**
  * Features que a escada trava. São só duas, e ambas por custo marginal
@@ -31,12 +32,6 @@ const INCLUDED_EVERYWHERE = [
   "Ficha de treino em PDF",
 ];
 
-const formatDate = (value) => {
-  if (!value) return null;
-  const [year, month, day] = value.slice(0, 10).split("-");
-  return `${day}/${month}/${year}`;
-};
-
 const formatLimit = (limit) =>
   limit === null || limit === undefined
     ? "Alunos ilimitados"
@@ -46,7 +41,7 @@ function CurrentPlanCard({ current }) {
   const plan = current?.plan;
   const usage = current?.usage;
   const overLimit = isOverLimit(usage?.students, usage?.students_limit);
-  const endsAt = formatDate(current?.subscription?.ends_at);
+  const endsAt = formatDate(current?.subscription?.ends_at, null);
   const daysLeft = current?.subscription?.days_left;
 
   return (

@@ -22,12 +22,7 @@ import {
   TableRow,
 } from "../../../components/ui/table";
 import trainerCheckinsService from "../../../services/TrainerCheckinsService";
-
-const formatDate = (value) => {
-  if (!value) return "-";
-  const [year, month, day] = value.slice(0, 10).split("-");
-  return `${day}/${month}/${year}`;
-};
+import { formatDate } from "../../../lib/format";
 
 const displayValue = (value) => (value === null || value === undefined || value === "" ? "-" : value);
 

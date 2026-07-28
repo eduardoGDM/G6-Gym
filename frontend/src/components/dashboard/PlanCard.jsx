@@ -7,12 +7,7 @@ import Skeleton from "../loading/Skeleton";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
 import { Card, CardContent } from "../ui/card";
-
-const formatDate = (value) => {
-  if (!value) return null;
-  const [year, month, day] = value.slice(0, 10).split("-");
-  return `${day}/${month}/${year}`;
-};
+import { formatDate } from "../../lib/format";
 
 /**
  * Plano do personal — puramente informativo.
@@ -49,7 +44,7 @@ export default function PlanCard() {
   const plan = data?.plan;
   const usage = data?.usage;
   const overLimit = isOverLimit(usage?.students, usage?.students_limit);
-  const endsAt = formatDate(data?.subscription?.ends_at);
+  const endsAt = formatDate(data?.subscription?.ends_at, null);
 
   return (
     <Card className="border-border/80 bg-card/80 animate-in fade-in slide-in-from-bottom-2 duration-300">

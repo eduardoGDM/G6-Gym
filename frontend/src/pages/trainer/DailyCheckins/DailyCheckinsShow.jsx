@@ -14,12 +14,7 @@ import { Badge } from "../../../components/ui/badge";
 import { Button } from "../../../components/ui/button";
 import { Card, CardContent } from "../../../components/ui/card";
 import trainerDailyCheckinsService from "../../../services/TrainerDailyCheckinsService";
-
-const formatDate = (value) => {
-  if (!value) return "-";
-  const [year, month, day] = value.slice(0, 10).split("-");
-  return `${day}/${month}/${year}`;
-};
+import { formatDate } from "../../../lib/format";
 
 export default function DailyCheckinsShow() {
   const { id } = useParams();
