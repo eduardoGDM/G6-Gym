@@ -7,6 +7,10 @@
     {
       "source": "/sanctum/:path*",
       "destination": "https://g6-gym-production-kzzowb.laravel.cloud/sanctum/:path*"
+    },
+    {
+      "source": "/:path*",
+      "destination": "/index.html"
     }
   ]
 }
