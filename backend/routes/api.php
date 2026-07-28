@@ -25,6 +25,7 @@ use App\Http\Controllers\Api\Student\DailyCheckinController;
 use App\Http\Controllers\Api\Student\ProfileController as StudentSelfProfileController;
 use App\Http\Controllers\Api\Student\DashboardController as StudentDashboardController;
 use App\Http\Controllers\Api\Student\GamificationController as StudentGamificationController;
+use App\Http\Controllers\Api\Student\AchievementController as StudentAchievementController;
 use App\Http\Controllers\Api\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Api\Admin\TrainerController as AdminTrainerController;
 use App\Http\Controllers\Api\Admin\StudentController as AdminStudentController;
@@ -121,6 +122,7 @@ Route::middleware('auth:sanctum')->group(function () {
 			Route::post('/checkins', [WorkoutCheckinController::class, 'store']);
 			Route::put('/checkins/{id}', [WorkoutCheckinController::class, 'update']);
 			Route::delete('/checkins/{id}', [WorkoutCheckinController::class, 'destroy']);
+			Route::get('/checkins/{id}/achievements', [StudentAchievementController::class, 'forCheckin']);
 
 			Route::get('/daily-checkins/reminder', [DailyCheckinController::class, 'reminder']);
 			Route::get('/daily-checkins', [DailyCheckinController::class, 'index']);

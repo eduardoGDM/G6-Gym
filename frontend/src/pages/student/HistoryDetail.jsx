@@ -16,12 +16,7 @@ import { Badge } from "../../components/ui/badge";
 import { Card, CardContent } from "../../components/ui/card";
 import { useConfirmDialog } from "../../hooks/useConfirmDialog";
 import workoutCheckinsService from "../../services/WorkoutCheckinsService";
-
-const formatDate = (value) => {
-  if (!value) return "-";
-  const [year, month, day] = value.slice(0, 10).split("-");
-  return `${day}/${month}/${year}`;
-};
+import { formatDate } from "../../lib/format";
 
 // A exclusão é definitiva e o check-in alimenta histórico, evolução e streak —
 // por isso o aluno revalida tudo que perde antes de confirmar.

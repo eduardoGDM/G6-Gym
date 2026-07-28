@@ -19,12 +19,7 @@ import gamificationService from "../../services/GamificationService";
 import studentDashboardService from "../../services/StudentDashboardService";
 import useAuthStore from "../../store/authStore";
 import { getGreeting } from "../../utils/greeting";
-
-const formatDate = (value) => {
-  if (!value) return "—";
-  const [year, month, day] = value.slice(0, 10).split("-");
-  return `${day}/${month}/${year}`;
-};
+import { formatDate } from "../../lib/format";
 
 export default function Dashboard() {
   const navigate = useNavigate();

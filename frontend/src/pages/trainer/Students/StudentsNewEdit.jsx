@@ -104,7 +104,7 @@ export default function StudentsNewEdit() {
           height: data.height ?? "",
           observations: data.observations || "",
         });
-      } catch (error) {
+      } catch {
         toast.error("Não foi possível carregar os dados do aluno.");
       } finally {
         setInitialLoading(false);

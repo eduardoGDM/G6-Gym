@@ -6,12 +6,7 @@ import { Dialog, DialogCloseButton } from "../ui/dialog";
 import ErrorState from "../loading/ErrorState";
 import ListSkeleton from "../loading/ListSkeleton";
 import exerciseHistoryService from "../../services/ExerciseHistoryService";
-
-const formatDate = (value) => {
-  if (!value) return "-";
-  const [year, month, day] = value.slice(0, 10).split("-");
-  return `${day}/${month}/${year}`;
-};
+import { formatDate } from "../../lib/format";
 
 // Carga vem como decimal em string ("30.00"); exibimos sem casas supérfluas.
 const formatWeight = (value) => {

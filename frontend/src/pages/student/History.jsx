@@ -14,12 +14,7 @@ import { Card, CardContent } from "../../components/ui/card";
 import { Input } from "../../components/ui/input";
 import { useDebouncedValue } from "../../hooks/useDebouncedValue";
 import workoutCheckinsService from "../../services/WorkoutCheckinsService";
-
-const formatDate = (value) => {
-  if (!value) return "-";
-  const [year, month, day] = value.slice(0, 10).split("-");
-  return `${day}/${month}/${year}`;
-};
+import { formatDate } from "../../lib/format";
 
 export default function History() {
   const navigate = useNavigate();

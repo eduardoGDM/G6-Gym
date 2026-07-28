@@ -25,6 +25,7 @@ import { FormSection } from "../../components/forms/FormSection";
 import FormSkeleton from "../../components/loading/FormSkeleton";
 import ListSkeleton from "../../components/loading/ListSkeleton";
 import ExerciseHistoryModal from "../../components/student/ExerciseHistoryModal";
+import WorkoutRecordsModal from "../../components/student/WorkoutRecordsModal";
 import { showWorkoutFeedbackToast } from "../../components/student/workoutFeedbackToast";
 import { Badge } from "../../components/ui/badge";
 import { Button } from "../../components/ui/button";
@@ -45,6 +46,7 @@ import {
   useCheckinAutosave,
 } from "../../hooks/useCheckinAutosave";
 import { cn } from "../../lib/utils";
+import achievementsService from "../../services/AchievementsService";
 import gamificationService from "../../services/GamificationService";
 import workoutCheckinsService from "../../services/WorkoutCheckinsService";
 import workoutsService from "../../services/WorkoutsService";
@@ -405,6 +407,7 @@ export default function Workout() {
   const [submitting, setSubmitting] = useState(false);
   const [confirmState, setConfirmState] = useState(null);
   const [historyExercise, setHistoryExercise] = useState(null);
+  const [records, setRecords] = useState(null);
 
   const {
     register,
@@ -536,7 +539,7 @@ export default function Workout() {
         ? workoutCheckinsService.update(checkinId, payload)
         : workoutCheckinsService.create(payload);
 
-      await crudToast(request, {
+      const saved = await crudToast(request, {
         action: checkinId ? "update" : "create",
         entity: "Check-in",
       });
@@ -548,6 +551,25 @@ export default function Workout() {
         showWorkoutFeedbackToast(feedback);
       } catch {
         // silencioso: o check-in já foi salvo com sucesso
+      }
+
+      // Conquistas (recordes pessoais) obtidas neste check-in. Se houver, a tela
+      // de celebração assume e adia a navegação para o fechamento da modal.
+      // Qualquer falha aqui é ignorada: o check-in já foi salvo com sucesso.
+      const savedCheckinId = saved?.id ?? checkinId;
+
+      if (savedCheckinId) {
+        try {
+          const achievements =
+            await achievementsService.forCheckin(savedCheckinId);
+
+          if (achievements?.length) {
+            setRecords(achievements);
+            return;
+          }
+        } catch {
+          // silencioso: segue direto para a navegação
+        }
       }
 
       navigate("/student/my-workouts");
@@ -842,6 +864,15 @@ export default function Workout() {
           exerciseName={historyExercise?.name}
           muscleGroup={historyExercise?.muscleGroup}
           excludeCheckinId={checkinId}
+        />
+
+        <WorkoutRecordsModal
+          open={Boolean(records)}
+          records={records || []}
+          onClose={() => {
+            setRecords(null);
+            navigate("/student/my-workouts");
+          }}
         />
       </div>
     </PageContainer>
