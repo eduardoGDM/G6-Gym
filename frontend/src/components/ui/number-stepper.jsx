@@ -22,6 +22,8 @@ function roundTo(value, precision) {
  * @param {number} [max]               Limite superior.
  * @param {number} [precision=0]       Casas decimais ao usar os botões.
  * @param {string} [inputMode="numeric"] "decimal" aceita vírgula/ponto.
+ * @param {string} [buttonClassName]  Classes extras dos botões −/+ (ex.: largura).
+ * @param {string} [inputClassName]   Classes extras do campo central.
  */
 export function NumberStepper({
   value,
@@ -36,6 +38,8 @@ export function NumberStepper({
   placeholder = "0",
   inputMode = "numeric",
   className,
+  buttonClassName,
+  inputClassName,
   ...props
 }) {
   const applyStep = (direction) => {
@@ -70,7 +74,10 @@ export function NumberStepper({
         tabIndex={-1}
         aria-label="Diminuir"
         onClick={() => applyStep(-1)}
-        className="flex w-11 shrink-0 items-center justify-center text-muted-foreground transition-colors hover:bg-accent hover:text-foreground active:bg-accent/70"
+        className={cn(
+          "flex w-11 shrink-0 items-center justify-center text-muted-foreground transition-colors hover:bg-accent hover:text-foreground active:bg-accent/70",
+          buttonClassName,
+        )}
       >
         <Minus className="h-4 w-4" />
       </button>
@@ -83,7 +90,10 @@ export function NumberStepper({
         onBlur={onBlur}
         inputMode={inputMode}
         placeholder={placeholder}
-        className="min-w-0 flex-1 border-x border-border bg-transparent text-center text-base font-semibold text-foreground outline-none placeholder:font-normal placeholder:text-muted-foreground/70"
+        className={cn(
+          "min-w-0 flex-1 border-x border-border bg-transparent text-center text-base font-semibold text-foreground outline-none placeholder:font-normal placeholder:text-muted-foreground/70",
+          inputClassName,
+        )}
       />
 
       <button
@@ -91,7 +101,10 @@ export function NumberStepper({
         tabIndex={-1}
         aria-label="Aumentar"
         onClick={() => applyStep(1)}
-        className="flex w-11 shrink-0 items-center justify-center text-muted-foreground transition-colors hover:bg-accent hover:text-foreground active:bg-accent/70"
+        className={cn(
+          "flex w-11 shrink-0 items-center justify-center text-muted-foreground transition-colors hover:bg-accent hover:text-foreground active:bg-accent/70",
+          buttonClassName,
+        )}
       >
         <Plus className="h-4 w-4" />
       </button>
