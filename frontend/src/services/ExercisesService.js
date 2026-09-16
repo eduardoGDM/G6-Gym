@@ -11,10 +11,18 @@ const exercisesService = {
     return data.data;
   },
 
-  async search({ page = 1, perPage = 10, search = "", muscleGroups = [] } = {}) {
+  // `scope` "student" usa a leitura do catálogo liberada ao aluno que gerencia
+  // os próprios treinos (ver useWorkoutScope).
+  async search({
+    page = 1,
+    perPage = 10,
+    search = "",
+    muscleGroups = [],
+    scope = "trainer",
+  } = {}) {
     const { data } = await sanctumRequest(
       "get",
-      "/trainer/exercises",
+      `/${scope}/exercises`,
       {},
       {
         params: {

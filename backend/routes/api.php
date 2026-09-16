@@ -19,6 +19,7 @@ use App\Http\Controllers\Api\Trainer\DailyCheckinController as TrainerDailyCheck
 use App\Http\Controllers\Api\Trainer\CheckinCommentController;
 use App\Http\Controllers\Api\Trainer\DashboardController as TrainerDashboardController;
 use App\Http\Controllers\Api\Student\WorkoutController as StudentWorkoutController;
+use App\Http\Controllers\Api\Student\ManagedWorkoutController;
 use App\Http\Controllers\Api\Student\WorkoutCheckinController;
 use App\Http\Controllers\Api\Student\ExerciseHistoryController;
 use App\Http\Controllers\Api\Student\ExerciseEvolutionController as StudentExerciseEvolutionSelfController;
@@ -59,6 +60,7 @@ Route::middleware('auth:sanctum')->group(function () {
 			Route::get('dashboard/weekly-evolution', [TrainerDashboardController::class, 'weeklyEvolution']);
 			Route::get('dashboard/active-students', [TrainerDashboardController::class, 'activeStudents']);
 
+			Route::patch('student-profiles/{id}/workout-management', [StudentProfileController::class, 'updateWorkoutManagement']);
 			Route::apiResource('student-profiles', StudentProfileController::class);
 			Route::apiResource('workouts', WorkoutController::class);
 			Route::apiResource('exercises', ExerciseController::class);
@@ -132,6 +134,15 @@ Route::middleware('auth:sanctum')->group(function () {
 			Route::get('/daily-checkins', [DailyCheckinController::class, 'index']);
 			Route::post('/daily-checkins', [DailyCheckinController::class, 'store']);
 			Route::put('/daily-checkins/{id}', [DailyCheckinController::class, 'update']);
+
+			// Autogestão de treinos: só para alunos autorizados pelo personal.
+			// Catálogo de exercícios e grupos musculares é global e somente leitura aqui.
+			Route::middleware('can-manage-workouts')->group(function () {
+				Route::get('/managed-workouts/sheet', [ManagedWorkoutController::class, 'sheet']);
+				Route::apiResource('managed-workouts', ManagedWorkoutController::class);
+				Route::get('/exercises', [ExerciseController::class, 'index']);
+				Route::get('/muscle-groups', [MuscleGroupController::class, 'index']);
+			});
 		});
 
 	Route::prefix('admin')

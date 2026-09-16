@@ -16,6 +16,7 @@ class WorkoutResource extends JsonResource
 			'start_date' => $this->start_date,
 			'end_date' => $this->end_date,
 			'active' => $this->active,
+			'created_by' => $this->created_by,
 			'student_profile' => $this->whenLoaded('studentProfile', function () {
 				return [
 					'id' => $this->studentProfile->id,

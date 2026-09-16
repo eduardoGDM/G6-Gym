@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect } from "react";
-import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Navigate, Outlet, Route, Routes } from "react-router-dom";
 
 import authService from "../services/authService";
 import useAuthStore from "../store/authStore";
@@ -170,6 +170,23 @@ export default function AppRoutes() {
           <Route path="history/:id" element={<HistoryDetail />} />
           <Route path="daily-checkins" element={<DailyCheckinsIndex />} />
           <Route path="profile" element={<StudentProfile />} />
+
+          {/* Autogestão de treinos: reaproveita as telas do personal, liberada
+              apenas quando o personal concede a permissão ao aluno. */}
+          <Route
+            element={
+              user?.student_profile?.can_manage_workouts ? (
+                <Outlet />
+              ) : (
+                <Navigate to="/student" replace />
+              )
+            }
+          >
+            <Route path="manage-workouts" element={<WorkoutsIndex />} />
+            <Route path="manage-workouts/new" element={<WorkoutsNewEdit />} />
+            <Route path="manage-workouts/:id" element={<WorkoutsShow />} />
+            <Route path="manage-workouts/:id/edit" element={<WorkoutsNewEdit />} />
+          </Route>
         </Route>
 
         <Route

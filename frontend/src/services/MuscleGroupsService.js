@@ -1,8 +1,8 @@
 import { sanctumRequest } from "../sanctumRequest";
 
 const muscleGroupsService = {
-  async getAll() {
-    const { data } = await sanctumRequest("get", "/trainer/muscle-groups");
+  async getAll(scope = "trainer") {
+    const { data } = await sanctumRequest("get", `/${scope}/muscle-groups`);
     return data;
   },
 };

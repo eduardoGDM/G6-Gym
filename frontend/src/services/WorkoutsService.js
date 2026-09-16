@@ -1,10 +1,23 @@
 import { sanctumRequest } from "../sanctumRequest";
 
+// Personal gerencia os treinos de todos os alunos; o aluno autorizado usa
+// endpoints próprios, restritos aos treinos dele (ver useWorkoutScope).
+const WORKOUTS_ENDPOINT = {
+  trainer: "/trainer/workouts",
+  student: "/student/managed-workouts",
+};
+
 const workoutsService = {
-  async search({ page = 1, perPage = 10, studentSearch = "", status = "all" } = {}) {
+  async search({
+    page = 1,
+    perPage = 10,
+    studentSearch = "",
+    status = "all",
+    scope = "trainer",
+  } = {}) {
     const { data } = await sanctumRequest(
       "get",
-      "/trainer/workouts",
+      WORKOUTS_ENDPOINT[scope],
       {},
       {
         params: {
@@ -18,35 +31,48 @@ const workoutsService = {
     return data;
   },
 
-  async getById(id) {
-    const { data } = await sanctumRequest("get", `/trainer/workouts/${id}`);
+  async getById(id, scope = "trainer") {
+    const { data } = await sanctumRequest(
+      "get",
+      `${WORKOUTS_ENDPOINT[scope]}/${id}`,
+    );
     return data;
   },
 
-  async create(payload) {
+  async create(payload, scope = "trainer") {
     const { data } = await sanctumRequest(
       "post",
-      "/trainer/workouts",
+      WORKOUTS_ENDPOINT[scope],
       payload,
     );
     return data;
   },
 
-  async update(id, payload) {
+  async update(id, payload, scope = "trainer") {
     const { data } = await sanctumRequest(
       "put",
-      `/trainer/workouts/${id}`,
+      `${WORKOUTS_ENDPOINT[scope]}/${id}`,
       payload,
     );
     return data;
   },
 
-  async remove(id) {
+  async remove(id, scope = "trainer") {
     const { data } = await sanctumRequest(
       "delete",
-      `/trainer/workouts/${id}`,
+      `${WORKOUTS_ENDPOINT[scope]}/${id}`,
     );
     return data;
+  },
+
+  async generateMyWorkoutSheet() {
+    const response = await sanctumRequest(
+      "get",
+      `${WORKOUTS_ENDPOINT.student}/sheet`,
+      {},
+      { responseType: "blob" },
+    );
+    return response.data;
   },
 
   async getMyWorkouts() {

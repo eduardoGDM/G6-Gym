@@ -37,6 +37,23 @@ function endSession(accountInactive) {
   );
 }
 
+/**
+ * 403 com code "WORKOUT_MANAGEMENT_DISABLED": o personal revogou a autogestão
+ * de treinos. Atualiza a flag no store; o guard de rota tira o aluno das telas
+ * de gestão e o item some do menu.
+ */
+function revokeWorkoutManagement() {
+  const { user, setUser } = useAuthStore.getState();
+  if (!user?.student_profile?.can_manage_workouts) return;
+
+  setUser({
+    ...user,
+    student_profile: { ...user.student_profile, can_manage_workouts: false },
+  });
+
+  toast.error("Seu acesso ao gerenciamento de treinos foi revogado pelo personal.");
+}
+
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
@@ -53,6 +70,10 @@ apiClient.interceptors.response.use(
 
     if (!isAuthEndpoint && (sessionExpired || accountInactive)) {
       endSession(accountInactive);
+    }
+
+    if (status === 403 && code === "WORKOUT_MANAGEMENT_DISABLED") {
+      revokeWorkoutManagement();
     }
 
     return Promise.reject(error);

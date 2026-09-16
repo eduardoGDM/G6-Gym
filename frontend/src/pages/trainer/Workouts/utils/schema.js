@@ -73,7 +73,11 @@ export const workoutExerciseItemSchema = yup.object({
 });
 
 export const workoutSchema = yup.object({
-  student_profile_id: yup.string().required("Selecione um aluno"),
+  student_profile_id: yup.string().when("$isStudent", {
+    is: true,
+    then: (schema) => schema.notRequired(),
+    otherwise: (schema) => schema.required("Selecione um aluno"),
+  }),
   name: yup
     .string()
     .trim()

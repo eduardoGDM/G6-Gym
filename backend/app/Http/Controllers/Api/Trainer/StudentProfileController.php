@@ -162,6 +162,29 @@ class StudentProfileController extends Controller
 		]);
 	}
 
+	public function updateWorkoutManagement(Request $request, $id)
+	{
+		$profile = StudentProfile::where('trainer_id', $request->user()->id)->find($id);
+
+		if (!$profile) {
+			return response()->json(['message' => 'Aluno não encontrado'], 404);
+		}
+
+		$request->validate([
+			'can_manage_workouts' => 'required|boolean',
+		]);
+
+		$profile->can_manage_workouts = $request->boolean('can_manage_workouts');
+		$profile->save();
+
+		return response()->json([
+			'message' => $profile->can_manage_workouts
+				? 'Aluno autorizado a gerenciar os próprios treinos'
+				: 'Permissão de gerenciar treinos revogada',
+			'profile' => $profile
+		]);
+	}
+
 	public function destroy(Request $request, $id)
 	{
 		$profile = StudentProfile::where('trainer_id', $request->user()->id)->find($id);

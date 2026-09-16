@@ -10,7 +10,12 @@ import exercisesService from "../../../../services/ExercisesService";
 
 const PER_PAGE = 8;
 
-export default function ExercisePicker({ muscleGroups = [], addedIds = [], onAdd }) {
+export default function ExercisePicker({
+  muscleGroups = [],
+  addedIds = [],
+  onAdd,
+  scope = "trainer",
+}) {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
 
@@ -27,7 +32,7 @@ export default function ExercisePicker({ muscleGroups = [], addedIds = [], onAdd
   const { data, isLoading, isFetching, isError } = useQuery({
     queryKey: [
       "exercises",
-      { search: debouncedSearch, page, perPage: PER_PAGE, muscleGroups },
+      { scope, search: debouncedSearch, page, perPage: PER_PAGE, muscleGroups },
     ],
     queryFn: () =>
       exercisesService.search({
@@ -35,6 +40,7 @@ export default function ExercisePicker({ muscleGroups = [], addedIds = [], onAdd
         perPage: PER_PAGE,
         search: debouncedSearch,
         muscleGroups,
+        scope,
       }),
     placeholderData: keepPreviousData,
   });

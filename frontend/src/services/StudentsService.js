@@ -32,6 +32,15 @@ const studentsService = {
     return data;
   },
 
+  async setWorkoutManagement(id, canManageWorkouts) {
+    const { data } = await sanctumRequest(
+      "patch",
+      `/trainer/student-profiles/${id}/workout-management`,
+      { can_manage_workouts: canManageWorkouts },
+    );
+    return data;
+  },
+
   async remove(id) {
     const { data } = await sanctumRequest(
       "delete",

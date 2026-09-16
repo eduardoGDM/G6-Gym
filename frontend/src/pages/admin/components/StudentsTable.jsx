@@ -9,7 +9,7 @@ import { CardContent, CardHeader, CardTitle } from "../../../components/ui/card"
 import { Input } from "../../../components/ui/input";
 import { useDebouncedValue } from "../../../hooks/useDebouncedValue";
 import adminStudentsService from "../../../services/AdminStudentsService";
-import StatusSwitch from "./StatusSwitch";
+import StatusSwitch from "../../../components/common/StatusSwitch";
 
 const PER_PAGE = 10;
 

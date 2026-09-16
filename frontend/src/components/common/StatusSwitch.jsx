@@ -1,6 +1,6 @@
 import { useState } from "react";
-import ConfirmDialog from "../../../components/common/ConfirmDialog";
-import { Switch } from "../../../components/ui/switch";
+import ConfirmDialog from "./ConfirmDialog";
+import { Switch } from "../ui/switch";
 
 export default function StatusSwitch({
   checked,

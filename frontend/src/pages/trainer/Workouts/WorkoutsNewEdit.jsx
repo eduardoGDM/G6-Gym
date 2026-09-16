@@ -23,6 +23,7 @@ import { FormSection } from "../../../components/forms/FormSection";
 import { Input } from "../../../components/ui/input";
 import { Select } from "../../../components/ui/select";
 import { Textarea } from "../../../components/ui/textarea";
+import { useWorkoutScope } from "../../../hooks/useWorkoutScope";
 import muscleGroupsService from "../../../services/MuscleGroupsService";
 import studentsService from "../../../services/StudentsService";
 import workoutsService from "../../../services/WorkoutsService";
@@ -67,6 +68,7 @@ export default function WorkoutsNewEdit() {
   const navigate = useNavigate();
   const { id } = useParams();
   const isEdit = Boolean(id);
+  const { scope, isStudent, basePath, canModify } = useWorkoutScope();
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
   const [students, setStudents] = useState([]);
@@ -84,6 +86,8 @@ export default function WorkoutsNewEdit() {
     formState: { errors, isSubmitting },
   } = useForm({
     resolver: yupResolver(workoutSchema),
+    // O aluno monta treinos só para si: o schema dispensa a seleção de aluno.
+    context: { isStudent },
     defaultValues: {
       student_profile_id: "",
       name: "",
@@ -108,19 +112,29 @@ export default function WorkoutsNewEdit() {
       title: isEdit ? "Editar treino" : "Novo treino",
       description: isEdit
         ? "Atualize os dados do treino e os exercícios selecionados."
-        : "Selecione o aluno, informe os dados do treino e adicione os exercícios.",
+        : isStudent
+          ? "Informe os dados do treino e adicione os exercícios."
+          : "Selecione o aluno, informe os dados do treino e adicione os exercícios.",
     }),
-    [isEdit],
+    [isEdit, isStudent],
   );
 
   useEffect(() => {
     const loadData = async () => {
       try {
         const [studentsData, muscleGroupsData, workout] = await Promise.all([
-          studentsService.getAll(),
-          muscleGroupsService.getAll(),
-          isEdit ? workoutsService.getById(id) : Promise.resolve(null),
+          isStudent ? Promise.resolve([]) : studentsService.getAll(),
+          muscleGroupsService.getAll(scope),
+          isEdit ? workoutsService.getById(id, scope) : Promise.resolve(null),
         ]);
+
+        // Treino montado pelo personal é somente leitura para o aluno; o
+        // backend também bloqueia, aqui só evitamos abrir um form inútil.
+        if (isEdit && workout && !canModify(workout)) {
+          toast.error("Você só pode editar treinos criados por você.");
+          navigate(`${basePath}/${id}`, { replace: true });
+          return;
+        }
 
         setStudents(studentsData || []);
         setMuscleGroupOptions(muscleGroupsData || []);
@@ -163,7 +177,7 @@ export default function WorkoutsNewEdit() {
     };
 
     loadData();
-  }, [id, isEdit, reset]);
+  }, [id, isEdit, reset, scope, isStudent, basePath, canModify, navigate]);
 
   const handleAddExercise = (exercise) => {
     setExerciseDetails((current) => ({
@@ -183,7 +197,7 @@ export default function WorkoutsNewEdit() {
       setLoading(true);
 
       const payload = {
-        student_profile_id: data.student_profile_id,
+        ...(isStudent ? {} : { student_profile_id: data.student_profile_id }),
         name: data.name,
         description: emptyToNull(data.description),
         start_date: data.start_date,
@@ -198,8 +212,8 @@ export default function WorkoutsNewEdit() {
       };
 
       const request = isEdit
-        ? workoutsService.update(id, payload)
-        : workoutsService.create(payload);
+        ? workoutsService.update(id, payload, scope)
+        : workoutsService.create(payload, scope);
 
       await crudToast(request, {
         action: isEdit ? "update" : "create",
@@ -215,7 +229,7 @@ export default function WorkoutsNewEdit() {
         },
       });
 
-      navigate("/trainer/workouts");
+      navigate(basePath);
     } catch {
       // erro já exibido pelo crudToast
     } finally {
@@ -231,7 +245,7 @@ export default function WorkoutsNewEdit() {
         <Button
           variant="outline"
           className="w-full md:w-auto"
-          onClick={() => navigate("/trainer/workouts")}
+          onClick={() => navigate(basePath)}
         >
           <ArrowLeft className="h-4 w-4" />
           Voltar à lista
@@ -259,23 +273,25 @@ export default function WorkoutsNewEdit() {
               className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300"
             >
               <div className="grid gap-6 md:grid-cols-2">
-                <Field
-                  label="Aluno"
-                  htmlFor="student_profile_id"
-                  error={errors.student_profile_id?.message}
-                >
-                  <Select
-                    id="student_profile_id"
-                    {...register("student_profile_id")}
+                {!isStudent ? (
+                  <Field
+                    label="Aluno"
+                    htmlFor="student_profile_id"
+                    error={errors.student_profile_id?.message}
                   >
-                    <option value="">Selecione</option>
-                    {students.map((student) => (
-                      <option key={student.id} value={student.id}>
-                        {student.user?.name || `Aluno #${student.id}`}
-                      </option>
-                    ))}
-                  </Select>
-                </Field>
+                    <Select
+                      id="student_profile_id"
+                      {...register("student_profile_id")}
+                    >
+                      <option value="">Selecione</option>
+                      {students.map((student) => (
+                        <option key={student.id} value={student.id}>
+                          {student.user?.name || `Aluno #${student.id}`}
+                        </option>
+                      ))}
+                    </Select>
+                  </Field>
+                ) : null}
 
                 <Field
                   label="Nome do treino"
@@ -349,6 +365,7 @@ export default function WorkoutsNewEdit() {
                 description="Busque e adicione os exercícios, monte as séries de cada um e use as setas para reordenar."
               >
                 <ExercisePicker
+                  scope={scope}
                   muscleGroups={watchedMuscleGroups}
                   addedIds={fields.map((field) => field.exercise_id)}
                   onAdd={handleAddExercise}
@@ -387,7 +404,7 @@ export default function WorkoutsNewEdit() {
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => navigate("/trainer/workouts")}
+                  onClick={() => navigate(basePath)}
                 >
                   Cancelar
                 </Button>

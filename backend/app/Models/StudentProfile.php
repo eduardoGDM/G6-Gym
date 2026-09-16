@@ -49,6 +49,7 @@ class StudentProfile extends Model
 	protected $casts = [
 		'birth_date' => 'date',
 		'height' => 'decimal:2',
+		'can_manage_workouts' => 'boolean',
 	];
 
 	/**

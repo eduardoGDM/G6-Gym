@@ -17,6 +17,7 @@ class Workout extends Model
 	protected $fillable = [
 		'student_profile_id',
 		'trainer_id',
+		'created_by',
 		'name',
 		'description',
 		'start_date',
@@ -38,6 +39,11 @@ class Workout extends Model
 	public function trainer(): BelongsTo
 	{
 		return $this->belongsTo(User::class, 'trainer_id');
+	}
+
+	public function creator(): BelongsTo
+	{
+		return $this->belongsTo(User::class, 'created_by');
 	}
 
 	public function workoutExercises(): HasMany

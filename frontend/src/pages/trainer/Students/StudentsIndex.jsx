@@ -11,6 +11,7 @@ import PageContainer from "../../../components/common/PageContainer";
 import PageTitle from "../../../components/common/PageTitle";
 import { Button } from "../../../components/ui/button";
 import { useConfirmDialog } from "../../../hooks/useConfirmDialog";
+import { downloadBlob } from "../../../lib/download";
 import studentsService from "../../../services/StudentsService";
 
 export default function StudentsIndex() {
@@ -56,14 +57,7 @@ export default function StudentsIndex() {
       setGeneratingSheetId(student.id);
       const pdfBlob = await studentsService.generateWorkoutSheet(student.id);
 
-      const url = window.URL.createObjectURL(pdfBlob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = `ficha-treino-${student.user?.name || student.id}.pdf`;
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      window.URL.revokeObjectURL(url);
+      downloadBlob(pdfBlob, `ficha-treino-${student.user?.name || student.id}.pdf`);
     } catch (error) {
       if (error.response?.status === 403) {
         toast.error("Este aluno não possui treinos vinculados a você.");

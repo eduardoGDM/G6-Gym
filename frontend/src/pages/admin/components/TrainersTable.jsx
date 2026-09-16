@@ -13,7 +13,7 @@ import adminPlansService from "../../../services/AdminPlansService";
 import adminTrainersService from "../../../services/AdminTrainersService";
 import { formatUsage, isOverLimit } from "../../../utils/plan";
 import PlanAssignDialog from "./PlanAssignDialog";
-import StatusSwitch from "./StatusSwitch";
+import StatusSwitch from "../../../components/common/StatusSwitch";
 
 const PER_PAGE = 10;
 

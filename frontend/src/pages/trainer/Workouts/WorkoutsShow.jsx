@@ -4,6 +4,7 @@ import {
   CalendarDays,
   Dumbbell,
   ListOrdered,
+  Pencil,
   UserRound,
 } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -22,6 +23,7 @@ import {
   CardHeader,
   CardTitle,
 } from "../../../components/ui/card";
+import { useWorkoutScope } from "../../../hooks/useWorkoutScope";
 import workoutsService from "../../../services/WorkoutsService";
 import WorkoutExerciseSummaryCard from "./components/WorkoutExerciseSummaryCard";
 
@@ -49,6 +51,7 @@ function MetaItem({ icon: Icon, label, value }) {
 export default function WorkoutsShow() {
   const navigate = useNavigate();
   const { id } = useParams();
+  const { scope, isStudent, basePath, canModify } = useWorkoutScope();
   const [workout, setWorkout] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -57,7 +60,7 @@ export default function WorkoutsShow() {
     try {
       setLoading(true);
       setError(false);
-      const data = await workoutsService.getById(id);
+      const data = await workoutsService.getById(id, scope);
       setWorkout(data);
     } catch {
       setError(true);
@@ -84,14 +87,26 @@ export default function WorkoutsShow() {
           description="Consulte todas as informações cadastradas para este treino."
         />
 
-        <Button
-          variant="outline"
-          className="w-full md:w-auto"
-          onClick={() => navigate("/trainer/workouts")}
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Voltar à lista
-        </Button>
+        <div className="flex flex-col gap-2 md:flex-row">
+          <Button
+            variant="outline"
+            className="w-full md:w-auto"
+            onClick={() => navigate(basePath)}
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Voltar à lista
+          </Button>
+
+          {isStudent && workout && canModify(workout) ? (
+            <Button
+              className="w-full md:w-auto"
+              onClick={() => navigate(`${basePath}/${id}/edit`)}
+            >
+              <Pencil className="h-4 w-4" />
+              Editar
+            </Button>
+          ) : null}
+        </div>
       </div>
 
       <Card className="border-border/80 bg-card/90">

@@ -6,6 +6,7 @@ import {
 import {
   Dumbbell,
   Eye,
+  FileText,
   Pause,
   Pencil,
   Play,
@@ -29,6 +30,8 @@ import { Input } from "../../../components/ui/input";
 import { Select } from "../../../components/ui/select";
 import { useConfirmDialog } from "../../../hooks/useConfirmDialog";
 import { useDebouncedValue } from "../../../hooks/useDebouncedValue";
+import { useWorkoutScope } from "../../../hooks/useWorkoutScope";
+import { downloadBlob } from "../../../lib/download";
 import workoutsService from "../../../services/WorkoutsService";
 
 const PER_PAGE_OPTIONS = [10, 25, 50];
@@ -48,12 +51,14 @@ function formatDateBR(dateString) {
 export default function WorkoutsIndex() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { scope, isStudent, basePath, canModify } = useWorkoutScope();
 
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("all");
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(10);
   const [togglingId, setTogglingId] = useState(null);
+  const [generatingSheet, setGeneratingSheet] = useState(false);
   const confirmDelete = useConfirmDialog();
 
   const debouncedSearch = useDebouncedValue(search, 500);
@@ -68,7 +73,7 @@ export default function WorkoutsIndex() {
   const { data, isLoading, isFetching, isError, refetch } = useQuery({
     queryKey: [
       "workouts",
-      { page, searchStudent: debouncedSearch, status, perPage },
+      { scope, page, searchStudent: debouncedSearch, status, perPage },
     ],
     queryFn: () =>
       workoutsService.search({
@@ -76,6 +81,7 @@ export default function WorkoutsIndex() {
         perPage,
         studentSearch: debouncedSearch,
         status,
+        scope,
       }),
     placeholderData: keepPreviousData,
   });
@@ -95,7 +101,7 @@ export default function WorkoutsIndex() {
 
   const runDelete = async (id) => {
     try {
-      await crudToast(workoutsService.remove(id), {
+      await crudToast(workoutsService.remove(id, scope), {
         action: "delete",
         entity: "Treino",
       });
@@ -119,7 +125,7 @@ export default function WorkoutsIndex() {
     try {
       setTogglingId(workout.id);
       await crudToast(
-        workoutsService.update(workout.id, { active: !workout.active }),
+        workoutsService.update(workout.id, { active: !workout.active }, scope),
         { action: "update", entity: "Treino" },
       );
       await queryClient.invalidateQueries({ queryKey: ["workouts"] });
@@ -127,6 +133,18 @@ export default function WorkoutsIndex() {
       // erro já exibido pelo crudToast
     } finally {
       setTogglingId(null);
+    }
+  };
+
+  const handleGenerateSheet = async () => {
+    try {
+      setGeneratingSheet(true);
+      const pdfBlob = await workoutsService.generateMyWorkoutSheet();
+      downloadBlob(pdfBlob, "ficha-treino.pdf");
+    } catch {
+      toast.error("Não foi possível gerar a ficha de treino.");
+    } finally {
+      setGeneratingSheet(false);
     }
   };
 
@@ -138,18 +156,25 @@ export default function WorkoutsIndex() {
       render: (workout) => (
         <>
           {workout.name}
-          <p className="mt-0.5 text-xs font-normal text-muted-foreground sm:hidden">
-            {workout.student_profile?.user?.name || "—"}
-          </p>
+          {!isStudent ? (
+            <p className="mt-0.5 text-xs font-normal text-muted-foreground sm:hidden">
+              {workout.student_profile?.user?.name || "—"}
+            </p>
+          ) : null}
         </>
       ),
     },
-    {
-      key: "student",
-      label: "Aluno",
-      className: "hidden sm:table-cell",
-      render: (workout) => workout.student_profile?.user?.name || "—",
-    },
+    // O aluno só enxerga os próprios treinos: a coluna de aluno não agrega.
+    ...(isStudent
+      ? []
+      : [
+          {
+            key: "student",
+            label: "Aluno",
+            className: "hidden sm:table-cell",
+            render: (workout) => workout.student_profile?.user?.name || "—",
+          },
+        ]),
     {
       key: "exercises_count",
       label: "Exercícios",
@@ -187,28 +212,33 @@ export default function WorkoutsIndex() {
           <ActionIconButton
             icon={Eye}
             tooltip="Visualizar"
-            onClick={() => navigate(`/trainer/workouts/${workout.id}`)}
+            onClick={() => navigate(`${basePath}/${workout.id}`)}
           />
-          <ActionIconButton
-            icon={Pencil}
-            tooltip="Editar"
-            onClick={() => navigate(`/trainer/workouts/${workout.id}/edit`)}
-          />
-          <ActionIconButton
-            icon={workout.active ? Pause : Play}
-            tooltip={workout.active ? "Inativar treino" : "Ativar treino"}
-            onClick={() => handleToggleStatus(workout)}
-            loading={togglingId === workout.id}
-          />
-          <ActionIconButton
-            icon={Trash2}
-            tooltip="Excluir"
-            color="destructive"
-            onClick={() => confirmDelete.request(workout.id)}
-            loading={
-              confirmDelete.loading && confirmDelete.target === workout.id
-            }
-          />
+          {/* Treinos montados pelo personal ficam somente leitura para o aluno. */}
+          {canModify(workout) ? (
+            <>
+              <ActionIconButton
+                icon={Pencil}
+                tooltip="Editar"
+                onClick={() => navigate(`${basePath}/${workout.id}/edit`)}
+              />
+              <ActionIconButton
+                icon={workout.active ? Pause : Play}
+                tooltip={workout.active ? "Inativar treino" : "Ativar treino"}
+                onClick={() => handleToggleStatus(workout)}
+                loading={togglingId === workout.id}
+              />
+              <ActionIconButton
+                icon={Trash2}
+                tooltip="Excluir"
+                color="destructive"
+                onClick={() => confirmDelete.request(workout.id)}
+                loading={
+                  confirmDelete.loading && confirmDelete.target === workout.id
+                }
+              />
+            </>
+          ) : null}
         </div>
       ),
     },
@@ -219,29 +249,49 @@ export default function WorkoutsIndex() {
       <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <PageTitle
           eyebrow="Planejamento"
-          title="Treinos"
-          description="Monte e gerencie os treinos dos alunos."
+          title={isStudent ? "Gerenciar treinos" : "Treinos"}
+          description={
+            isStudent
+              ? "Monte e ajuste seus próprios treinos. Os treinos criados pelo seu personal ficam disponíveis apenas para consulta."
+              : "Monte e gerencie os treinos dos alunos."
+          }
         />
 
-        <Button
-          className="w-full md:w-auto"
-          onClick={() => navigate("/trainer/workouts/new")}
-        >
-          <Plus className="h-4 w-4" />
-          Novo treino
-        </Button>
+        <div className="flex flex-col gap-2 md:flex-row">
+          {isStudent ? (
+            <Button
+              variant="outline"
+              className="w-full md:w-auto"
+              onClick={handleGenerateSheet}
+              disabled={generatingSheet}
+            >
+              <FileText className="h-4 w-4" />
+              {generatingSheet ? "Gerando..." : "Gerar planilha"}
+            </Button>
+          ) : null}
+
+          <Button
+            className="w-full md:w-auto"
+            onClick={() => navigate(`${basePath}/new`)}
+          >
+            <Plus className="h-4 w-4" />
+            Novo treino
+          </Button>
+        </div>
       </div>
 
       <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center">
-        <div className="relative max-w-sm flex-1">
-          <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-            placeholder="Buscar aluno..."
-            className="pl-10"
-          />
-        </div>
+        {!isStudent ? (
+          <div className="relative max-w-sm flex-1">
+            <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder="Buscar aluno..."
+              className="pl-10"
+            />
+          </div>
+        ) : null}
 
         <Select
           className="sm:w-48"
@@ -280,7 +330,7 @@ export default function WorkoutsIndex() {
           !debouncedSearch ? (
             <Button
               variant="outline"
-              onClick={() => navigate("/trainer/workouts/new")}
+              onClick={() => navigate(`${basePath}/new`)}
             >
               <Plus className="h-4 w-4" />
               Cadastrar treino

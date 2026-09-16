@@ -1,11 +1,20 @@
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, CalendarDays, Mail, Ruler, UserRound } from "lucide-react";
+import {
+  ArrowLeft,
+  CalendarDays,
+  Mail,
+  Ruler,
+  ShieldCheck,
+  UserRound,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { useNavigate, useParams } from "react-router-dom";
 
 import PageContainer from "../../../components/common/PageContainer";
 import PageTitle from "../../../components/common/PageTitle";
+import StatusSwitch from "../../../components/common/StatusSwitch";
+import { crudToast } from "../../../components/common/crudToast";
 import DetailsSkeleton from "../../../components/loading/DetailsSkeleton";
 import ErrorState from "../../../components/loading/ErrorState";
 import { Button } from "../../../components/ui/button";
@@ -80,6 +89,18 @@ export default function StudentsShow() {
   useEffect(() => {
     loadStudent();
   }, [id]);
+
+  const handleToggleWorkoutManagement = async (enabled) => {
+    try {
+      await crudToast(studentsService.setWorkoutManagement(id, enabled), {
+        action: "update",
+        entity: "Aluno",
+      });
+      setStudent((current) => ({ ...current, can_manage_workouts: enabled }));
+    } catch {
+      // erro já exibido pelo crudToast
+    }
+  };
 
   // O peso atual não é mais um campo do cadastro: vem da avaliação física mais
   // recente. A query compartilha a chave com PhysicalAssessmentSection, então a
@@ -174,6 +195,31 @@ export default function StudentsShow() {
                     }
                   />
                 </dl>
+              </InfoCard>
+
+              <InfoCard
+                icon={ShieldCheck}
+                title="Permissões"
+                className="sm:col-span-2 lg:col-span-3"
+              >
+                <div className="flex items-start justify-between gap-4">
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-foreground">
+                      Permitir que o aluno gerencie seus próprios treinos
+                    </p>
+                    <p className="mt-0.5 text-xs text-muted-foreground">
+                      O aluno poderá criar, editar e gerar a planilha dos
+                      próprios treinos. Os treinos montados por você continuam
+                      somente leitura para ele.
+                    </p>
+                  </div>
+                  <StatusSwitch
+                    checked={Boolean(student.can_manage_workouts)}
+                    onConfirm={handleToggleWorkoutManagement}
+                    confirmTitle="Gerenciamento de treinos pelo aluno"
+                    confirmMessage="Ao ativar, o aluno passa a criar e editar os próprios treinos. Ao desativar, o acesso dele às telas de gestão é bloqueado imediatamente."
+                  />
+                </div>
               </InfoCard>
 
               <InfoCard
