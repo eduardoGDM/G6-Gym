@@ -8,6 +8,12 @@ como referência em prompts.
 > não está instalado** no projeto. A interface é Tailwind v4 + componentes
 > próprios em `src/components/ui`.
 
+> **Escopo:** este documento descreve o tema **vermelho sobre ramp escuro**, que
+> vale para treinador e admin. A **área do aluno** roda no tema "A Ficha"
+> (giz/ferro/anilha, em modo escuro ou claro) — ver a última seção,
+> [Tema "A Ficha"](#tema-a-ficha--área-do-aluno). Antes de mexer em tela do
+> aluno, ler essa seção.
+
 ---
 
 ## Princípio
@@ -217,3 +223,170 @@ Antes de fechar uma tela nova:
 | `student/DailyCheckins/components/RatingDial.jsx` | Dial, mola, SVG acessível |
 | `student/DailyCheckins/components/CheckinPulse.jsx` | Traço de histórico |
 | `src/index.css` | Tokens e keyframes |
+
+---
+
+# Tema "A Ficha" — área do aluno
+
+A partir de 27/10/2026 a **área do aluno** roda num tema próprio. Tudo acima
+deste ponto continua valendo para o treinador e o admin (tema vermelho sobre
+ramp escuro).
+
+O escopo é aplicado em `StudentLayout` → `RoleLayout theme="ficha"`, que põe
+`data-theme="ficha"` na raiz. Os **nomes** dos tokens são os mesmos — `bg-card`,
+`text-primary`, `border-border` — só os **valores** mudam dentro do escopo. Por
+isso componente compartilhado (`Card`, `Button`, `ExerciseEvolutionPanel`) herda
+a paleta sem reescrita.
+
+## Conceito
+
+A ficha de treino de papel na prancheta: giz, ferro e anilha. Três decisões
+sustentam tudo:
+
+1. **Papel e ferro, não preto e neon.** Dois modos — ferro fundido (padrão) e
+   giz —, a mesma direção invertida. Nenhum verde-limão, nenhum glow.
+2. **Conclusão é marca de mão, não cor.** Série feita recebe **risco**, nunca
+   verde. Isso libera a paleta de precisar de uma cor de sucesso.
+3. **Número é a imagem.** Não há ilustração nem anel de progresso: o elemento
+   gráfico dominante é um número gigante alinhado à esquerda.
+
+## Dois modos
+
+São **três cores** (Giz, Ferro, Anilha) e dois arranjos delas. O modo é escrito
+como `data-mode` na mesma raiz do `data-theme`, pelo `RoleLayout`.
+
+**Escuro é o padrão** — por decisão de produto, deliberadamente *sem* olhar
+`prefers-color-scheme`. A **ausência** de `data-mode` já significa escuro, então
+o padrão vale até no primeiro paint, antes de o JS resolver o `localStorage`.
+
+| Papel | Escuro (padrão) | Claro (`data-mode="light"`) |
+|---|---|---|
+| `background` | Ferro `#191B1C` | Giz `#EDE8DE` |
+| `foreground` | Giz `#EDE8DE` — 14,2:1 | Ferro `#191B1C` — 14,2:1 |
+| `card` | `#1F2223` | Folha `#F7F4EC` |
+| `surface` | `#141617` | `#E5DFD3` |
+| `muted` | `#26292A` | `#E3DCCD` |
+| `muted-foreground` | `#9A968C` — 5,9:1 | `#5A5D5F` — 5,4:1 |
+| `border` | `#313436` | `#D8D2C6` |
+| `input` | `#44484A` | `#C6BFAF` |
+| `rule` (pauta) | `#26292A` | `#E3DCCD` |
+| **`primary` (Anilha)** | `#E2672B` — 5,1:1 | `#C1440E` — 6,0:1 |
+| `primary-foreground` | `#191B1C` | `#F7F4EC` |
+| `primary-hover` | `#EF7C45` (clareia) | `#A93B0C` (escurece) |
+
+**A Anilha muda de valor entre os modos e isso não é negociável:** `#C1440E`
+sobre `#191B1C` dá 2,3:1 — ilegível. No escuro ela é a mesma anilha vista sob
+luz de galpão, clareada até passar AA. `primary-dark` guarda a anilha do outro
+modo em cada um, para quando um elemento precisar do par.
+
+**No máximo um elemento em Anilha por tela** — é "onde você está agora", não
+enfeite. Semânticos (`destructive`, `success`, `warning`, `info`) são **função,
+não marca** (só erro de formulário, aviso e exclusão) e têm um valor por modo:
+terrosos escuros no claro, terrosos claros no escuro.
+
+### Escrever componente que serve os dois modos
+
+Regra prática: **nunca** nomear a cor, sempre o papel.
+
+- Tinta é `foreground`, não "preto". Papel é `background`, não "branco".
+- Marca de mão (risco, pauzinho, barra de giz, fita) é `bg-foreground`. Ela
+  inverte junto e continua sendo "tinta sobre papel" nos dois modos.
+- Preenchimento de hover é `bg-foreground/5`; inversão de botão é
+  `hover:bg-foreground hover:text-background`.
+- Fundo de scrim de modal é `bg-black/60` nos dois modos (igual ao `Dialog`) —
+  é o único lugar onde preto literal é correto.
+- Gradiente em `@utility` **aceita** `var(--color-…)`: é como `ficha-tape` e
+  `ficha-ruled` acompanham o modo. Não hardcodar hex ali.
+
+## Troca de modo
+
+| Arquivo | Papel |
+|---|---|
+| `src/store/themeStore.js` | `mode` (`dark`/`light`), `setMode`, `toggle`. Lê o `localStorage` (`g6:theme-mode`) de forma síncrona na criação, então o primeiro render já sai certo. Falha de `localStorage` cai no padrão sem quebrar |
+| `src/components/ficha/ThemeModeToggle.jsx` | O botão. Montado via `topbarActions` do `RoleLayout` |
+| `RoleLayout` | Escreve `data-mode` — só quando há `theme` |
+
+A marca do botão **não é sol/lua**: é um quadrado meio preenchido (notação de
+contraste). O rótulo nomeia a cor de destino — `GIZ` para claro, `FERRO` para
+escuro — que é como a paleta é chamada no resto do sistema.
+
+## Tipografia
+
+| Papel | Token | Fonte |
+|---|---|---|
+| Display e número protagonista | `--font-display` | Archivo Variable, `font-stretch: 125%`, peso 900 |
+| Corpo | `--font-ficha` | IBM Plex Sans Variable |
+| Dado numérico, micro-label | `--font-ficha-mono` | IBM Plex Mono |
+| Assinatura | `--font-hand` | Shantell Sans Variable |
+
+Archivo entra pelo eixo **expandido** de propósito: inverte o clichê da
+condensada esportiva e dá peso de letra estampada em anilha. Todas via
+`@fontsource` — **nenhum webfont por rede**.
+
+Utilitários: `ficha-display`, `ficha-mono`, `ficha-label`, `ficha-hand`.
+`tabular-nums` continua obrigatório em número que muda em tela.
+
+A assinatura (`ficha-hand`) aparece em **dois lugares** no app inteiro: o
+rodapé do painel e o do histórico. Nunca atribuída a uma pessoa — não inventar
+recado de personal; quando existir campo para isso no backend, é ali que entra.
+
+## Exceção registrada: rotação
+
+A regra "geometria é reta" dos anti-padrões **continua valendo**, com duas
+exceções nomeadas:
+
+- **Carimbo de recorde** (`RecordStamp`): −1,6°, dentro do keyframe `stamp`.
+- **Fita de piso** (`TapeDivider`): até 1°.
+- O **risco** de série/valor superado: −1,2°, porque é traço de mão.
+
+Nada mais gira.
+
+## Componentes de assinatura
+
+`src/components/ficha/`:
+
+| Arquivo | O que é |
+|---|---|
+| `TallyMarks.jsx` | Contagem em pauzinhos, grupos de 5, cada traço se desenha. Substitui ícone de fogo e anel |
+| `TapeDivider.jsx` | Divisão de seção em fita de demarcação de piso, desenrolando |
+| `RecordStamp.jsx` | Recorde como carimbo, com sangria de tinta. Substitui confete |
+| `RestTimer.jsx` | Descanso em barra de giz apagando, borda irregular, respiro orgânico |
+| `ThemeModeToggle.jsx` | Troca escuro/claro. Marca de contraste, não sol/lua |
+
+O grão de papel é `background-image` do próprio container temático (ladrilho de
+140px via `feTurbulence`), não overlay — sem custo de filtro em tela cheia.
+
+## Movimento
+
+Tokens em `src/index.css`: `animate-rise`, `animate-sheet`, `animate-unroll`,
+`animate-stamp`, `animate-digit` / `animate-digit-alt`, `animate-strike`,
+`animate-draw`, `animate-breathe`, `animate-slow-pulse`.
+
+Duas curvas: **chalk** `cubic-bezier(.33,0,.1,1)` para traço e revelação,
+**stamp** `cubic-bezier(.2,1.6,.3,1)` para carimbo e rolagem de dígito.
+
+`digit` e `digit-alt` são idênticos de propósito: alternar entre os dois
+reinicia a animação **sem remontar** o elemento — necessário quando o número é
+um `<input>` que não pode perder o foco. Onde o remount é aceitável, continua
+valendo o `key={valor}`.
+
+Todo o escopo respeita `prefers-reduced-motion`: cai para fade, e o que desenha
+(`[data-draw]`) renderiza no estado final.
+
+## Hierarquia da tela de execução
+
+A **série atual domina**: carga e repetições viram números gigantes editáveis
+(input real, com o alvo prescrito como placeholder esmaecido) e concluir é uma
+barra de largura total. As outras séries recuam para uma linha de pauta — feitas
+com o risco por cima, futuras só com o alvo — e expandem ao toque para correção.
+
+## Referência canônica do tema
+
+| Arquivo | O que demonstra |
+|---|---|
+| `student/Dashboard.jsx` | Grid assimétrico, número sangrando, pauzinhos, fita |
+| `student/components/workout/CheckinSet.jsx` | Série herói, número editável, risco |
+| `student/History.jsx` | Pauta de caderno, busca em linha de ficha |
+| `components/student/WorkoutRecordsModal.jsx` | Carimbo de recorde |
+| `src/index.css` | Blocos de modo escuro/claro, keyframes, utilitários |
+| `src/store/themeStore.js` | Persistência do modo, com o escuro como padrão |

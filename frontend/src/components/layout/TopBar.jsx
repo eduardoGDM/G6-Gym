@@ -14,6 +14,7 @@ export default function Topbar({
   isDesktop,
   roleLabel = "Personal",
   profilePath,
+  actions,
 }) {
   const user = useAuthStore((state) => state.user);
   const userName = user?.name || "Usuário";
@@ -64,6 +65,8 @@ export default function Topbar({
         </div>
 
         <div className="ml-auto flex shrink-0 items-center gap-2 sm:gap-3">
+          {actions}
+
           <NotificationsMenu />
 
           {/* Só vira link quando o papel tem uma tela de perfil (hoje, o aluno). */}

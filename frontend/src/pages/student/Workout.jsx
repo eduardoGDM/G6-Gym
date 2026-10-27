@@ -8,8 +8,9 @@ import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 
 import { crudToast } from "../../components/common/crudToast";
 import PageContainer from "../../components/common/PageContainer";
-import PageTitle from "../../components/common/PageTitle";
 import Spinner from "../../components/common/Spinner";
+import RestTimer from "../../components/ficha/RestTimer";
+import TapeDivider from "../../components/ficha/TapeDivider";
 import { Field } from "../../components/forms/Field";
 import FormSkeleton from "../../components/loading/FormSkeleton";
 import ListSkeleton from "../../components/loading/ListSkeleton";
@@ -60,6 +61,9 @@ export default function Workout() {
   // Sanfona: apenas um exercício aberto por vez (null = todos fechados).
   const [openIndex, setOpenIndex] = useState(null);
   const scrollToOpenRef = useRef(false);
+  // Descanso em andamento: { seconds, key }. A `key` remonta o cronômetro para
+  // reiniciar a contagem quando a série seguinte é marcada.
+  const [rest, setRest] = useState(null);
 
   const {
     register,
@@ -211,6 +215,19 @@ export default function Workout() {
 
     setValue(path, completed, { shouldDirty: true });
 
+    // Série marcada: dispara o descanso prescrito. É só visual — o campo
+    // "Descanso (s)" continua manual, para o dado gravado seguir sendo o que o
+    // aluno informou. Desmarcar uma série encerra a contagem.
+    if (completed) {
+      const planned = Number(
+        getValues(`exercises.${exerciseIndex}.sets.${setIndex}.planned_rest_time`),
+      );
+
+      setRest(planned > 0 ? { seconds: planned, key: Date.now() } : null);
+    } else {
+      setRest(null);
+    }
+
     // Última série do exercício marcada: avança para o próximo pendente.
     if (completed) {
       const exercises = getValues("exercises");
@@ -328,32 +345,39 @@ export default function Workout() {
   return (
     <PageContainer>
       <div className="mx-auto w-full max-w-3xl">
-        <div className="flex items-start justify-between gap-3">
-          <PageTitle
-            eyebrow={checkinId ? "Treino · editando" : "Treino"}
-            title={workout?.name || "Treino"}
-          />
+        <header className="flex items-start justify-between gap-4 border-b-2 border-foreground pb-5 pt-7">
+          <div className="min-w-0">
+            <p className="text-muted-foreground ficha-label">
+              {checkinId ? "Treino · editando" : "Treino"}
+              {fields.length
+                ? ` · ${fields.length} ${fields.length === 1 ? "exercício" : "exercícios"}`
+                : ""}
+            </p>
+            <h1 className="mt-3 text-[clamp(2.25rem,7vw,3.75rem)] ficha-display">
+              {workout?.name || "Treino"}
+            </h1>
+          </div>
 
           <Button
             variant="outline"
             size="sm"
-            className="mt-8 shrink-0"
+            className="mt-1 shrink-0 rounded-none border-2 border-foreground text-[11px] uppercase tracking-[0.18em] ficha-mono"
             onClick={() => navigate("/student/my-workouts")}
           >
             <ArrowLeft className="h-4 w-4" aria-hidden="true" />
             Voltar
           </Button>
-        </div>
+        </header>
 
         {loading ? (
-          <Card className="border-border/80 bg-card/90">
+          <Card className="rounded-none border-2 border-border bg-card">
             <CardContent className="space-y-8 px-6 py-6 sm:px-8">
               <FormSkeleton fields={1} columns={1} footer={false} />
               <ListSkeleton count={3} columns="" lines={4} />
             </CardContent>
           </Card>
         ) : notFound ? (
-          <Card className="border-border/80 bg-card/80">
+          <Card className="rounded-none border-2 border-border bg-card">
             <CardContent className="p-6">
               <p className="font-semibold">
                 Este treino não está mais disponível
@@ -375,7 +399,7 @@ export default function Workout() {
               </p>
             ) : null}
 
-            <div className="space-y-3">
+            <div className="mt-2 border-t border-border">
               {fields.map((field, index) => (
                 <ExerciseAccordionItem
                   key={field.id}
@@ -399,12 +423,10 @@ export default function Workout() {
               ))}
             </div>
 
-            <section className="relative mt-6 overflow-hidden rounded-xl border border-border bg-surface/60 p-4 pl-5 sm:p-5 sm:pl-6">
-              <span
-                aria-hidden="true"
-                className="absolute inset-y-0 left-0 w-1 bg-primary/70"
-              />
-              <h2 className="mb-4 flex items-center gap-2 text-sm font-bold uppercase tracking-[0.14em] text-foreground">
+            <section className="mt-10">
+              <TapeDivider delay={120} className="mb-6" />
+
+              <h2 className="mb-5 flex items-center gap-2 text-muted-foreground ficha-label">
                 <Flag className="h-4 w-4 text-primary" aria-hidden="true" />
                 Finalizar treino
               </h2>
@@ -439,6 +461,15 @@ export default function Workout() {
               control={control}
               autosaveStatus={autosaveStatus}
               submitting={submitting}
+              restTimer={
+                rest ? (
+                  <RestTimer
+                    key={rest.key}
+                    seconds={rest.seconds}
+                    onDismiss={() => setRest(null)}
+                  />
+                ) : null
+              }
             />
           </form>
         )}
@@ -447,12 +478,12 @@ export default function Workout() {
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <button
               type="button"
-              className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm"
+              className="fixed inset-0 z-40 bg-black/60"
               aria-label="Fechar"
               onClick={() => setConfirmState(null)}
             />
 
-            <Card className="relative z-50 w-full max-w-md border-border/80 bg-card">
+            <Card className="relative z-50 w-full max-w-md rounded-none border-2 border-foreground bg-card">
               <CardContent className="space-y-4 p-6">
                 <div className="space-y-1">
                   <p className="text-lg font-semibold text-foreground">

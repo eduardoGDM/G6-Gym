@@ -4,6 +4,7 @@ import { useMemo } from "react";
 import { useWatch } from "react-hook-form";
 
 import ActionIconButton from "../../../../components/common/ActionIconButton";
+import TallyMarks from "../../../../components/ficha/TallyMarks";
 import { Field } from "../../../../components/forms/Field";
 import { Textarea } from "../../../../components/ui/textarea";
 import { cn } from "../../../../lib/utils";
@@ -13,11 +14,14 @@ import CheckinSet from "./CheckinSet";
 import PrescriptionInfo from "./PrescriptionInfo";
 
 /**
- * Item da lista em sanfona do treino. Fechado, mostra só nome e progresso
- * ("2/4"); aberto, mostra o alvo comum, as séries e a observação do exercício.
+ * Item da lista em sanfona do treino, no tema "A Ficha".
  *
- * Cores: borda/faixa vermelha enquanto houver série pendente, verde quando todas
- * as séries foram marcadas como feitas.
+ * Fechado, é uma linha de ficha: índice em mono, nome na display e o progresso
+ * marcado em pauzinhos ao lado do contador. Aberto, ganha a barra de tinta à
+ * esquerda e as séries — com a série atual dominando a tela (ver CheckinSet).
+ *
+ * Exercício concluído não fica verde: o contador vira um tique de tinta e o
+ * nome recua para o cinza. Conclusão é marca, não cor.
  */
 export default function ExerciseAccordionItem({
   index,
@@ -71,70 +75,73 @@ export default function ExerciseAccordionItem({
     <section
       id={`exercise-${index}`}
       className={cn(
-        "relative scroll-mt-20 overflow-hidden rounded-xl border bg-card transition-colors duration-200",
-        allDone
-          ? "border-success/50"
-          : isOpen
-            ? "border-primary/70"
-            : "border-primary/25 hover:border-primary/50",
+        "relative scroll-mt-20 border-b border-border bg-transparent transition-colors duration-200",
+        isOpen && "border-b-2 border-foreground bg-card",
       )}
     >
-      <span
-        aria-hidden="true"
-        className={cn(
-          "absolute inset-y-0 left-0 w-1",
-          allDone ? "bg-success" : "bg-primary/70",
-        )}
-      />
+      {isOpen ? (
+        <span
+          aria-hidden="true"
+          className="absolute inset-y-0 left-0 w-[3px] bg-primary"
+        />
+      ) : null}
 
       <button
         type="button"
         onClick={() => onToggleOpen(index)}
         aria-expanded={isOpen}
         aria-controls={bodyId}
-        className="flex w-full items-center gap-3 py-3.5 pl-5 pr-4 text-left"
+        className={cn(
+          "flex w-full items-center gap-3.5 py-4 pr-2 text-left transition-colors duration-200",
+          isOpen ? "pl-5" : "pl-1 hover:bg-foreground/5",
+        )}
       >
-        <span
-          className={cn(
-            "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg font-mono text-xs font-bold tabular-nums",
-            allDone
-              ? "bg-success/15 text-success"
-              : isOpen
-                ? "bg-primary text-primary-foreground"
-                : "bg-muted text-muted-foreground",
-          )}
-        >
-          {allDone ? (
-            <Check className="h-4 w-4" strokeWidth={3} aria-hidden="true" />
-          ) : (
-            String(index + 1).padStart(2, "0")
-          )}
+        <span className="w-7 shrink-0 text-xs font-semibold tabular-nums text-muted-foreground ficha-mono">
+          {String(index + 1).padStart(2, "0")}
         </span>
 
         <span className="min-w-0 flex-1">
           <span
             className={cn(
-              "block truncate font-bold",
+              "block truncate text-[19px] ficha-display",
               allDone && !isOpen ? "text-muted-foreground" : "text-foreground",
             )}
           >
             {field.exercise_name}
           </span>
           {field.muscle_group ? (
-            <span className="block truncate font-mono text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
+            <span className="mt-1 block truncate text-muted-foreground ficha-label">
               {field.muscle_group}
             </span>
           ) : null}
         </span>
 
+        {doneCount > 0 ? (
+          <TallyMarks
+            count={doneCount}
+            scale={0.42}
+            animate={false}
+            label={`${doneCount} de ${total} séries feitas`}
+            className="hidden shrink-0 sm:block"
+          />
+        ) : null}
+
         <span
-          className={cn(
-            "font-mono text-sm font-bold tabular-nums",
-            allDone ? "text-success" : "text-muted-foreground",
-          )}
+          className="shrink-0 text-base font-semibold tabular-nums ficha-mono"
           aria-label={`${doneCount} de ${total} séries feitas`}
         >
-          {doneCount}/{total}
+          {allDone ? (
+            <Check
+              className="h-5 w-5 text-foreground"
+              strokeWidth={3}
+              aria-hidden="true"
+            />
+          ) : (
+            <>
+              {doneCount}
+              <span className="text-muted-foreground">/{total}</span>
+            </>
+          )}
         </span>
 
         <ChevronDown
@@ -149,7 +156,7 @@ export default function ExerciseAccordionItem({
       {isOpen ? (
         <div
           id={bodyId}
-          className="space-y-3 border-t border-border/60 py-3 pl-4 pr-3 animate-in fade-in duration-200 sm:py-4 sm:pl-6 sm:pr-5"
+          className="space-y-4 border-t border-border py-4 pl-5 pr-3 animate-rise sm:pr-5"
         >
           <div className="flex items-start justify-between gap-2">
             <PrescriptionInfo set={field.sets?.[0] || {}} keys={common} />
@@ -176,7 +183,7 @@ export default function ExerciseAccordionItem({
             </div>
           </div>
 
-          <div className="space-y-2">
+          <div className="space-y-2.5">
             {(field.sets || []).map((set, setIndex) => (
               <CheckinSet
                 key={`${field.id}-set-${set.set_number}`}
@@ -200,7 +207,7 @@ export default function ExerciseAccordionItem({
           <Field
             label="Observação do exercício"
             htmlFor={`exercises.${index}.notes`}
-            labelClassName="text-xs"
+            labelClassName="ficha-label text-muted-foreground"
           >
             <Textarea
               id={`exercises.${index}.notes`}

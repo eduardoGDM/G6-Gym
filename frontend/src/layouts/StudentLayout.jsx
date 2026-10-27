@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { useEffect } from "react";
 
+import ThemeModeToggle from "../components/ficha/ThemeModeToggle";
 import RoleLayout from "../components/layout/RoleLayout";
 import DailyCheckinReminder from "../components/student/DailyCheckinReminder";
 import PendingWorkoutModal from "../components/student/PendingWorkoutModal";
@@ -81,6 +82,11 @@ export default function StudentLayout() {
 
   return (
     <RoleLayout
+      // Tema "A Ficha": giz, ferro e anilha. Escopado aqui — o treinador segue
+      // no tema vermelho. Valores em `src/index.css`.
+      theme="ficha"
+      // Escuro é o padrão; o botão troca para o claro e a escolha persiste.
+      topbarActions={<ThemeModeToggle />}
       navGroups={buildNavGroups(canManageWorkouts)}
       title="G6Fit"
       roleLabel="Aluno"

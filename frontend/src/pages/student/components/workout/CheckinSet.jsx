@@ -1,49 +1,139 @@
-import { Check, ChevronDown } from "lucide-react";
+import { Check, ChevronDown, Minus, Plus } from "lucide-react";
 import { useState } from "react";
 import { Controller, useWatch } from "react-hook-form";
 
 import { Input } from "../../../../components/ui/input";
 import { Label } from "../../../../components/ui/label";
-import { NumberStepper } from "../../../../components/ui/number-stepper";
 import { Textarea } from "../../../../components/ui/textarea";
 import { cn } from "../../../../lib/utils";
-import { formatSetSummary } from "../../utils/workoutCheckin";
+import {
+  formatSetSummary,
+  formatWeight,
+  hasValue,
+} from "../../utils/workoutCheckin";
 import PrescriptionInfo from "./PrescriptionInfo";
 
-function DoneButton({ completed, highlighted, setNumber, iconOnly, onClick }) {
+const roundTo = (value, precision) => {
+  const factor = 10 ** precision;
+  return Math.round(value * factor) / factor;
+};
+
+/** Botão quadrado de −/+ : 48px de alvo, geometria reta, 2px de tinta. */
+function StepButton({ icon: Icon, label, onClick }) {
   return (
     <button
       type="button"
+      tabIndex={-1}
+      aria-label={label}
       onClick={onClick}
-      aria-pressed={completed}
-      aria-label={
-        completed
-          ? `Desmarcar série ${setNumber}`
-          : `Marcar série ${setNumber} como feita`
-      }
-      className={cn(
-        "inline-flex h-10 shrink-0 items-center justify-center gap-1.5 rounded-lg text-sm font-semibold transition-colors duration-200 active:scale-95",
-        iconOnly ? "w-10" : "px-3",
-        completed
-          ? "bg-success text-success-foreground hover:bg-success/90"
-          : highlighted
-            ? "bg-primary text-primary-foreground hover:bg-primary-hover"
-            : "border border-border text-muted-foreground hover:border-success/60 hover:text-foreground",
-      )}
+      className="flex h-12 w-14 shrink-0 items-center justify-center border-2 border-foreground text-foreground transition-colors duration-150 hover:bg-foreground hover:text-background active:scale-90"
     >
-      <Check className="h-4 w-4" strokeWidth={3} aria-hidden="true" />
-      {iconOnly ? null : "Feita"}
+      <Icon className="h-5 w-5" strokeWidth={2.5} aria-hidden="true" />
     </button>
   );
 }
 
 /**
- * Uma série do check-in. Pendente: carga e repetições lado a lado, com os
- * valores da prescrição esmaecidos como sugestão até o aluno marcar "Feita".
- * Concluída: vira uma linha compacta verde ("40 kg × 12"); tocar no resumo
- * reabre os campos para correção sem desmarcar a série.
+ * Campo numérico protagonista: o próprio número é o input (editável por
+ * teclado), em display expandida e tabular, com o alvo prescrito como
+ * placeholder gigante quando está vazio.
  *
- * Borda vermelha = pendente (mais forte na série atual), verde = feita.
+ * A rolagem de dígito alterna entre `animate-digit` e `animate-digit-alt` em
+ * vez de remontar o elemento — remontar faria o input perder o foco.
+ */
+function GiantField({
+  id,
+  field,
+  fieldState,
+  ghost,
+  unit,
+  size,
+  step,
+  precision,
+  inputMode,
+  onStep,
+  stepLabels,
+}) {
+  const [bump, setBump] = useState(0);
+
+  const applyStep = (direction) => {
+    const raw = hasValue(field.value) ? Number(field.value) : NaN;
+    const base = Number.isNaN(raw) ? 0 : raw;
+    const next = String(roundTo(Math.max(0, base + direction * step), precision));
+
+    onStep?.(field.value, next);
+    field.onChange(next);
+    setBump((current) => current + 1);
+  };
+
+  return (
+    <>
+      <div className="relative flex items-end gap-2">
+        {ghost ? (
+          <span
+            aria-hidden="true"
+            className="pointer-events-none absolute left-0.5 top-1 select-none text-foreground/[0.09] ficha-display"
+            style={{ fontSize: size }}
+          >
+            {ghost}
+          </span>
+        ) : null}
+
+        <input
+          id={id}
+          name={field.name}
+          value={field.value ?? ""}
+          onChange={(event) =>
+            field.onChange(
+              inputMode === "decimal"
+                ? event.target.value.replace(",", ".")
+                : event.target.value,
+            )
+          }
+          onBlur={field.onBlur}
+          inputMode={inputMode}
+          placeholder=""
+          aria-invalid={fieldState.invalid || undefined}
+          className={cn(
+            "relative w-full min-w-0 border-0 bg-transparent p-0 text-foreground outline-none ficha-display",
+            bump % 2 === 0 ? "animate-digit" : "animate-digit-alt",
+            fieldState.invalid && "text-destructive",
+          )}
+          style={{ fontSize: size }}
+        />
+
+        {unit ? (
+          <span className="relative shrink-0 pb-[0.16em] text-base font-semibold tracking-[0.08em] ficha-mono">
+            {unit}
+          </span>
+        ) : null}
+      </div>
+
+      <div className="mt-2.5 flex gap-2.5">
+        <StepButton
+          icon={Minus}
+          label={stepLabels.down}
+          onClick={() => applyStep(-1)}
+        />
+        <StepButton
+          icon={Plus}
+          label={stepLabels.up}
+          onClick={() => applyStep(1)}
+        />
+      </div>
+    </>
+  );
+}
+
+/**
+ * Uma série do check-in.
+ *
+ * A série atual DOMINA a tela: carga e repetições viram números gigantes, o
+ * alvo do personal aparece como placeholder esmaecido e a ação de concluir é
+ * uma barra de largura total. As outras séries recuam para uma linha de pauta —
+ * as feitas com o risco à mão por cima, as futuras só com o alvo.
+ *
+ * Tocar em qualquer linha recuada a expande para correção, sem desmarcar.
  */
 export default function CheckinSet({
   exerciseIndex,
@@ -58,7 +148,7 @@ export default function CheckinSet({
   onToggle,
   onWeightChange,
 }) {
-  const [editing, setEditing] = useState(false);
+  const [expanded, setExpanded] = useState(false);
   const [detailsOpen, setDetailsOpen] = useState(false);
 
   const base = `exercises.${exerciseIndex}.sets.${setIndex}`;
@@ -68,140 +158,179 @@ export default function CheckinSet({
   });
 
   const setNumber = set.set_number;
+  const summary = formatSetSummary(weight, repetitions);
+  const target = formatSetSummary(set.planned_weight, set.planned_repetitions);
   const lastSummary = lastSet
     ? formatSetSummary(lastSet.performed_weight, lastSet.performed_repetitions)
     : null;
 
+  // A série atual abre sozinha; qualquer outra abre quando o aluno toca nela.
+  const showFull = (isCurrent && !completed) || expanded;
+
   const handleToggle = () => {
-    setEditing(false);
+    setExpanded(false);
     onToggle(setIndex);
   };
 
-  if (completed && !editing) {
+  if (!showFull) {
     return (
-      <div className="flex items-center gap-3 rounded-lg border border-success/50 bg-success/5 py-1.5 pl-3 pr-1.5 transition-colors duration-200">
-        <span className="w-8 shrink-0 font-mono text-[11px] font-bold uppercase tracking-[0.14em] text-success">
+      <div className="flex items-center gap-3 border-b border-border py-2">
+        <span
+          className={cn(
+            "w-9 shrink-0 text-[11px] font-semibold uppercase tracking-[0.14em] ficha-mono",
+            completed ? "text-foreground" : "text-muted-foreground",
+          )}
+        >
           S{setNumber}
         </span>
+
         <button
           type="button"
-          onClick={() => setEditing(true)}
-          aria-label={`Editar série ${setNumber}`}
-          className="min-w-0 flex-1 truncate py-2 text-left font-mono text-sm font-semibold tabular-nums text-foreground"
+          onClick={() => setExpanded(true)}
+          aria-label={`Abrir série ${setNumber} para ajuste`}
+          className="min-w-0 flex-1 py-2 text-left transition-colors hover:text-foreground"
         >
-          {formatSetSummary(weight, repetitions) ?? "Sem valores"}
+          {completed ? (
+            <span className="relative inline-block text-[15px] font-medium text-muted-foreground ficha-mono">
+              {summary ?? "Sem valores"}
+              <span
+                aria-hidden="true"
+                className="absolute -left-1.5 -right-1.5 top-1/2 h-[2.5px] origin-left -rotate-[1.2deg] bg-foreground animate-strike"
+              />
+            </span>
+          ) : (
+            <span className="truncate text-[14px] text-muted-foreground ficha-mono">
+              {target ? `alvo ${target}` : "sem alvo definido"}
+            </span>
+          )}
         </button>
-        <DoneButton
-          completed
-          iconOnly
-          setNumber={setNumber}
+
+        <button
+          type="button"
           onClick={handleToggle}
-        />
+          aria-pressed={completed}
+          aria-label={
+            completed
+              ? `Desmarcar série ${setNumber}`
+              : `Marcar série ${setNumber} como feita`
+          }
+          className={cn(
+            "flex h-11 w-11 shrink-0 items-center justify-center border-2 transition-colors duration-150 active:scale-90",
+            completed
+              ? "border-foreground bg-foreground text-background"
+              : "border-input text-muted-foreground hover:border-foreground hover:text-foreground",
+          )}
+        >
+          <Check className="h-4 w-4" strokeWidth={3} aria-hidden="true" />
+        </button>
       </div>
     );
   }
 
-  const suggestionClassName = cn(
-    "font-mono tabular-nums",
-    !completed && "text-foreground/55",
-  );
-
   return (
     <div
       className={cn(
-        "space-y-3 rounded-lg border p-3 transition-colors duration-200",
-        completed
-          ? "border-success/50 bg-success/5"
-          : isCurrent
-            ? "border-primary bg-primary/5"
-            : "border-primary/30",
+        "border-2 px-4 pb-4 pt-4 transition-colors duration-200 sm:px-5",
+        isCurrent && !completed
+          ? "border-foreground bg-card"
+          : "border-border bg-card",
       )}
     >
-      <div className="flex items-center justify-between gap-2">
-        <div className="min-w-0 space-y-0.5">
-          <p
-            className={cn(
-              "font-mono text-[11px] font-bold uppercase tracking-[0.14em]",
-              completed
-                ? "text-success"
-                : isCurrent
-                  ? "text-primary"
-                  : "text-muted-foreground",
-            )}
-          >
-            Série {setNumber}
-            {isCurrent && !completed ? " · agora" : ""}
-          </p>
-          {lastSummary ? (
-            <p className="truncate font-mono text-xs tabular-nums text-muted-foreground">
-              Última: {lastSummary}
-            </p>
-          ) : null}
-        </div>
+      <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+        <p
+          className={cn(
+            "ficha-label",
+            isCurrent && !completed ? "text-primary" : "text-muted-foreground",
+          )}
+        >
+          Série {setNumber}
+          {isCurrent && !completed ? " · agora" : ""}
+          {completed ? " · feita" : ""}
+        </p>
 
-        <DoneButton
-          completed={completed}
-          highlighted={isCurrent}
-          setNumber={setNumber}
-          onClick={handleToggle}
-        />
+        {target ? (
+          <p className="text-muted-foreground ficha-label">Alvo · {target}</p>
+        ) : null}
       </div>
 
-      {prescriptionKeys.length ? (
-        <PrescriptionInfo set={set} keys={prescriptionKeys} />
+      {lastSummary ? (
+        <p className="mt-1.5 text-xs text-muted-foreground ficha-mono">
+          Última vez: {lastSummary}
+        </p>
       ) : null}
 
-      <div className="grid grid-cols-2 gap-2 sm:gap-3">
-        <div className="min-w-0 space-y-1">
-          <Label htmlFor={`${base}.performed_weight`} className="text-xs">
-            Carga (kg)
-          </Label>
+      {prescriptionKeys.length ? (
+        <div className="mt-3">
+          <PrescriptionInfo set={set} keys={prescriptionKeys} />
+        </div>
+      ) : null}
+
+      <div className="mt-5">
+        <Label
+          htmlFor={`${base}.performed_weight`}
+          className="text-muted-foreground ficha-label"
+        >
+          Carga
+        </Label>
+        <div className="mt-1.5">
           <Controller
             control={control}
             name={`${base}.performed_weight`}
             render={({ field, fieldState }) => (
-              <NumberStepper
+              <GiantField
                 id={`${base}.performed_weight`}
-                name={field.name}
-                value={field.value}
-                onChange={(value) => {
-                  onWeightChange(setIndex, field.value, value);
-                  field.onChange(value);
-                }}
-                onBlur={field.onBlur}
+                field={field}
+                fieldState={fieldState}
+                ghost={
+                  hasValue(field.value) ? null : formatWeight(set.planned_weight)
+                }
+                unit="kg"
+                size="clamp(3.25rem, 13vw, 5.5rem)"
                 step={2.5}
-                min={0}
                 precision={2}
                 inputMode="decimal"
-                buttonClassName="w-9 sm:w-11"
-                inputClassName={suggestionClassName}
-                aria-invalid={fieldState.invalid || undefined}
+                onStep={(previous, next) =>
+                  onWeightChange(setIndex, previous, next)
+                }
+                stepLabels={{
+                  down: "Diminuir 2,5 quilos",
+                  up: "Aumentar 2,5 quilos",
+                }}
               />
             )}
           />
         </div>
+      </div>
 
-        <div className="min-w-0 space-y-1">
-          <Label htmlFor={`${base}.performed_repetitions`} className="text-xs">
-            Repetições
-          </Label>
+      <div className="mt-6 border-t border-border pt-4">
+        <Label
+          htmlFor={`${base}.performed_repetitions`}
+          className="text-muted-foreground ficha-label"
+        >
+          Repetições
+        </Label>
+        <div className="mt-1.5">
           <Controller
             control={control}
             name={`${base}.performed_repetitions`}
             render={({ field, fieldState }) => (
-              <NumberStepper
+              <GiantField
                 id={`${base}.performed_repetitions`}
-                name={field.name}
-                value={field.value}
-                onChange={field.onChange}
-                onBlur={field.onBlur}
+                field={field}
+                fieldState={fieldState}
+                ghost={
+                  hasValue(field.value)
+                    ? null
+                    : (set.planned_repetitions ?? null)
+                }
+                size="clamp(2.5rem, 9vw, 3.5rem)"
                 step={1}
-                min={0}
                 precision={0}
                 inputMode="numeric"
-                buttonClassName="w-9 sm:w-11"
-                inputClassName={suggestionClassName}
-                aria-invalid={fieldState.invalid || undefined}
+                stepLabels={{
+                  down: "Diminuir uma repetição",
+                  up: "Aumentar uma repetição",
+                }}
               />
             )}
           />
@@ -210,14 +339,29 @@ export default function CheckinSet({
 
       <button
         type="button"
+        onClick={handleToggle}
+        aria-pressed={completed}
+        className={cn(
+          "mt-5 flex min-h-14 w-full items-center justify-center gap-2.5 border-2 border-foreground text-sm font-semibold uppercase tracking-[0.2em] transition-colors duration-200 ficha-mono active:scale-[0.99]",
+          completed
+            ? "bg-transparent text-foreground hover:bg-foreground hover:text-background"
+            : "bg-primary text-primary-foreground hover:bg-primary-hover",
+        )}
+      >
+        <Check className="h-4 w-4" strokeWidth={3} aria-hidden="true" />
+        {completed ? `Desmarcar série ${setNumber}` : "Marcar série feita"}
+      </button>
+
+      <button
+        type="button"
         onClick={() => setDetailsOpen((open) => !open)}
         aria-expanded={detailsOpen}
-        className="flex w-full items-center justify-center gap-1.5 rounded-lg py-1 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
+        className="mt-3 flex w-full items-center justify-center gap-1.5 py-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground transition-colors ficha-mono hover:text-foreground"
       >
         <ChevronDown
           aria-hidden="true"
           className={cn(
-            "h-3.5 w-3.5 transition-transform",
+            "h-3.5 w-3.5 transition-transform duration-200",
             detailsOpen && "rotate-180",
           )}
         />
@@ -225,9 +369,14 @@ export default function CheckinSet({
       </button>
 
       {detailsOpen ? (
-        <div className="space-y-4">
+        <div className="space-y-4 animate-rise">
           <div className="space-y-1.5">
-            <Label htmlFor={`${base}.performed_rest_time`}>Descanso (s)</Label>
+            <Label
+              htmlFor={`${base}.performed_rest_time`}
+              className="text-muted-foreground ficha-label"
+            >
+              Descanso (s)
+            </Label>
             <Input
               id={`${base}.performed_rest_time`}
               type="number"
@@ -236,14 +385,19 @@ export default function CheckinSet({
               {...register(`${base}.performed_rest_time`)}
             />
             {set.planned_rest_time ? (
-              <p className="text-xs text-muted-foreground">
+              <p className="text-xs text-muted-foreground ficha-mono">
                 Meta: {set.planned_rest_time} s
               </p>
             ) : null}
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor={`${base}.notes`}>Observação da série</Label>
+            <Label
+              htmlFor={`${base}.notes`}
+              className="text-muted-foreground ficha-label"
+            >
+              Observação da série
+            </Label>
             <Textarea
               id={`${base}.notes`}
               autoResize
@@ -255,13 +409,13 @@ export default function CheckinSet({
         </div>
       ) : null}
 
-      {completed && editing ? (
+      {expanded ? (
         <button
           type="button"
-          onClick={() => setEditing(false)}
-          className="w-full rounded-lg py-1 text-xs font-medium text-success transition-colors hover:text-foreground"
+          onClick={() => setExpanded(false)}
+          className="mt-2 w-full py-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground transition-colors ficha-mono hover:text-foreground"
         >
-          Fechar edição
+          Fechar série
         </button>
       ) : null}
     </div>

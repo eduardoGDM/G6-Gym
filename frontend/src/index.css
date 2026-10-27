@@ -1,4 +1,15 @@
 @import "tailwindcss";
+
+/* Fontes do tema "A Ficha" (área do aluno). Empacotadas via @fontsource —
+   nenhum webfont é carregado por rede. Archivo entra pelo arquivo `wdth` para
+   liberar o eixo de largura (font-stretch 62%–125%). */
+@import "@fontsource-variable/archivo/wdth.css";
+@import "@fontsource-variable/ibm-plex-sans/index.css";
+@import "@fontsource-variable/shantell-sans/index.css";
+@import "@fontsource/ibm-plex-mono/400.css";
+@import "@fontsource/ibm-plex-mono/500.css";
+@import "@fontsource/ibm-plex-mono/600.css";
+
 @plugin "tailwindcss-animate";
 
 @theme {
@@ -6,6 +17,15 @@
   /* Mono usada em números (notas, datas de carimbo). Cai no stack do sistema
      enquanto a JetBrains Mono não for empacotada. */
   --font-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+
+  /* ── Tipografia do tema "A Ficha" ───────────────────────────────── */
+  /* Display: grotesca industrial no eixo EXPANDIDO (o oposto da condensada
+     esportiva genérica). Usada em títulos e números protagonistas. */
+  --font-display: "Archivo Variable", Archivo, ui-sans-serif, system-ui, sans-serif;
+  --font-ficha: "IBM Plex Sans Variable", "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-ficha-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  /* Assinatura: só o recado do treinador. Dois lugares no app, mais nenhum. */
+  --font-hand: "Shantell Sans Variable", "Shantell Sans", "Segoe Script", cursive;
 
   /* ── Identidade G6Fit — Tema Vermelho ──────────────────────────── */
   /* Neutros (ramp escuro) */
@@ -59,6 +79,148 @@
 
   /* Mola curta — feedback ao incrementar valores (dial do check-in). */
   --animate-spring-pop: spring-pop 0.42s cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* ── Movimento do tema "A Ficha" ────────────────────────────────── */
+  /* Duas curvas: `chalk` para traço/revelação, `stamp` para carimbo e dígito. */
+  --animate-rise: rise 0.5s cubic-bezier(0.33, 0, 0.1, 1) both;
+  --animate-sheet: sheet 0.66s cubic-bezier(0.33, 0, 0.1, 1) both;
+  --animate-unroll: unroll 0.42s cubic-bezier(0.33, 0, 0.1, 1) both;
+  --animate-stamp: stamp 0.44s cubic-bezier(0.2, 1.6, 0.3, 1) both;
+  /* `digit` e `digit-alt` são idênticos de propósito: alternar entre os dois
+     reinicia a animação sem remontar o elemento — essencial quando o número é
+     um <input> que não pode perder o foco. */
+  --animate-digit: digit 0.4s cubic-bezier(0.2, 1.6, 0.3, 1) both;
+  --animate-digit-alt: digit-alt 0.4s cubic-bezier(0.2, 1.6, 0.3, 1) both;
+  --animate-strike: strike 0.19s cubic-bezier(0.33, 0, 0.1, 1) both;
+  --animate-draw: draw 0.32s cubic-bezier(0.33, 0, 0.1, 1) both;
+  --animate-breathe: breathe 2.6s ease-in-out infinite;
+  --animate-slow-pulse: slow-pulse 1.1s ease-in-out infinite;
+}
+
+/* ── Keyframes do tema "A Ficha" ──────────────────────────────────── */
+
+/* Entrada de bloco: sobe e aparece. */
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Revelação do herói — como puxar a ficha da prancheta. */
+@keyframes sheet {
+  from {
+    opacity: 0;
+    clip-path: inset(100% 0 0 0);
+  }
+  to {
+    opacity: 1;
+    clip-path: inset(-12% 0 0 0);
+  }
+}
+
+/* Fita de demarcação desenrolando da esquerda. */
+@keyframes unroll {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+/* Carimbo de recorde: pressiona e sangra a tinta. Única rotação permitida
+   no sistema, junto com a fita (ver docs/design-cards.md). */
+@keyframes stamp {
+  0% {
+    opacity: 0;
+    transform: rotate(-1.6deg) scale(1.24);
+  }
+  55% {
+    opacity: 1;
+    transform: rotate(-1.6deg) scale(0.96);
+  }
+  100% {
+    opacity: 1;
+    transform: rotate(-1.6deg) scale(1);
+  }
+}
+
+/* Rolagem de dígito ao mudar carga/repetição. */
+@keyframes digit {
+  0% {
+    opacity: 0.2;
+    transform: translateY(-10px) scale(0.94);
+  }
+  55% {
+    opacity: 1;
+    transform: translateY(0) scale(1.05);
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes digit-alt {
+  0% {
+    opacity: 0.2;
+    transform: translateY(-10px) scale(0.94);
+  }
+  55% {
+    opacity: 1;
+    transform: translateY(0) scale(1.05);
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Risco à mão sobre a série concluída. */
+@keyframes strike {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+/* Traço de pauzinho se desenhando (stroke-dashoffset). */
+@keyframes draw {
+  from {
+    stroke-dashoffset: var(--draw-length, 60);
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* Respiro da barra de giz do descanso — movimento orgânico, não mecânico. */
+@keyframes breathe {
+  0%,
+  100% {
+    transform: translateX(0) scaleY(1);
+  }
+  50% {
+    transform: translateX(1.5px) scaleY(1.06);
+  }
+}
+
+/* Últimos segundos do descanso: pulsação que desacelera. */
+@keyframes slow-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(0.955);
+  }
 }
 
 @keyframes spring-pop {
@@ -140,5 +302,283 @@
 
   input[type="date"]::-webkit-calendar-picker-indicator:hover {
     opacity: 1;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   TEMA "A FICHA" — área do aluno
+   ══════════════════════════════════════════════════════════════════════
+
+   Giz, ferro e anilha. Os NOMES dos tokens são os mesmos do tema vermelho:
+   `bg-card`, `text-primary` e companhia continuam funcionando sem reescrita —
+   só os VALORES mudam dentro do escopo. A área do treinador fica intacta.
+
+   O escopo é aplicado pelo `StudentLayout` (prop `theme` do `RoleLayout`).
+
+   DOIS MODOS, mesma direção de arte — a paleta inverte, a Anilha fica:
+
+   - ESCURO (padrão): Ferro #191B1C de fundo, Giz #EDE8DE de tinta.
+     A Anilha clareia para #E2672B, senão não passa de 2,3:1 no escuro.
+   - CLARO (`data-mode="light"`): Giz de fundo, Ferro de tinta, Anilha #C1440E.
+
+   O modo vem do `themeStore` e é escrito como `data-mode` pelo `RoleLayout`.
+   Ausência de `data-mode` = escuro, então o padrão vale até no primeiro paint,
+   antes de o JS resolver o localStorage.
+
+   Todos os pares de texto/fundo abaixo passam AA (≥ 4,5:1).
+   ────────────────────────────────────────────────────────────────────── */
+
+/* ── Modo escuro — o padrão ──────────────────────────────────────── */
+[data-theme="ficha"] {
+  /* Neutros (ramp de ferro fundido) */
+  --color-background: #191b1c;
+  --color-foreground: #ede8de; /* 14,2:1 */
+  --color-surface: #141617;
+  --color-card: #1f2223;
+  --color-card-foreground: #ede8de;
+  --color-popover: #1f2223;
+  --color-popover-foreground: #ede8de;
+  --color-muted: #26292a;
+  --color-muted-foreground: #9a968c; /* 5,9:1 */
+  --color-accent: #26292a;
+  --color-accent-foreground: #ede8de;
+  --color-secondary: #26292a;
+  --color-secondary-foreground: #ede8de;
+  --color-border: #313436;
+  --color-input: #44484a;
+  /* Pauta do caderno — mais fraca que a borda, nunca igual. */
+  --color-rule: #26292a;
+
+  /* Anilha sob luz de galpão: a mesma anilha, clareada para o escuro. */
+  --color-primary: #e2672b; /* 5,1:1 */
+  --color-primary-foreground: #191b1c; /* 5,1:1 sobre a anilha */
+  /* No escuro o hover CLAREIA (no claro ele escurece). */
+  --color-primary-hover: #ef7c45;
+  --color-primary-dark: #c1440e;
+  --color-ring: #e2672b;
+
+  /* Semânticos: função, não marca. Só erro de formulário, aviso e exclusão. */
+  --color-destructive: #de6b57; /* 5,2:1 */
+  --color-destructive-foreground: #191b1c;
+  --color-success: #7fa86f;
+  --color-success-foreground: #191b1c;
+  --color-warning: #d9a13c;
+  --color-warning-foreground: #191b1c;
+  --color-info: #7fa8c4;
+  --color-info-foreground: #191b1c;
+
+  --shadow-subtle: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+  --shadow-card: 0 2px 6px 0 rgba(0, 0, 0, 0.34), 0 1px 2px 0 rgba(0, 0, 0, 0.2);
+  --shadow-popover: 0 6px 16px 0 rgba(0, 0, 0, 0.4);
+  --shadow-modal: 0 12px 28px 0 rgba(0, 0, 0, 0.5);
+}
+
+/* ── Modo claro ──────────────────────────────────────────────────── */
+[data-theme="ficha"][data-mode="light"] {
+  /* Neutros (ramp claro) — papel e magnésio, nunca branco puro */
+  --color-background: #ede8de;
+  --color-foreground: #191b1c;
+  --color-surface: #e5dfd3;
+  --color-card: #f7f4ec;
+  --color-card-foreground: #191b1c;
+  --color-popover: #f7f4ec;
+  --color-popover-foreground: #191b1c;
+  --color-muted: #e3dccd;
+  --color-muted-foreground: #5a5d5f; /* 5,4:1 */
+  --color-accent: #e3dccd;
+  --color-accent-foreground: #191b1c;
+  --color-secondary: #e3dccd;
+  --color-secondary-foreground: #191b1c;
+  --color-border: #d8d2c6;
+  --color-input: #c6bfaf;
+  --color-rule: #e3dccd;
+
+  /* Anilha — acento único. No máximo um elemento ativo por tela. */
+  --color-primary: #c1440e; /* 6,0:1 */
+  --color-primary-foreground: #f7f4ec;
+  --color-primary-hover: #a93b0c;
+  --color-primary-dark: #8f3209;
+  --color-ring: #c1440e;
+
+  --color-destructive: #a52a1a;
+  --color-destructive-foreground: #f7f4ec;
+  --color-success: #3f6b3a;
+  --color-success-foreground: #f7f4ec;
+  --color-warning: #8a5a10;
+  --color-warning-foreground: #f7f4ec;
+  --color-info: #2f4f6b;
+  --color-info-foreground: #f7f4ec;
+
+  /* Sombra quase inexistente: contraste vem de tinta e borda. */
+  --shadow-subtle: 0 1px 1px 0 rgba(25, 27, 28, 0.06);
+  --shadow-card: 0 1px 2px 0 rgba(25, 27, 28, 0.07);
+  --shadow-popover: 0 6px 16px 0 rgba(25, 27, 28, 0.12);
+  --shadow-modal: 0 12px 28px 0 rgba(25, 27, 28, 0.18);
+}
+
+@layer base {
+  /* O corpo é pintado fora do escopo: o `<body>` é ancestral do container
+     temático, então a sobrescrita de variável não o alcança. A regra do modo
+     claro é mais específica, então vence sem precisar de ordem. */
+  html:has([data-theme="ficha"]) body {
+    background: #191b1c;
+  }
+
+  html:has([data-theme="ficha"][data-mode="light"]) body {
+    background: #ede8de;
+  }
+
+  html:has([data-theme="ficha"]) ::selection {
+    background: rgba(226, 103, 43, 0.28);
+    color: #ede8de;
+  }
+
+  html:has([data-theme="ficha"][data-mode="light"]) ::selection {
+    background: rgba(193, 68, 14, 0.22);
+    color: #191b1c;
+  }
+
+  [data-theme="ficha"] {
+    font-family: var(--font-ficha);
+    /* Grão de papel/giz. Ladrilho de 140px gerado por feTurbulence, pintado
+       como background-image do próprio container (acima da cor de fundo,
+       abaixo do conteúdo) — sem overlay, sem custo de filtro em tela cheia.
+       Se der para ler como textura, está forte demais. */
+    background-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><filter id='g'><feTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='140' height='140' filter='url(%23g)' opacity='0.07'/></svg>");
+  }
+
+  /* Todo título de página do aluno entra na display expandida. */
+  [data-theme="ficha"] h1 {
+    font-family: var(--font-display);
+    font-stretch: 125%;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Dado numérico é mono em todo o app; no tema claro ele troca de família. */
+  [data-theme="ficha"] .font-mono,
+  [data-theme="ficha"] .ficha-mono {
+    font-family: var(--font-ficha-mono);
+  }
+
+  /* Barra de rolagem acompanha o modo pelos próprios tokens. */
+  [data-theme="ficha"] *::-webkit-scrollbar-track {
+    background: var(--color-muted);
+  }
+
+  [data-theme="ficha"] *::-webkit-scrollbar-thumb {
+    background: var(--color-input);
+  }
+
+  [data-theme="ficha"] *::-webkit-scrollbar-thumb:hover {
+    background: var(--color-muted-foreground);
+  }
+
+  /* Sobre papel o ícone do calendário já é escuro — sem inversão. No modo
+     escuro vale a inversão global definida mais acima. */
+  [data-theme="ficha"][data-mode="light"]
+    input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: none;
+  }
+}
+
+/* ── Utilitários do tema ──────────────────────────────────────────── */
+
+/* Número e título protagonistas. */
+@utility ficha-display {
+  font-family: var(--font-display);
+  font-stretch: 125%;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  line-height: 0.82;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Micro-label: mono, caixa alta, tracking aberto. */
+@utility ficha-label {
+  font-family: var(--font-ficha-mono);
+  font-size: 10px;
+  line-height: 1.4;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+/* Assinatura — recado do treinador. */
+@utility ficha-hand {
+  font-family: var(--font-hand);
+}
+
+/* Fita de demarcação de piso. Usada como divisão de seção. */
+@utility ficha-tape {
+  background-image: repeating-linear-gradient(
+    135deg,
+    var(--color-foreground) 0,
+    var(--color-foreground) 7px,
+    transparent 7px,
+    transparent 14px
+  );
+}
+
+/* Pauta de caderno: uma linha fraca no meio da altura da linha. */
+@utility ficha-ruled {
+  background-image: linear-gradient(
+    to bottom,
+    transparent 31px,
+    var(--color-rule, #e3dccd) 31px,
+    var(--color-rule, #e3dccd) 32px,
+    transparent 32px
+  );
+}
+
+/* Borda irregular de giz, para a barra de descanso. */
+@utility ficha-chalk {
+  clip-path: polygon(
+    0 0,
+    100% 0,
+    calc(100% - 3px) 22%,
+    100% 44%,
+    calc(100% - 4px) 62%,
+    100% 82%,
+    calc(100% - 2px) 100%,
+    0 100%
+  );
+}
+
+/* Preenchimento de hover que varre da esquerda (CTA do painel). */
+@utility ficha-wipe {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: var(--color-foreground);
+    transform: scaleX(0);
+    transform-origin: left center;
+    transition: transform 0.34s cubic-bezier(0.33, 0, 0.1, 1);
+  }
+
+  &:hover::after,
+  &:focus-visible::after {
+    transform: scaleX(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-theme="ficha"] *,
+  [data-theme="ficha"] *::before,
+  [data-theme="ficha"] *::after {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  /* O que desenha precisa terminar no estado final, não sumir. */
+  [data-theme="ficha"] [data-draw] {
+    stroke-dashoffset: 0 !important;
   }
 }

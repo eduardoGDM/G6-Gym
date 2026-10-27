@@ -1,7 +1,5 @@
-import { Check, Trophy } from "lucide-react";
-
-import { Badge } from "../ui/badge";
-import { Button } from "../ui/button";
+import RecordStamp from "../ficha/RecordStamp";
+import TapeDivider from "../ficha/TapeDivider";
 import { Dialog } from "../ui/dialog";
 
 // Rótulo de cada critério de recorde. Mantido no frontend para separar a
@@ -26,58 +24,60 @@ const formatDelta = (delta, unit) => {
 };
 
 /**
- * Uma linha de evolução: valor anterior → novo valor, com o ganho em destaque.
+ * Uma linha de evolução: o valor anterior riscado à mão, o novo em número
+ * grande e o ganho em anilha. O risco repete a marcação de série concluída —
+ * o que passou está riscado, não apagado.
  */
 function ImprovementRow({ improvement }) {
   const label = METRIC_LABEL[improvement.metric] ?? improvement.metric;
 
   return (
-    <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1 text-sm">
-      <span className="font-medium text-muted-foreground">{label}:</span>
-      <span className="text-muted-foreground line-through">
-        {formatValue(improvement.previous, improvement.unit)}
+    <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 border-t border-border pt-2.5">
+      <span className="w-20 shrink-0 text-muted-foreground ficha-label">
+        {label}
       </span>
-      <span className="text-muted-foreground">→</span>
-      <span className="font-bold text-foreground">
+
+      <span className="relative inline-block text-sm text-muted-foreground ficha-mono">
+        {formatValue(improvement.previous, improvement.unit)}
+        <span
+          aria-hidden="true"
+          className="absolute -left-1 -right-1 top-1/2 h-[2px] origin-left -rotate-[1.2deg] bg-muted-foreground animate-strike"
+        />
+      </span>
+
+      <span className="text-[22px] ficha-display">
         {formatValue(improvement.current, improvement.unit)}
       </span>
-      <span className="font-semibold text-success">
-        ({formatDelta(improvement.delta, improvement.unit)})
+
+      <span className="text-sm font-semibold text-primary ficha-mono">
+        {formatDelta(improvement.delta, improvement.unit)}
       </span>
     </div>
   );
 }
 
-/**
- * Card de um exercício que evoluiu, com entrada animada (stagger via delay).
- */
+/** Um exercício que evoluiu. Entrada escalonada pelo índice. */
 function RecordCard({ record, index }) {
   return (
     <div
-      className="flex gap-3 rounded-xl border border-border/60 bg-surface p-4 animate-in fade-in slide-in-from-bottom-2"
-      style={{ animationDelay: `${120 + index * 90}ms`, animationFillMode: "both" }}
+      className="border-2 border-border bg-card px-4 pb-4 pt-3.5 animate-rise"
+      style={{ animationDelay: `${160 + index * 90}ms` }}
     >
-      <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-success/15 text-success">
-        <Check className="h-4 w-4" strokeWidth={3} />
+      <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 pb-3">
+        <span className="text-[17px] ficha-display">
+          {record.exercise?.name || "Exercício"}
+        </span>
+        {record.exercise?.muscle_group ? (
+          <span className="text-muted-foreground ficha-label">
+            {record.exercise.muscle_group}
+          </span>
+        ) : null}
       </div>
 
-      <div className="min-w-0 space-y-1.5">
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="font-semibold text-foreground">
-            {record.exercise?.name || "Exercício"}
-          </span>
-          {record.exercise?.muscle_group ? (
-            <Badge variant="outline" className="text-[0.65rem]">
-              {record.exercise.muscle_group}
-            </Badge>
-          ) : null}
-        </div>
-
-        <div className="space-y-1">
-          {(record.improvements || []).map((improvement) => (
-            <ImprovementRow key={improvement.metric} improvement={improvement} />
-          ))}
-        </div>
+      <div className="space-y-2.5">
+        {(record.improvements || []).map((improvement) => (
+          <ImprovementRow key={improvement.metric} improvement={improvement} />
+        ))}
       </div>
     </div>
   );
@@ -87,22 +87,36 @@ function RecordCard({ record, index }) {
  * Tela de celebração exibida ao concluir um treino em que o aluno bateu ao menos
  * um recorde pessoal. Não é renderizada quando não há recordes — quem controla
  * isso é a página do treino, que só abre a modal com `records` não vazio.
+ *
+ * O recorde é celebrado com CARIMBO, não com confete nem troféu dourado: é o
+ * fecho da direção de arte do tema "A Ficha".
  */
 export default function WorkoutRecordsModal({ open, onClose, records = [] }) {
   return (
     <Dialog open={open} onClose={onClose} className="max-w-lg">
-      <div className="flex flex-col items-center gap-3 border-b border-border/80 px-6 py-7 text-center sm:px-8">
-        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-amber-400/15 text-amber-500 animate-in zoom-in-50 duration-300">
-          <Trophy className="h-8 w-8" strokeWidth={2.2} />
+      <div className="border-b-2 border-foreground px-6 pb-6 pt-7 sm:px-8">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div className="min-w-0">
+            <p className="text-muted-foreground ficha-label">
+              {records.length}{" "}
+              {records.length === 1 ? "novo recorde" : "novos recordes"}
+            </p>
+            <h2 className="mt-3 text-[clamp(1.75rem,6vw,2.5rem)] ficha-display">
+              Está na ficha
+            </h2>
+          </div>
+
+          <RecordStamp
+            title="Recorde"
+            detail="carga · reps · volume"
+            delay={140}
+            className="shrink-0"
+          />
         </div>
-        <div>
-          <h2 className="text-xl font-bold text-foreground sm:text-2xl">
-            Você bateu novos recordes!
-          </h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Sua evolução em relação à última vez que treinou.
-          </p>
-        </div>
+
+        <p className="mt-4 max-w-sm text-sm text-muted-foreground">
+          Sua evolução em relação à última vez que você fez cada exercício.
+        </p>
       </div>
 
       <div className="max-h-[55vh] space-y-3 overflow-auto px-6 py-6 sm:px-8">
@@ -115,10 +129,16 @@ export default function WorkoutRecordsModal({ open, onClose, records = [] }) {
         ))}
       </div>
 
-      <div className="border-t border-border/80 px-6 py-4 sm:px-8">
-        <Button className="w-full" onClick={onClose}>
+      <div className="px-6 pb-6 sm:px-8">
+        <TapeDivider delay={240} className="mb-5" />
+
+        <button
+          type="button"
+          onClick={onClose}
+          className="flex min-h-14 w-full items-center justify-center border-2 border-foreground bg-primary text-xs font-semibold uppercase tracking-[0.2em] text-primary-foreground transition-colors duration-200 ficha-mono hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+        >
           Continuar
-        </Button>
+        </button>
       </div>
     </Dialog>
   );
