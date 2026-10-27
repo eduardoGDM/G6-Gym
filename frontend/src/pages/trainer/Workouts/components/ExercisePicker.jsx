@@ -10,11 +10,21 @@ import exercisesService from "../../../../services/ExercisesService";
 
 const PER_PAGE = 8;
 
+/**
+ * Busca paginada do catálogo de exercícios com ação por item.
+ *
+ * Os rótulos da ação são parametrizados porque a mesma busca serve para montar
+ * o treino (adicionar) e para o aluno trocar um exercício já prescrito
+ * (selecionar) — ver WorkoutEdit.
+ */
 export default function ExercisePicker({
   muscleGroups = [],
   addedIds = [],
   onAdd,
   scope = "trainer",
+  actionIcon: ActionIcon = Plus,
+  actionLabel = "Adicionar",
+  addedLabel = "Adicionado",
 }) {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
@@ -101,8 +111,8 @@ export default function ExercisePicker({
                   disabled={alreadyAdded}
                   onClick={() => onAdd(exercise)}
                 >
-                  <Plus className="h-4 w-4" />
-                  {alreadyAdded ? "Adicionado" : "Adicionar"}
+                  <ActionIcon className="h-4 w-4" />
+                  {alreadyAdded ? addedLabel : actionLabel}
                 </Button>
               </div>
             );

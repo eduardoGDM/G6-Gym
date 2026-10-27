@@ -18,11 +18,13 @@ class WorkoutCheckin extends Model
 		'student_profile_id',
 		'workout_id',
 		'performed_at',
+		'completed_at',
 		'notes',
 	];
 
 	protected $casts = [
 		'performed_at' => 'date',
+		'completed_at' => 'datetime',
 	];
 
 	/**

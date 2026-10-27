@@ -39,6 +39,20 @@ const workoutCheckinsService = {
     return data.data;
   },
 
+  /**
+   * Treino iniciado e não finalizado (hoje ou ontem), usado no destaque de
+   * "Meus treinos" e na modal de retomada. Retorna null quando não há pendência.
+   */
+  async pending() {
+    const { data } = await sanctumRequest(
+      "get",
+      "/student/checkins/pending",
+      {},
+    );
+    // Resource aninhado na resposta não recebe o envelope `data`.
+    return data.pending ? data.checkin : null;
+  },
+
   async create(payload) {
     const { data } = await sanctumRequest("post", "/student/checkins", payload);
     return data.data;

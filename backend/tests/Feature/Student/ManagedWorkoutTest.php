@@ -168,7 +168,11 @@ class ManagedWorkoutTest extends TestCase
 		$this->assertDatabaseMissing('workouts', ['id' => $workout->id]);
 	}
 
-	public function test_student_can_view_but_not_change_workout_created_by_trainer(): void
+	/**
+	 * Autogestão é completa: quem montou o treino não limita o aluno. Ele
+	 * reestrutura e até exclui o treino que veio do personal.
+	 */
+	public function test_student_can_restructure_workout_created_by_trainer(): void
 	{
 		$profile = $this->createStudent();
 		$workout = $this->createWorkout($profile, $this->trainer);
@@ -178,14 +182,45 @@ class ManagedWorkoutTest extends TestCase
 			->assertOk();
 
 		$this->actingAs($profile->user)
-			->putJson("/api/student/managed-workouts/{$workout->id}", ['name' => 'Alterado'])
-			->assertForbidden();
+			->putJson(
+				"/api/student/managed-workouts/{$workout->id}",
+				$this->workoutPayload(['name' => 'Reestruturado'])
+			)
+			->assertOk();
+
+		$this->assertDatabaseHas('workouts', ['id' => $workout->id, 'name' => 'Reestruturado']);
+		$this->assertDatabaseCount('workout_exercises', 1);
 
 		$this->actingAs($profile->user)
 			->deleteJson("/api/student/managed-workouts/{$workout->id}")
-			->assertForbidden();
+			->assertOk();
 
-		$this->assertDatabaseHas('workouts', ['id' => $workout->id, 'name' => 'Treino A']);
+		$this->assertDatabaseMissing('workouts', ['id' => $workout->id]);
+	}
+
+	/**
+	 * O aluno manda name/start_date/exercises, mas o vínculo é imutável: ele não
+	 * consegue mover o treino do personal para outro aluno nem trocar de
+	 * personal pelo payload.
+	 */
+	public function test_student_cannot_rebind_workout_while_editing(): void
+	{
+		$profile = $this->createStudent();
+		$otherProfile = $this->createStudent();
+		$workout = $this->createWorkout($profile, $this->trainer);
+
+		$this->actingAs($profile->user)
+			->putJson("/api/student/managed-workouts/{$workout->id}", $this->workoutPayload([
+				'student_profile_id' => $otherProfile->id,
+				'trainer_id' => 999,
+			]))
+			->assertOk();
+
+		$this->assertDatabaseHas('workouts', [
+			'id' => $workout->id,
+			'student_profile_id' => $profile->id,
+			'trainer_id' => $this->trainer->id,
+		]);
 	}
 
 	public function test_revoking_permission_blocks_the_next_request(): void

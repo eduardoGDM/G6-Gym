@@ -51,7 +51,7 @@ function formatDateBR(dateString) {
 export default function WorkoutsIndex() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { scope, isStudent, basePath, canModify } = useWorkoutScope();
+  const { scope, isStudent, basePath } = useWorkoutScope();
 
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("all");
@@ -214,31 +214,26 @@ export default function WorkoutsIndex() {
             tooltip="Visualizar"
             onClick={() => navigate(`${basePath}/${workout.id}`)}
           />
-          {/* Treinos montados pelo personal ficam somente leitura para o aluno. */}
-          {canModify(workout) ? (
-            <>
-              <ActionIconButton
-                icon={Pencil}
-                tooltip="Editar"
-                onClick={() => navigate(`${basePath}/${workout.id}/edit`)}
-              />
-              <ActionIconButton
-                icon={workout.active ? Pause : Play}
-                tooltip={workout.active ? "Inativar treino" : "Ativar treino"}
-                onClick={() => handleToggleStatus(workout)}
-                loading={togglingId === workout.id}
-              />
-              <ActionIconButton
-                icon={Trash2}
-                tooltip="Excluir"
-                color="destructive"
-                onClick={() => confirmDelete.request(workout.id)}
-                loading={
-                  confirmDelete.loading && confirmDelete.target === workout.id
-                }
-              />
-            </>
-          ) : null}
+          <ActionIconButton
+            icon={Pencil}
+            tooltip="Editar"
+            onClick={() => navigate(`${basePath}/${workout.id}/edit`)}
+          />
+          <ActionIconButton
+            icon={workout.active ? Pause : Play}
+            tooltip={workout.active ? "Inativar treino" : "Ativar treino"}
+            onClick={() => handleToggleStatus(workout)}
+            loading={togglingId === workout.id}
+          />
+          <ActionIconButton
+            icon={Trash2}
+            tooltip="Excluir"
+            color="destructive"
+            onClick={() => confirmDelete.request(workout.id)}
+            loading={
+              confirmDelete.loading && confirmDelete.target === workout.id
+            }
+          />
         </div>
       ),
     },

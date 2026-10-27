@@ -111,6 +111,38 @@ class WorkoutCheckinController extends Controller
 		return new WorkoutCheckinResource($checkin);
 	}
 
+	/**
+	 * Treino iniciado e não finalizado, para o destaque em "Meus treinos" e a
+	 * modal de retomada ao entrar no sistema.
+	 *
+	 * Só olha hoje e ontem: um treino abandonado semanas atrás não deve ficar
+	 * perseguindo o aluno em todo login. Mesmo formato do lembrete de check-in
+	 * diário (DailyCheckinController@reminder).
+	 */
+	public function pending(Request $request)
+	{
+		$profile = $this->resolveProfile($request);
+
+		if (!$profile) {
+			return response()->json([
+				'message' => 'Perfil de student não encontrado'
+			], 404);
+		}
+
+		$checkin = WorkoutCheckin::with('workout')
+			->where('student_profile_id', $profile->id)
+			->whereNull('completed_at')
+			->whereDate('performed_at', '>=', now()->subDay()->toDateString())
+			->orderBy('performed_at', 'desc')
+			->orderBy('created_at', 'desc')
+			->first();
+
+		return response()->json([
+			'pending' => (bool) $checkin,
+			'checkin' => $checkin ? new WorkoutCheckinResource($checkin) : null,
+		]);
+	}
+
 	public function show(Request $request, $id)
 	{
 		$profile = $this->resolveProfile($request);
@@ -148,6 +180,7 @@ class WorkoutCheckinController extends Controller
 		$request->validate(array_merge([
 			'workout_id' => 'required|exists:workouts,id',
 			'performed_at' => 'required|date|before_or_equal:today',
+			'completed' => 'nullable|boolean',
 			'notes' => 'nullable|string',
 		], self::EXERCISES_VALIDATION_RULES));
 
@@ -168,6 +201,9 @@ class WorkoutCheckinController extends Controller
 				'student_profile_id' => $profile->id,
 				'workout_id' => $request->workout_id,
 				'performed_at' => $request->performed_at,
+				// O autosave não envia `completed`: o check-in fica em
+				// andamento até o aluno finalizar o treino.
+				'completed_at' => $request->boolean('completed') ? now() : null,
 				'notes' => $request->notes,
 			]);
 
@@ -254,6 +290,7 @@ class WorkoutCheckinController extends Controller
 
 		$request->validate(array_merge([
 			'performed_at' => 'sometimes|date|before_or_equal:today',
+			'completed' => 'nullable|boolean',
 			'notes' => 'nullable|string',
 		], self::EXERCISES_VALIDATION_RULES));
 
@@ -262,6 +299,16 @@ class WorkoutCheckinController extends Controller
 				'performed_at',
 				'notes',
 			]));
+
+			// `completed` ausente mantém o estado atual: o autosave não envia o
+			// campo e não pode reabrir um treino que o aluno já finalizou.
+			if ($request->has('completed')) {
+				$checkin->update([
+					'completed_at' => $request->boolean('completed')
+						? ($checkin->completed_at ?? now())
+						: null,
+				]);
+			}
 
 			if ($request->has('exercises')) {
 				foreach ($request->input('exercises', []) as $exercise) {

@@ -5,11 +5,18 @@ import Topbar from "./TopBar";
 
 const DRAWER_WIDTH = 280;
 
+/**
+ * @param {object} props
+ * @param {React.ReactNode} [props.banner] - aviso no topo do conteúdo (ocupa espaço no fluxo).
+ * @param {React.ReactNode} [props.overlay] - camada sobreposta (modais) que o papel exibe
+ *   em qualquer tela, montada fora do <main> para não interferir no layout.
+ */
 export default function RoleLayout({
   navGroups,
   title,
   roleLabel,
   banner,
+  overlay,
   profilePath,
 }) {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -54,6 +61,8 @@ export default function RoleLayout({
           <Outlet />
         </main>
       </div>
+
+      {overlay}
     </div>
   );
 }

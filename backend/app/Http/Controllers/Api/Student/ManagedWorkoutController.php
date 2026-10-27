@@ -14,9 +14,11 @@ use App\Models\Workout;
  * (student_profiles.can_manage_workouts, validado no middleware
  * `can-manage-workouts`).
  *
- * Escopo: o aluno enxerga todos os treinos do próprio perfil, mas só altera os
- * que ele mesmo criou (created_by). O student_profile_id e o trainer_id nunca
- * vêm do request — sempre do perfil do usuário autenticado.
+ * Escopo: o aluno gerencia todos os treinos do próprio perfil, inclusive os
+ * montados pelo personal — a permissão é autogestão completa, não apenas dos
+ * treinos que ele mesmo criou. O vínculo nunca vem do request: o
+ * student_profile_id e o trainer_id saem sempre do perfil autenticado, então o
+ * aluno não consegue mover um treino para outro aluno nem trocar de personal.
  */
 class ManagedWorkoutController extends Controller
 {
@@ -107,7 +109,7 @@ class ManagedWorkoutController extends Controller
 
 	public function update(Request $request, $id)
 	{
-		$workout = $this->findOwnWorkout($request, $id);
+		$workout = $this->findWorkout($request, $id);
 
 		if (!$workout instanceof Workout) {
 			return $workout;
@@ -148,7 +150,7 @@ class ManagedWorkoutController extends Controller
 
 	public function destroy(Request $request, $id)
 	{
-		$workout = $this->findOwnWorkout($request, $id);
+		$workout = $this->findWorkout($request, $id);
 
 		if (!$workout instanceof Workout) {
 			return $workout;
@@ -169,26 +171,19 @@ class ManagedWorkoutController extends Controller
 	}
 
 	/**
-	 * Treino do próprio aluno que ele pode alterar. Treino de outro aluno é
-	 * tratado como inexistente (404); treino do próprio aluno montado pelo
-	 * personal existe, mas é somente leitura (403).
+	 * Treino do próprio aluno. O perfil autenticado é o único filtro: treino de
+	 * outro aluno é tratado como inexistente (404), e quem montou o treino não
+	 * importa — o aluno com autogestão altera também o que veio do personal.
 	 */
-	private function findOwnWorkout(Request $request, $id)
+	private function findWorkout(Request $request, $id)
 	{
-		$user = $request->user();
-
-		$workout = Workout::where('student_profile_id', $user->studentProfile->id)->find($id);
+		$workout = Workout::where('student_profile_id', $request->user()->studentProfile->id)
+			->find($id);
 
 		if (!$workout) {
 			return response()->json([
 				'message' => 'Treino não encontrado'
 			], 404);
-		}
-
-		if ((int) $workout->created_by !== (int) $user->id) {
-			return response()->json([
-				'message' => 'Você só pode alterar treinos criados por você.'
-			], 403);
 		}
 
 		return $workout;

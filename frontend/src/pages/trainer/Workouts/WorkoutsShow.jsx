@@ -51,7 +51,7 @@ function MetaItem({ icon: Icon, label, value }) {
 export default function WorkoutsShow() {
   const navigate = useNavigate();
   const { id } = useParams();
-  const { scope, isStudent, basePath, canModify } = useWorkoutScope();
+  const { scope, isStudent, basePath } = useWorkoutScope();
   const [workout, setWorkout] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -97,7 +97,7 @@ export default function WorkoutsShow() {
             Voltar à lista
           </Button>
 
-          {isStudent && workout && canModify(workout) ? (
+          {isStudent && workout ? (
             <Button
               className="w-full md:w-auto"
               onClick={() => navigate(`${basePath}/${id}/edit`)}

@@ -84,6 +84,20 @@ const workoutsService = {
     const { data } = await sanctumRequest("get", `/student/workout/${id}`);
     return data;
   },
+
+  /**
+   * Troca os exercícios de um treino atribuído ao aluno mantendo a estrutura
+   * prescrita (séries, repetições, carga, descanso). `exercises` é uma lista de
+   * { workout_exercise_id, exercise_id }.
+   */
+  async updateWorkoutExercises(id, exercises) {
+    const { data } = await sanctumRequest(
+      "put",
+      `/student/workout/${id}/exercises`,
+      { exercises },
+    );
+    return data;
+  },
 };
 
 export default workoutsService;

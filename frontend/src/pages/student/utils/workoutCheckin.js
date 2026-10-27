@@ -66,9 +66,15 @@ export const findNextOpenExercise = (exercises = [], from = -1) => {
   return null;
 };
 
-export const buildCheckinPayload = (workoutId, data) => ({
+/**
+ * Payload do check-in. `completed` só é enviado ao finalizar o treino — o
+ * autosave omite o campo para que a API mantenha o check-in em andamento (e não
+ * reabra um treino já finalizado que o aluno esteja editando).
+ */
+export const buildCheckinPayload = (workoutId, data, { completed } = {}) => ({
   workout_id: Number(workoutId),
   performed_at: data.performed_at,
+  ...(completed === undefined ? {} : { completed }),
   notes: emptyToNull(data.notes),
   exercises: (data.exercises || []).map((item) => ({
     exercise_id: item.exercise_id,

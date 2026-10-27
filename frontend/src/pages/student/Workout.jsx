@@ -1,4 +1,5 @@
 import { yupResolver } from "@hookform/resolvers/yup";
+import { useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, Flag } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useFieldArray, useForm } from "react-hook-form";
@@ -23,6 +24,7 @@ import {
   readCheckinDraft,
   useCheckinAutosave,
 } from "../../hooks/useCheckinAutosave";
+import { PENDING_WORKOUT_QUERY_KEY } from "../../hooks/usePendingWorkout";
 import achievementsService from "../../services/AchievementsService";
 import gamificationService from "../../services/GamificationService";
 import workoutCheckinsService from "../../services/WorkoutCheckinsService";
@@ -45,6 +47,7 @@ export default function Workout() {
   const [searchParams] = useSearchParams();
   const checkinIdParam = searchParams.get("checkin_id");
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   const [workout, setWorkout] = useState(null);
   const [checkinId, setCheckinId] = useState(null);
@@ -237,7 +240,9 @@ export default function Workout() {
     try {
       setSubmitting(true);
 
-      const payload = buildCheckinPayload(id, data);
+      // Finalização: é aqui que o check-in deixa de ser "em andamento" e sai do
+      // destaque/modal de treino pendente (o autosave nunca manda `completed`).
+      const payload = buildCheckinPayload(id, data, { completed: true });
 
       const request = checkinId
         ? workoutCheckinsService.update(checkinId, payload)
@@ -247,6 +252,9 @@ export default function Workout() {
         action: checkinId ? "update" : "create",
         entity: "Check-in",
       });
+
+      // Treino concluído: tira o destaque do card e a modal de retomada.
+      queryClient.invalidateQueries({ queryKey: PENDING_WORKOUT_QUERY_KEY });
 
       // Feedback de gamificação (streak + sono) após concluir — não bloqueia o
       // fluxo caso a chamada falhe.

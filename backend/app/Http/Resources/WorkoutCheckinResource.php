@@ -13,6 +13,8 @@ class WorkoutCheckinResource extends JsonResource
 			'id' => $this->id,
 			'workout_id' => $this->workout_id,
 			'performed_at' => $this->performed_at,
+			// Nulo = treino em andamento (ver migration completed_at).
+			'completed_at' => $this->completed_at,
 			'notes' => $this->notes,
 			'workout' => $this->whenLoaded('workout', function () {
 				return [

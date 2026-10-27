@@ -68,7 +68,7 @@ export default function WorkoutsNewEdit() {
   const navigate = useNavigate();
   const { id } = useParams();
   const isEdit = Boolean(id);
-  const { scope, isStudent, basePath, canModify } = useWorkoutScope();
+  const { scope, isStudent, basePath } = useWorkoutScope();
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
   const [students, setStudents] = useState([]);
@@ -128,14 +128,6 @@ export default function WorkoutsNewEdit() {
           isEdit ? workoutsService.getById(id, scope) : Promise.resolve(null),
         ]);
 
-        // Treino montado pelo personal é somente leitura para o aluno; o
-        // backend também bloqueia, aqui só evitamos abrir um form inútil.
-        if (isEdit && workout && !canModify(workout)) {
-          toast.error("Você só pode editar treinos criados por você.");
-          navigate(`${basePath}/${id}`, { replace: true });
-          return;
-        }
-
         setStudents(studentsData || []);
         setMuscleGroupOptions(muscleGroupsData || []);
 
@@ -177,7 +169,7 @@ export default function WorkoutsNewEdit() {
     };
 
     loadData();
-  }, [id, isEdit, reset, scope, isStudent, basePath, canModify, navigate]);
+  }, [id, isEdit, reset, scope, isStudent]);
 
   const handleAddExercise = (exercise) => {
     setExerciseDetails((current) => ({

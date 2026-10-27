@@ -352,6 +352,20 @@ Resposta (200): array de `Workout` com relações.
 Objetivo: Detalha um treino do aluno.
 Resposta (200): `Workout` com relações. Erro `404` (`Treino não encontrado`).
 
+### PUT /api/student/workout/{id}/exercises
+Objetivo: Troca os exercícios do treino mantendo a estrutura prescrita. Altera **apenas** `workout_exercises.exercise_id` — as séries (`workout_exercise_series`), a ordem e as observações não são tocadas. Middleware extra: `can-manage-workouts`.
+Body:
+```json
+{
+  "exercises": [
+    { "workout_exercise_id": 31, "exercise_id": 10 }
+  ]
+}
+```
+Validação: `exercises` req/array/min:1; `workout_exercise_id` req/integer (precisa pertencer ao treino); `exercise_id` req/existe. A composição final não pode repetir exercício.
+Resposta (200): `{"message": "Exercícios atualizados com sucesso", "workout": Workout}`.
+Erros: `403` (sem permissão, ou treino inativo), `404` (`Treino não encontrado` — inclui treino de outro aluno), `422`.
+
 ## Check-ins de treino
 
 ### GET /api/student/checkins
@@ -362,6 +376,10 @@ Resposta (200): coleção paginada `WorkoutCheckinResource` (com `exercises_coun
 ### GET /api/student/checkins/by-date
 Objetivo: Retorna o check-in de uma data específica.
 Parâmetros: `date` (req, date). Resposta (200): `WorkoutCheckinResource`. Erro `404` (`Nenhum check-in encontrado para esta data`).
+
+### GET /api/student/checkins/pending
+Objetivo: Treino iniciado e **não finalizado** (`completed_at` nulo) com `performed_at` em hoje/ontem — alimenta o destaque em "Meus treinos" e a modal de retomada. Janela curta de propósito: pendência antiga não deve reaparecer em todo login.
+Resposta (200): `{"pending": true, "checkin": WorkoutCheckinResource}` ou `{"pending": false, "checkin": null}`. O resource vem **sem** o envelope `data` (está aninhado na resposta).
 
 ### GET /api/student/checkins/{id}
 Resposta (200): `WorkoutCheckinResource` (com treino, exercícios, séries). Erro `404`.
@@ -385,13 +403,15 @@ Body:
   ]
 }
 ```
-Validação: `workout_id` req/existe (revalidado: do aluno e **ativo**); `performed_at` req/date/`before_or_equal:today`; estrutura de `exercises`/`sets` conforme regras.
+Validação: `workout_id` req/existe (revalidado: do aluno e **ativo**); `performed_at` req/date/`before_or_equal:today`; `completed` opcional/boolean; estrutura de `exercises`/`sets` conforme regras.
 Resposta (201): `WorkoutCheckinResource` + `{"message": "Check-in registrado com sucesso"}`.
 Erros: `404` (`Treino não encontrado ou não está ativo`), `422`.
 
+> `completed` controla `completed_at`. O autosave da tela de treino **não** envia o campo, então o check-in nasce em andamento; só "Finalizar treino" envia `completed: true`. No PUT, o campo ausente preserva o estado atual (autosave não reabre treino concluído) e `false` volta o check-in para em andamento.
+
 ### PUT /api/student/checkins/{id}
 Objetivo: Atualiza valores executados do check-in (o snapshot planejado é preservado).
-Body: `performed_at` (opcional), `notes`, `exercises[].sets[]` (por `id` ou `set_number`).
+Body: `performed_at` (opcional), `completed` (opcional), `notes`, `exercises[].sets[]` (por `id` ou `set_number`).
 Resposta (200): `WorkoutCheckinResource` + `{"message": "Check-in atualizado com sucesso"}`.
 Erros: `404`, `422`.
 
@@ -515,6 +535,7 @@ Erro: `404` (`Aluno não encontrado`).
 | POST/DELETE | /api/trainer/students/{student}/anamnesis/videos[/{video}] | trainer,admin | StudentAnamnesisVideoController |
 | GET | /api/student/my-workouts | student | Student\WorkoutController |
 | GET | /api/student/workout/{id} | student | Student\WorkoutController |
+| PUT | /api/student/workout/{id}/exercises | student + can-manage-workouts | Student\WorkoutController |
 | GET/POST/PUT | /api/student/checkins[...] | student | Student\WorkoutCheckinController |
 | GET/POST/PUT | /api/student/daily-checkins[...] | student | Student\DailyCheckinController |
 | GET | /api/student/dashboard/* | student | Student\DashboardController |

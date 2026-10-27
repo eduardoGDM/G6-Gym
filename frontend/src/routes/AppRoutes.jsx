@@ -32,6 +32,7 @@ const HistoryDetail = lazy(() => import("../pages/student/HistoryDetail"));
 const MyWorkouts = lazy(() => import("../pages/student/MyWorkouts"));
 const StudentProfile = lazy(() => import("../pages/student/Profile"));
 const Workout = lazy(() => import("../pages/student/Workout"));
+const WorkoutEdit = lazy(() => import("../pages/student/WorkoutEdit"));
 
 const CheckinsIndex = lazy(() => import("../pages/trainer/Checkins/CheckinsIndex"));
 const CheckinsShow = lazy(() => import("../pages/trainer/Checkins/CheckinsShow"));
@@ -182,6 +183,9 @@ export default function AppRoutes() {
               )
             }
           >
+            {/* Troca de exercícios do treino atribuído, mantendo as séries. */}
+            <Route path="workout/:id/edit" element={<WorkoutEdit />} />
+
             <Route path="manage-workouts" element={<WorkoutsIndex />} />
             <Route path="manage-workouts/new" element={<WorkoutsNewEdit />} />
             <Route path="manage-workouts/:id" element={<WorkoutsShow />} />

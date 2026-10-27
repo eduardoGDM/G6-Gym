@@ -11,6 +11,7 @@ import { useEffect } from "react";
 
 import RoleLayout from "../components/layout/RoleLayout";
 import DailyCheckinReminder from "../components/student/DailyCheckinReminder";
+import PendingWorkoutModal from "../components/student/PendingWorkoutModal";
 import authService from "../services/authService";
 import useAuthStore from "../store/authStore";
 
@@ -84,6 +85,7 @@ export default function StudentLayout() {
       title="G6Fit"
       roleLabel="Aluno"
       banner={<DailyCheckinReminder />}
+      overlay={<PendingWorkoutModal />}
       profilePath="/student/profile"
     />
   );

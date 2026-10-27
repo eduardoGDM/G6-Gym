@@ -7,6 +7,7 @@ use App\Models\MuscleGroup;
 use App\Models\StudentProfile;
 use App\Models\User;
 use App\Models\Workout;
+use App\Models\WorkoutCheckin;
 use App\Models\WorkoutExercise;
 use App\Models\WorkoutExerciseSeries;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -226,6 +227,108 @@ class WorkoutCheckinTest extends TestCase
         // exercícios e séries junto, senão sobram órfãos no histórico.
         $this->assertDatabaseMissing('workout_checkin_exercises', ['workout_checkin_id' => $created['id']]);
         $this->assertDatabaseMissing('workout_checkin_exercise_sets', ['workout_checkin_exercise_id' => $checkinExerciseId]);
+    }
+
+    public function test_checkin_starts_in_progress_and_is_only_completed_when_the_student_finalizes(): void
+    {
+        [$studentUser, $workout, $exercise] = $this->createStudentWithWorkout();
+
+        // Autosave: cria o check-in sem `completed` enquanto o aluno treina.
+        $created = $this->actingAs($studentUser)->postJson('/api/student/checkins', [
+            'workout_id' => $workout->id,
+            'performed_at' => now()->toDateString(),
+            'exercises' => [
+                [
+                    'exercise_id' => $exercise->id,
+                    'sets' => [
+                        ['set_number' => 1, 'performed_repetitions' => 12, 'performed_weight' => 40],
+                    ],
+                ],
+            ],
+        ])->json('data');
+
+        $this->assertNull($created['completed_at']);
+        $this->assertDatabaseHas('workout_checkins', ['id' => $created['id'], 'completed_at' => null]);
+
+        // Autosave seguinte não pode concluir o treino por conta própria.
+        $this->actingAs($studentUser)
+            ->putJson("/api/student/checkins/{$created['id']}", ['notes' => 'pesado'])
+            ->assertOk()
+            ->assertJsonPath('data.completed_at', null);
+
+        // "Finalizar treino" envia completed.
+        $this->actingAs($studentUser)
+            ->putJson("/api/student/checkins/{$created['id']}", ['completed' => true])
+            ->assertOk();
+
+        $this->assertNotNull(WorkoutCheckin::find($created['id'])->completed_at);
+    }
+
+    public function test_pending_returns_the_unfinished_checkin_and_ignores_the_completed_one(): void
+    {
+        [$studentUser, $workout] = $this->createStudentWithWorkout();
+        $profileId = $studentUser->studentProfile->id;
+
+        // Concluído ontem: não é pendência.
+        WorkoutCheckin::create([
+            'student_profile_id' => $profileId,
+            'workout_id' => $workout->id,
+            'performed_at' => now()->subDay()->toDateString(),
+            'completed_at' => now()->subDay(),
+        ]);
+
+        $this->actingAs($studentUser)
+            ->getJson('/api/student/checkins/pending')
+            ->assertOk()
+            ->assertJsonPath('pending', false)
+            ->assertJsonPath('checkin', null);
+
+        $pending = WorkoutCheckin::create([
+            'student_profile_id' => $profileId,
+            'workout_id' => $workout->id,
+            'performed_at' => now()->toDateString(),
+        ]);
+
+        $this->actingAs($studentUser)
+            ->getJson('/api/student/checkins/pending')
+            ->assertOk()
+            ->assertJsonPath('pending', true)
+            ->assertJsonPath('checkin.id', $pending->id)
+            ->assertJsonPath('checkin.workout.name', 'Treino A');
+    }
+
+    public function test_pending_ignores_unfinished_checkins_older_than_yesterday(): void
+    {
+        [$studentUser, $workout] = $this->createStudentWithWorkout();
+
+        WorkoutCheckin::create([
+            'student_profile_id' => $studentUser->studentProfile->id,
+            'workout_id' => $workout->id,
+            'performed_at' => now()->subDays(5)->toDateString(),
+        ]);
+
+        $this->actingAs($studentUser)
+            ->getJson('/api/student/checkins/pending')
+            ->assertOk()
+            ->assertJsonPath('pending', false);
+    }
+
+    public function test_pending_does_not_leak_another_students_checkin(): void
+    {
+        [$studentUser, $workout] = $this->createStudentWithWorkout();
+
+        WorkoutCheckin::create([
+            'student_profile_id' => $studentUser->studentProfile->id,
+            'workout_id' => $workout->id,
+            'performed_at' => now()->toDateString(),
+        ]);
+
+        [$otherStudentUser] = $this->createStudentWithWorkout();
+
+        $this->actingAs($otherStudentUser)
+            ->getJson('/api/student/checkins/pending')
+            ->assertOk()
+            ->assertJsonPath('pending', false);
     }
 
     public function test_student_cannot_delete_a_checkin_from_another_student(): void

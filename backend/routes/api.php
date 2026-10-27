@@ -124,6 +124,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
 			Route::get('/checkins', [WorkoutCheckinController::class, 'index']);
 			Route::get('/checkins/by-date', [WorkoutCheckinController::class, 'byDate']);
+			Route::get('/checkins/pending', [WorkoutCheckinController::class, 'pending']);
 			Route::get('/checkins/{id}', [WorkoutCheckinController::class, 'show']);
 			Route::post('/checkins', [WorkoutCheckinController::class, 'store']);
 			Route::put('/checkins/{id}', [WorkoutCheckinController::class, 'update']);
@@ -138,6 +139,9 @@ Route::middleware('auth:sanctum')->group(function () {
 			// Autogestão de treinos: só para alunos autorizados pelo personal.
 			// Catálogo de exercícios e grupos musculares é global e somente leitura aqui.
 			Route::middleware('can-manage-workouts')->group(function () {
+				// Troca de exercícios do treino atribuído, preservando as séries.
+				Route::put('/workout/{id}/exercises', [StudentWorkoutController::class, 'updateExercises']);
+
 				Route::get('/managed-workouts/sheet', [ManagedWorkoutController::class, 'sheet']);
 				Route::apiResource('managed-workouts', ManagedWorkoutController::class);
 				Route::get('/exercises', [ExerciseController::class, 'index']);
