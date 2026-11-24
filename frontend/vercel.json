@@ -2,11 +2,11 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://g6-gym-production-kzzowb.laravel.cloud/api/:path*"
+      "destination": "https://api-production-918ad087.up.railway.app/api/:path*"
     },
     {
       "source": "/sanctum/:path*",
-      "destination": "https://g6-gym-production-kzzowb.laravel.cloud/sanctum/:path*"
+      "destination": "https://api-production-918ad087.up.railway.app/sanctum/:path*"
     },
     {
       "source": "/:path*",
