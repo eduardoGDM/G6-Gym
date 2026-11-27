@@ -36,12 +36,32 @@ import { checkinSchema, getTodayISO } from "./utils/checkinSchema";
 import {
   buildCheckinPayload,
   buildExerciseDefaults,
+  canCompleteSet,
   countSets,
   findNextOpenExercise,
   isExerciseDone,
   normalizeDraft,
   sameNumber,
 } from "./utils/workoutCheckin";
+
+/**
+ * Primeira série marcada como feita que não tem carga e repetições, ou null.
+ * Usada só como rede na finalização — ver o comentário no onSubmit.
+ */
+const findIncompleteCompletedSet = (exercises = []) => {
+  for (const exercise of exercises) {
+    for (const set of exercise?.sets || []) {
+      if (set?.completed && !canCompleteSet(set)) {
+        return {
+          exerciseName: exercise.exercise_name || "Exercício",
+          setNumber: set.set_number,
+        };
+      }
+    }
+  }
+
+  return null;
+};
 
 export default function Workout() {
   const { id } = useParams();
@@ -310,6 +330,18 @@ export default function Workout() {
   };
 
   const onSubmit = async (data) => {
+    // Rede: a trava fica no botão de marcar série feita (ver canCompleteSet), mas
+    // um rascunho local de versão antiga chega aqui com séries concluídas e sem
+    // valores — o normalizeDraft marca tudo como feito.
+    const incomplete = findIncompleteCompletedSet(data.exercises);
+
+    if (incomplete) {
+      toast.error(
+        `${incomplete.exerciseName}: a série ${incomplete.setNumber} está marcada como feita sem carga ou repetições.`,
+      );
+      return;
+    }
+
     if (countSets(data.exercises).done === 0) {
       toast.error("Marque ao menos uma série como feita para concluir o treino.");
       return;

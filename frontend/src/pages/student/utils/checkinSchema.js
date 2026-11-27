@@ -22,8 +22,18 @@ const optionalNumber = (min) =>
 
 export const checkinSetSchema = yup.object({
   set_number: yup.number().required(),
-  performed_weight: optionalNumber(0),
-  performed_repetitions: optionalNumber(0),
+  // Série marcada como feita precisa dos dois valores. A trava principal é no
+  // botão de marcar (ver canCompleteSet); isto é a rede para rascunho local de
+  // versão antiga, que o normalizeDraft marca como concluído sem exigir valores.
+  completed: yup.boolean().nullable().notRequired(),
+  performed_weight: optionalNumber(0).when("completed", {
+    is: true,
+    then: (schema) => schema.required("Informe a carga da série feita"),
+  }),
+  performed_repetitions: optionalNumber(0).when("completed", {
+    is: true,
+    then: (schema) => schema.required("Informe as repetições da série feita"),
+  }),
   performed_rest_time: optionalNumber(0),
   notes: yup.string().trim().nullable().notRequired(),
 });
