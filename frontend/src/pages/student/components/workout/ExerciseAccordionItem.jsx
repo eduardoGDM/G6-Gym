@@ -9,7 +9,11 @@ import { Field } from "../../../../components/forms/Field";
 import { Textarea } from "../../../../components/ui/textarea";
 import { cn } from "../../../../lib/utils";
 import exerciseHistoryService from "../../../../services/ExerciseHistoryService";
-import { hasValue, splitPrescription } from "../../utils/workoutCheckin";
+import {
+  hasValue,
+  sameNumber,
+  splitPrescription,
+} from "../../utils/workoutCheckin";
 import CheckinSet from "./CheckinSet";
 import PrescriptionInfo from "./PrescriptionInfo";
 
@@ -21,6 +25,25 @@ import PrescriptionInfo from "./PrescriptionInfo";
  * Série `Válida` NUNCA entra aqui: é o dado que importa, e precisa ser digitado.
  */
 const PREFILL_TYPES = new Set(["Aquecimento", "Reconhecimento"]);
+
+/**
+ * A série ainda não recebeu valor do aluno?
+ *
+ * Campo vazio é o caso óbvio. O menos óbvio: `buildExerciseDefaults` já nasce
+ * com a PRESCRIÇÃO dentro de `performed_weight`/`performed_repetitions`, então
+ * "tem valor" não significa "o aluno digitou". Sem esta comparação, todo
+ * aquecimento com carga prescrita pelo personal bloquearia o pré-preenchimento
+ * — e a prescrição venceria a execução anterior, o inverso da precedência que
+ * esta tela quer.
+ *
+ * Compara por valor numérico porque a prescrição chega como decimal em string
+ * ("20.00") e o default a copia crua.
+ */
+const isUntouched = (live, set) =>
+  (!hasValue(live?.performed_weight) ||
+    sameNumber(live.performed_weight, set.planned_weight)) &&
+  (!hasValue(live?.performed_repetitions) ||
+    sameNumber(live.performed_repetitions, set.planned_repetitions));
 
 /**
  * Item da lista em sanfona do treino, no tema "A Ficha".
@@ -99,15 +122,10 @@ export default function ExerciseAccordionItem({
 
       const live = sets?.[setIndex];
 
-      // Precedência: série já feita e valor já existente (rascunho ou check-in
-      // salvo) nunca são tocados.
+      // Precedência: série já feita e valor já digitado pelo aluno (rascunho ou
+      // check-in salvo) nunca são tocados.
       if (live?.completed) return;
-      if (
-        hasValue(live?.performed_weight) ||
-        hasValue(live?.performed_repetitions)
-      ) {
-        return;
-      }
+      if (!isUntouched(live, set)) return;
 
       // Casamento por `set_number`, nunca por posição no array: o personal pode
       // ter mudado a quantidade de séries desde a última execução.
