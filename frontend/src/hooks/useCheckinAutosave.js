@@ -55,6 +55,9 @@ const isOfflineError = (error) => {
  * @param {(id: number) => void} params.onCheckinCreated
  * @param {(values: any) => object} params.buildPayload
  * @param {string} params.draftId - chave estável do rascunho no localStorage.
+ * @param {{ current: boolean }} [params.isDirtyRef] - quando informado, alterações
+ *   observadas com o formulário limpo são ignoradas. Ref (e não valor) para não
+ *   recriar a subscription a cada render.
  * @returns {{ status: string }}
  */
 export function useCheckinAutosave({
@@ -64,6 +67,7 @@ export function useCheckinAutosave({
   onCheckinCreated,
   buildPayload,
   draftId,
+  isDirtyRef,
 }) {
   const [status, setStatus] = useState(AUTOSAVE_STATUS.IDLE);
 
@@ -176,8 +180,9 @@ export function useCheckinAutosave({
     [persistDraft, save],
   );
 
-  // Salva imediatamente, ignorando o debounce (ex.: sincronizar um rascunho
-  // recuperado do localStorage assim que a página reabre).
+  // Salva imediatamente, ignorando o debounce — e também a trava de formulário
+  // limpo acima, de propósito: é a sincronização explícita de um rascunho
+  // recuperado do localStorage, que precisa subir mesmo sem edição nesta sessão.
   const saveNow = useCallback(
     (values) => {
       clearTimeout(timerRef.current);
@@ -193,6 +198,13 @@ export function useCheckinAutosave({
     if (!enabled) return undefined;
 
     const subscription = watch((values) => {
+      // O callback do `watch` dispara em QUALQUER setValue, inclusive com
+      // `shouldDirty: false`. Como o primeiro save CRIA o check-in, sem esta
+      // trava o pré-preenchimento de aquecimento/reconhecimento faria o simples
+      // ato de abrir um exercício criar um treino pendente, com modal de
+      // retomada e tudo. Só salva depois da primeira edição real do aluno.
+      if (isDirtyRef && isDirtyRef.current === false) return;
+
       scheduleSave(values);
     });
 
@@ -200,7 +212,7 @@ export function useCheckinAutosave({
       subscription.unsubscribe();
       clearTimeout(timerRef.current);
     };
-  }, [enabled, watch, scheduleSave]);
+  }, [enabled, watch, scheduleSave, isDirtyRef]);
 
   // Reenvio automático quando a conexão volta.
   useEffect(() => {

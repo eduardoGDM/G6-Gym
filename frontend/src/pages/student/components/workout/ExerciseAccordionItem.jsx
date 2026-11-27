@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { Check, ChevronDown, History, Video } from "lucide-react";
-import { useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { useWatch } from "react-hook-form";
 
 import ActionIconButton from "../../../../components/common/ActionIconButton";
@@ -9,9 +9,18 @@ import { Field } from "../../../../components/forms/Field";
 import { Textarea } from "../../../../components/ui/textarea";
 import { cn } from "../../../../lib/utils";
 import exerciseHistoryService from "../../../../services/ExerciseHistoryService";
-import { splitPrescription } from "../../utils/workoutCheckin";
+import { hasValue, splitPrescription } from "../../utils/workoutCheckin";
 import CheckinSet from "./CheckinSet";
 import PrescriptionInfo from "./PrescriptionInfo";
+
+/**
+ * Séries que nascem preenchidas com a execução anterior: elas mudam pouco de um
+ * mês para o outro, então o valor da última vez é um bom palpite — e remove
+ * quase todo o atrito da obrigatoriedade de carga e reps.
+ *
+ * Série `Válida` NUNCA entra aqui: é o dado que importa, e precisa ser digitado.
+ */
+const PREFILL_TYPES = new Set(["Aquecimento", "Reconhecimento"]);
 
 /**
  * Item da lista em sanfona do treino, no tema "A Ficha".
@@ -33,6 +42,7 @@ export default function ExerciseAccordionItem({
   onToggleOpen,
   onToggleSet,
   onWeightChange,
+  onPrefillSet,
   onOpenHistory,
 }) {
   const sets = useWatch({ control, name: `exercises.${index}.sets` });
@@ -50,8 +60,12 @@ export default function ExerciseAccordionItem({
     [field.sets],
   );
 
-  // Mesma queryKey da ExerciseHistoryModal: a última execução carregada aqui
-  // já deixa a modal pronta. Só busca quando o exercício está aberto.
+  // Última execução, para a dica "Última vez" na série e para o pré-preenchimento
+  // de aquecimento/reconhecimento. Só busca quando o exercício está aberto.
+  //
+  // Chave própria, separada da ExerciseHistoryModal: ela pagina o log completo
+  // (per_page 10, useInfiniteQuery) e não pode compartilhar cache com esta, que
+  // quer só as 2 últimas.
   const { data: history } = useQuery({
     queryKey: ["exercise-history", field.exercise_id, checkinId ?? null],
     queryFn: () =>
@@ -68,6 +82,51 @@ export default function ExerciseAccordionItem({
       ),
     [history],
   );
+
+  // Pré-preenchimento roda uma vez por exercício por sessão de edição: depois
+  // disso o aluno é o dono dos valores.
+  const prefilledRef = useRef(false);
+
+  useEffect(() => {
+    // `history` indefinido = ainda carregando. Sem histórico, a resposta vem
+    // com `data: []` e o laço simplesmente não encontra correspondente.
+    if (!isOpen || prefilledRef.current || !history) return;
+
+    prefilledRef.current = true;
+
+    (field.sets || []).forEach((set, setIndex) => {
+      if (!PREFILL_TYPES.has(set.planned_type)) return;
+
+      const live = sets?.[setIndex];
+
+      // Precedência: série já feita e valor já existente (rascunho ou check-in
+      // salvo) nunca são tocados.
+      if (live?.completed) return;
+      if (
+        hasValue(live?.performed_weight) ||
+        hasValue(live?.performed_repetitions)
+      ) {
+        return;
+      }
+
+      // Casamento por `set_number`, nunca por posição no array: o personal pode
+      // ter mudado a quantidade de séries desde a última execução.
+      const last = lastSetByNumber.get(set.set_number);
+      if (!last) return;
+
+      const values = {};
+      if (hasValue(last.performed_weight)) {
+        values.performed_weight = last.performed_weight;
+      }
+      if (hasValue(last.performed_repetitions)) {
+        values.performed_repetitions = last.performed_repetitions;
+      }
+
+      if (Object.keys(values).length) {
+        onPrefillSet(index, setIndex, values);
+      }
+    });
+  }, [isOpen, history, field.sets, sets, lastSetByNumber, index, onPrefillSet]);
 
   const bodyId = `exercise-${index}-body`;
 
@@ -200,6 +259,7 @@ export default function ExerciseAccordionItem({
                 onWeightChange={(target, previous, next) =>
                   onWeightChange(index, target, previous, next)
                 }
+                onOpenHistory={onOpenHistory}
               />
             ))}
           </div>

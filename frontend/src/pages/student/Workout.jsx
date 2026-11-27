@@ -36,12 +36,32 @@ import { checkinSchema, getTodayISO } from "./utils/checkinSchema";
 import {
   buildCheckinPayload,
   buildExerciseDefaults,
+  canCompleteSet,
   countSets,
   findNextOpenExercise,
   isExerciseDone,
   normalizeDraft,
   sameNumber,
 } from "./utils/workoutCheckin";
+
+/**
+ * Primeira série marcada como feita que não tem carga e repetições, ou null.
+ * Usada só como rede na finalização — ver o comentário no onSubmit.
+ */
+const findIncompleteCompletedSet = (exercises = []) => {
+  for (const exercise of exercises) {
+    for (const set of exercise?.sets || []) {
+      if (set?.completed && !canCompleteSet(set)) {
+        return {
+          exerciseName: exercise.exercise_name || "Exercício",
+          setNumber: set.set_number,
+        };
+      }
+    }
+  }
+
+  return null;
+};
 
 export default function Workout() {
   const { id } = useParams();
@@ -73,7 +93,7 @@ export default function Workout() {
     watch,
     getValues,
     setValue,
-    formState: { errors },
+    formState: { errors, isDirty },
   } = useForm({
     resolver: yupResolver(checkinSchema),
     defaultValues: {
@@ -100,6 +120,17 @@ export default function Workout() {
 
   const draftToSyncRef = useRef(null);
 
+  // Espelho do `isDirty` em ref: o autosave ignora alterações enquanto o
+  // formulário está limpo, para o pré-preenchimento não criar check-in. Em
+  // efeito, e não durante o render, porque o lint do projeto (regras do React
+  // Compiler) proíbe escrever ref no render. O autosave tem debounce de 1,5 s,
+  // então o efeito já rodou muito antes de o primeiro save ser considerado.
+  const isDirtyRef = useRef(false);
+
+  useEffect(() => {
+    isDirtyRef.current = isDirty;
+  }, [isDirty]);
+
   const { status: autosaveStatus, saveNow } = useCheckinAutosave({
     watch,
     enabled: !loading && !notFound && Boolean(workout),
@@ -107,6 +138,7 @@ export default function Workout() {
     onCheckinCreated: setCheckinId,
     buildPayload,
     draftId,
+    isDirtyRef,
   });
 
   // Rascunho local recuperado ao reabrir a página é sincronizado com a API
@@ -209,6 +241,22 @@ export default function Workout() {
     setOpenIndex((current) => (current === index ? null : index));
   };
 
+  // Pré-preenchimento de aquecimento/reconhecimento com a execução anterior.
+  // `shouldDirty: false` é essencial: junto com a trava do autosave, impede que
+  // abrir um exercício crie um check-in que o aluno não pediu.
+  const handlePrefillSet = useCallback(
+    (exerciseIndex, setIndex, values) => {
+      Object.entries(values).forEach(([field, value]) => {
+        setValue(
+          `exercises.${exerciseIndex}.sets.${setIndex}.${field}`,
+          value,
+          { shouldDirty: false },
+        );
+      });
+    },
+    [setValue],
+  );
+
   const handleToggleSet = (exerciseIndex, setIndex) => {
     const path = `exercises.${exerciseIndex}.sets.${setIndex}.completed`;
     const completed = !getValues(path);
@@ -310,6 +358,18 @@ export default function Workout() {
   };
 
   const onSubmit = async (data) => {
+    // Rede: a trava fica no botão de marcar série feita (ver canCompleteSet), mas
+    // um rascunho local de versão antiga chega aqui com séries concluídas e sem
+    // valores — o normalizeDraft marca tudo como feito.
+    const incomplete = findIncompleteCompletedSet(data.exercises);
+
+    if (incomplete) {
+      toast.error(
+        `${incomplete.exerciseName}: a série ${incomplete.setNumber} está marcada como feita sem carga ou repetições.`,
+      );
+      return;
+    }
+
     if (countSets(data.exercises).done === 0) {
       toast.error("Marque ao menos uma série como feita para concluir o treino.");
       return;
@@ -412,6 +472,7 @@ export default function Workout() {
                   onToggleOpen={handleToggleOpen}
                   onToggleSet={handleToggleSet}
                   onWeightChange={handleWeightChange}
+                  onPrefillSet={handlePrefillSet}
                   onOpenHistory={() =>
                     setHistoryExercise({
                       id: field.exercise_id,

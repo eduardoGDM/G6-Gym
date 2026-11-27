@@ -11,11 +11,14 @@ use Illuminate\Http\Request;
 class ExerciseHistoryController extends Controller
 {
 	/**
-	 * Quantidade de execuções (check-ins) mostradas no histórico — apenas as
-	 * mais recentes, o suficiente para comparar com a última vez que o aluno
-	 * executou o exercício.
+	 * Página padrão: as duas execuções mais recentes, o suficiente para a dica
+	 * "Última vez" comparar com a última vez que o aluno fez o exercício. Quem
+	 * quer o log completo pede `per_page` maior.
 	 */
-	private const HISTORY_LIMIT = 2;
+	private const DEFAULT_PER_PAGE = 2;
+
+	/** Teto de `per_page`, para uma query maliciosa não despejar a tabela. */
+	private const MAX_PER_PAGE = 20;
 
 	/**
 	 * Histórico executado de um exercício para o aluno autenticado: as
@@ -49,6 +52,13 @@ class ExerciseHistoryController extends Controller
 
 		$excludeCheckinId = $request->query('exclude_checkin_id');
 
+		// Valor ausente, zero, negativo ou não numérico cai no padrão; acima do
+		// teto é limitado.
+		$requestedPerPage = (int) $request->query('per_page', self::DEFAULT_PER_PAGE);
+		$perPage = $requestedPerPage > 0
+			? min($requestedPerPage, self::MAX_PER_PAGE)
+			: self::DEFAULT_PER_PAGE;
+
 		$history = WorkoutCheckin::query()
 			->where('student_profile_id', $profile->id)
 			->when($excludeCheckinId, fn ($query) => $query->whereKeyNot($excludeCheckinId))
@@ -64,8 +74,7 @@ class ExerciseHistoryController extends Controller
 			}])
 			->orderBy('performed_at', 'desc')
 			->orderBy('created_at', 'desc')
-			->limit(self::HISTORY_LIMIT)
-			->get();
+			->paginate($perPage);
 
 		return ExerciseHistoryEntryResource::collection($history)
 			->additional([

@@ -1,4 +1,4 @@
-import { Check, ChevronDown, Minus, Plus } from "lucide-react";
+import { Check, ChevronDown, History, Minus, Plus } from "lucide-react";
 import { useState } from "react";
 import { Controller, useWatch } from "react-hook-form";
 
@@ -7,6 +7,7 @@ import { Label } from "../../../../components/ui/label";
 import { Textarea } from "../../../../components/ui/textarea";
 import { cn } from "../../../../lib/utils";
 import {
+  canCompleteSet,
   formatSetSummary,
   formatWeight,
   hasValue,
@@ -147,6 +148,7 @@ export default function CheckinSet({
   lastSet,
   onToggle,
   onWeightChange,
+  onOpenHistory,
 }) {
   const [expanded, setExpanded] = useState(false);
   const [detailsOpen, setDetailsOpen] = useState(false);
@@ -166,6 +168,31 @@ export default function CheckinSet({
 
   // A série atual abre sozinha; qualquer outra abre quando o aluno toca nela.
   const showFull = (isCurrent && !completed) || expanded;
+
+  // Só dá para marcar feita tendo carga e reps. Desmarcar é sempre livre.
+  const markBlocked =
+    !completed &&
+    !canCompleteSet({
+      performed_weight: weight,
+      performed_repetitions: repetitions,
+    });
+  const blockedReason = "Informe carga e reps para marcar";
+
+  // O histórico completo só é oferecido na série Válida: é a série que carrega
+  // a progressão. Aquecimento e reconhecimento já vêm pré-preenchidos.
+  const showHistory = set.planned_type === "Válida" && Boolean(onOpenHistory);
+
+  const historyButton = showHistory ? (
+    <button
+      type="button"
+      onClick={onOpenHistory}
+      aria-label="Histórico de carga e repetições deste exercício"
+      title="Histórico de carga e repetições"
+      className="flex h-11 w-11 shrink-0 items-center justify-center text-muted-foreground transition-colors duration-150 hover:text-primary active:scale-90"
+    >
+      <History className="h-4 w-4" aria-hidden="true" />
+    </button>
+  ) : null;
 
   const handleToggle = () => {
     setExpanded(false);
@@ -205,20 +232,29 @@ export default function CheckinSet({
           )}
         </button>
 
+        {historyButton}
+
         <button
           type="button"
           onClick={handleToggle}
+          disabled={markBlocked}
+          aria-disabled={markBlocked}
           aria-pressed={completed}
+          title={markBlocked ? blockedReason : undefined}
           aria-label={
             completed
               ? `Desmarcar série ${setNumber}`
-              : `Marcar série ${setNumber} como feita`
+              : markBlocked
+                ? `Série ${setNumber}: ${blockedReason}`
+                : `Marcar série ${setNumber} como feita`
           }
           className={cn(
-            "flex h-11 w-11 shrink-0 items-center justify-center border-2 transition-colors duration-150 active:scale-90",
+            "flex h-11 w-11 shrink-0 items-center justify-center border-2 transition-colors duration-150",
             completed
-              ? "border-foreground bg-foreground text-background"
-              : "border-input text-muted-foreground hover:border-foreground hover:text-foreground",
+              ? "border-foreground bg-foreground text-background active:scale-90"
+              : markBlocked
+                ? "cursor-not-allowed border-dashed border-input text-muted-foreground/50"
+                : "border-input text-muted-foreground hover:border-foreground hover:text-foreground active:scale-90",
           )}
         >
           <Check className="h-4 w-4" strokeWidth={3} aria-hidden="true" />
@@ -248,9 +284,14 @@ export default function CheckinSet({
           {completed ? " · feita" : ""}
         </p>
 
-        {target ? (
-          <p className="text-muted-foreground ficha-label">Alvo · {target}</p>
-        ) : null}
+        <span className="flex items-center gap-1">
+          {target ? (
+            <span className="text-muted-foreground ficha-label">
+              Alvo · {target}
+            </span>
+          ) : null}
+          {historyButton}
+        </span>
       </div>
 
       {lastSummary ? (
@@ -337,15 +378,27 @@ export default function CheckinSet({
         </div>
       </div>
 
+      {markBlocked ? (
+        <p className="mt-5 text-center text-muted-foreground ficha-label">
+          {blockedReason}
+        </p>
+      ) : null}
+
       <button
         type="button"
         onClick={handleToggle}
+        disabled={markBlocked}
+        aria-disabled={markBlocked}
         aria-pressed={completed}
+        title={markBlocked ? blockedReason : undefined}
         className={cn(
-          "mt-5 flex min-h-14 w-full items-center justify-center gap-2.5 border-2 border-foreground text-sm font-semibold uppercase tracking-[0.2em] transition-colors duration-200 ficha-mono active:scale-[0.99]",
+          "flex min-h-14 w-full items-center justify-center gap-2.5 border-2 text-sm font-semibold uppercase tracking-[0.2em] transition-colors duration-200 ficha-mono",
+          markBlocked ? "mt-2" : "mt-5",
           completed
-            ? "bg-transparent text-foreground hover:bg-foreground hover:text-background"
-            : "bg-primary text-primary-foreground hover:bg-primary-hover",
+            ? "border-foreground bg-transparent text-foreground hover:bg-foreground hover:text-background active:scale-[0.99]"
+            : markBlocked
+              ? "cursor-not-allowed border-dashed border-input text-muted-foreground/60"
+              : "border-foreground bg-primary text-primary-foreground hover:bg-primary-hover active:scale-[0.99]",
         )}
       >
         <Check className="h-4 w-4" strokeWidth={3} aria-hidden="true" />

@@ -10,6 +10,7 @@ use App\Models\WorkoutCheckinExercise;
 use App\Models\WorkoutCheckinExerciseSet;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class WorkoutCheckinController extends Controller
 {
@@ -31,6 +32,42 @@ class WorkoutCheckinController extends Controller
 	private function resolveProfile(Request $request)
 	{
 		return $request->user()->studentProfile;
+	}
+
+	/**
+	 * Rede de validação da finalização: toda série registrada precisa de carga
+	 * E repetições. Série com os dois vazios é série não feita, e passa.
+	 *
+	 * Só atua quando o payload traz `completed`: o autosave nunca valida, porque
+	 * grava parcial enquanto o aluno preenche no meio do treino.
+	 *
+	 * A trava principal é no frontend, no botão de marcar série feita. Esta aqui
+	 * cobre rascunho local de versão antiga e cliente desatualizado.
+	 */
+	private function assertCompletedSetsAreComplete(Request $request): void
+	{
+		if (!$request->boolean('completed')) {
+			return;
+		}
+
+		// `0` é valor (peso corporal, paralelas), não campo vazio: comparar com
+		// null e '' — nunca com falsy.
+		$filled = fn ($value) => $value !== null && $value !== '';
+
+		foreach ($request->input('exercises', []) as $exercise) {
+			foreach ($exercise['sets'] ?? [] as $set) {
+				$hasWeight = $filled($set['performed_weight'] ?? null);
+				$hasRepetitions = $filled($set['performed_repetitions'] ?? null);
+
+				if ($hasWeight === $hasRepetitions) {
+					continue;
+				}
+
+				throw ValidationException::withMessages([
+					'exercises' => 'Toda série registrada precisa de carga e repetições.',
+				]);
+			}
+		}
 	}
 
 	public function index(Request $request)
@@ -184,6 +221,8 @@ class WorkoutCheckinController extends Controller
 			'notes' => 'nullable|string',
 		], self::EXERCISES_VALIDATION_RULES));
 
+		$this->assertCompletedSetsAreComplete($request);
+
 		$workout = Workout::with('workoutExercises.series')
 			->where('student_profile_id', $profile->id)
 			->where('id', $request->workout_id)
@@ -293,6 +332,8 @@ class WorkoutCheckinController extends Controller
 			'completed' => 'nullable|boolean',
 			'notes' => 'nullable|string',
 		], self::EXERCISES_VALIDATION_RULES));
+
+		$this->assertCompletedSetsAreComplete($request);
 
 		DB::transaction(function () use ($request, $checkin) {
 			$checkin->update($request->only([

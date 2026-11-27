@@ -3,6 +3,19 @@ export const hasValue = (value) =>
 
 const emptyToNull = (value) => (hasValue(value) ? value : null);
 
+/**
+ * Uma série só pode ser marcada como feita tendo carga E repetições. É a trava
+ * principal do registro: como `completed` é inferido de "tem valores salvos"
+ * (ver buildExerciseDefaults), exigir os dois aqui faz a inferência nunca
+ * discordar da realidade — série feita e vazia deixa de ser possível.
+ *
+ * Usa `hasValue`, nunca truthiness: carga `0` é peso corporal (paralelas,
+ * flexão), valor legítimo, e `!0` travaria o aluno justamente nesses exercícios.
+ */
+export const canCompleteSet = (set) =>
+  hasValue(set?.performed_weight) && hasValue(set?.performed_repetitions);
+
+
 // Carga vem como decimal em string ("30.00"); exibimos sem casas supérfluas e
 // no padrão pt-BR ("82,5").
 export const formatWeight = (value) => {

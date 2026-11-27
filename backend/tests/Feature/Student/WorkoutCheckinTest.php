@@ -356,4 +356,82 @@ class WorkoutCheckinTest extends TestCase
 
         $this->assertDatabaseHas('workout_checkins', ['id' => $created['id']]);
     }
+
+    /**
+     * Payload de check-in com um único exercício. `$extra` sobrescreve o topo
+     * (ex.: `['completed' => true]` para finalizar em vez de autosalvar).
+     */
+    private function postCheckin($studentUser, $workout, $exercise, array $sets, array $extra = [])
+    {
+        return $this->actingAs($studentUser)->postJson('/api/student/checkins', array_merge([
+            'workout_id' => $workout->id,
+            'performed_at' => now()->toDateString(),
+            'exercises' => [
+                [
+                    'exercise_id' => $exercise->id,
+                    'sets' => $sets,
+                ],
+            ],
+        ], $extra));
+    }
+
+    public function test_finalizing_rejects_set_with_weight_but_no_repetitions(): void
+    {
+        [$studentUser, $workout, $exercise] = $this->createStudentWithWorkout();
+
+        $response = $this->postCheckin($studentUser, $workout, $exercise, [
+            ['set_number' => 1, 'performed_weight' => 40, 'performed_repetitions' => null],
+        ], ['completed' => true]);
+
+        $response->assertStatus(422)->assertJsonValidationErrors('exercises');
+    }
+
+    public function test_finalizing_rejects_set_with_repetitions_but_no_weight(): void
+    {
+        [$studentUser, $workout, $exercise] = $this->createStudentWithWorkout();
+
+        $response = $this->postCheckin($studentUser, $workout, $exercise, [
+            ['set_number' => 1, 'performed_weight' => null, 'performed_repetitions' => 10],
+        ], ['completed' => true]);
+
+        $response->assertStatus(422)->assertJsonValidationErrors('exercises');
+    }
+
+    public function test_finalizing_accepts_bodyweight_set_with_zero_weight(): void
+    {
+        [$studentUser, $workout, $exercise] = $this->createStudentWithWorkout();
+
+        // Carga 0 é peso corporal (paralelas, flexão): valor válido, não campo vazio.
+        $response = $this->postCheckin($studentUser, $workout, $exercise, [
+            ['set_number' => 1, 'performed_weight' => 0, 'performed_repetitions' => 10],
+        ], ['completed' => true]);
+
+        $response->assertCreated();
+    }
+
+    public function test_finalizing_accepts_empty_set_alongside_a_complete_one(): void
+    {
+        [$studentUser, $workout, $exercise] = $this->createStudentWithWorkout();
+
+        // Série vazia = não feita. Dá para finalizar tendo feito 1 de 2.
+        $response = $this->postCheckin($studentUser, $workout, $exercise, [
+            ['set_number' => 1, 'performed_weight' => 40, 'performed_repetitions' => 12],
+            ['set_number' => 2, 'performed_weight' => null, 'performed_repetitions' => null],
+        ], ['completed' => true]);
+
+        $response->assertCreated();
+    }
+
+    public function test_autosave_accepts_partial_set_without_completed_flag(): void
+    {
+        [$studentUser, $workout, $exercise] = $this->createStudentWithWorkout();
+
+        // Mesmo payload incompleto do primeiro teste, sem `completed`: o autosave
+        // grava parcial enquanto o aluno preenche no meio do treino.
+        $response = $this->postCheckin($studentUser, $workout, $exercise, [
+            ['set_number' => 1, 'performed_weight' => 40, 'performed_repetitions' => null],
+        ]);
+
+        $response->assertCreated();
+    }
 }
