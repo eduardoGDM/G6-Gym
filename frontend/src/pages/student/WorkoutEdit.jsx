@@ -1,20 +1,21 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Info, Repeat2, Save, SlidersHorizontal } from "lucide-react";
+import { Repeat2 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
 import { crudToast } from "../../components/common/crudToast";
 import PageContainer from "../../components/common/PageContainer";
-import PageTitle from "../../components/common/PageTitle";
 import Spinner from "../../components/common/Spinner";
+import TapeDivider from "../../components/ficha/TapeDivider";
 import ErrorState from "../../components/loading/ErrorState";
-import ListSkeleton from "../../components/loading/ListSkeleton";
-import { Button } from "../../components/ui/button";
-import { Card, CardContent } from "../../components/ui/card";
 import { Dialog, DialogCloseButton } from "../../components/ui/dialog";
+import { cn } from "../../lib/utils";
 import workoutsService from "../../services/WorkoutsService";
 import ExercisePicker from "../trainer/Workouts/components/ExercisePicker";
-import ExerciseSwapCard from "./components/workout/ExerciseSwapCard";
+import ExerciseSwapRow from "./components/workout/ExerciseSwapRow";
+
+const LINK =
+  "min-h-11 text-[11px] font-semibold uppercase tracking-[0.2em] underline decoration-dotted underline-offset-4 transition-colors ficha-mono";
 
 /**
  * Troca de exercícios de um treino do aluno — o caminho rápido e conservador.
@@ -30,6 +31,9 @@ import ExerciseSwapCard from "./components/workout/ExerciseSwapCard";
  * reaproveita o formulário do personal. As duas telas convivem porque o update
  * de lá apaga e recria os workout_exercises, enquanto aqui a prescrição é
  * preservada posição por posição.
+ *
+ * No tema "A Ficha": a prescrição é a folha do personal e o aluno só troca a
+ * peça de cada linha. Salvar é a única Anilha da tela.
  */
 export default function WorkoutEdit() {
   const { id } = useParams();
@@ -115,89 +119,88 @@ export default function WorkoutEdit() {
   };
 
   return (
-    <PageContainer>
+    <PageContainer className="max-w-[1320px] lg:px-10">
       <div className="mx-auto w-full max-w-3xl">
-        <div className="flex items-start justify-between gap-3">
-          <PageTitle
-            eyebrow="Meus treinos"
-            title={workout?.name || "Editar treino"}
-            description="Troque os exercícios do treino mantendo a prescrição. As séries, repetições, cargas e descansos continuam como estão."
-          />
-
-          <Button
-            variant="outline"
-            size="sm"
-            className="mt-8 shrink-0"
+        <div className="border-b-2 border-foreground pb-6 pt-8">
+          <button
+            type="button"
             onClick={() => navigate("/student/my-workouts")}
+            className={cn(LINK, "text-muted-foreground hover:text-foreground")}
           >
-            <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-            Voltar
-          </Button>
+            ← A prancheta
+          </button>
+
+          <p className="mt-5 text-muted-foreground ficha-label">
+            Troca de exercícios
+          </p>
+
+          <h1 className="mt-4 text-[clamp(2.25rem,5.5vw,3.75rem)] ficha-display">
+            {workout?.name || "Editar treino"}
+          </h1>
+
+          <p className="mt-5 text-[15px] leading-relaxed text-muted-foreground">
+            A estrutura não muda: o exercício que entrar assume as mesmas séries
+            e a mesma prescrição da posição.
+          </p>
+
+          <button
+            type="button"
+            onClick={() => navigate(`/student/manage-workouts/${id}/edit`)}
+            className={cn(LINK, "mt-3 block hover:text-primary")}
+          >
+            Mudar séries, ordem ou adicionar exercícios
+          </button>
         </div>
 
         {isLoading ? (
-          <ListSkeleton count={4} columns="" lines={3} />
-        ) : notFound ? (
-          <Card className="border-border/80 bg-card/80">
-            <CardContent className="p-6">
-              <p className="font-semibold">Este treino não está mais disponível</p>
-              <p className="text-sm text-muted-foreground">
-                Ele pode ter sido desativado ou removido pelo seu personal
-                trainer.
-              </p>
-            </CardContent>
-          </Card>
-        ) : isError ? (
-          <Card className="border-border/80 bg-card/80">
-            <CardContent>
-              <ErrorState onRetry={refetch} />
-            </CardContent>
-          </Card>
-        ) : exercises.length === 0 ? (
-          <Card className="border-border/80 bg-card/80">
-            <CardContent className="p-6">
-              <p className="font-semibold">
-                Este treino ainda não possui exercícios
-              </p>
-              <p className="text-sm text-muted-foreground">
-                Não há nada para trocar aqui — mas você pode montar o treino
-                você mesmo.
-              </p>
-              <Button
-                className="mt-4"
-                onClick={() => navigate(`/student/manage-workouts/${id}/edit`)}
+          <div aria-hidden="true" className="mt-10 border-t border-border">
+            {Array.from({ length: 4 }).map((_, index) => (
+              <div
+                key={index}
+                className="flex h-28 flex-col justify-center gap-3.5 border-b border-border"
               >
-                <SlidersHorizontal className="h-4 w-4" aria-hidden="true" />
-                Adicionar exercícios
-              </Button>
-            </CardContent>
-          </Card>
+                <span className="block h-5 w-56 animate-pulse bg-muted" />
+                <span className="block h-3 w-72 animate-pulse bg-muted" />
+              </div>
+            ))}
+          </div>
+        ) : notFound ? (
+          <div className="mt-10">
+            <TapeDivider className="mb-7" />
+            <p className="text-[19px] font-medium">
+              Este treino não está mais disponível
+            </p>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Ele pode ter sido desativado ou removido pelo seu personal.
+            </p>
+          </div>
+        ) : isError ? (
+          <div className="mt-10 border-2 border-border bg-card p-6">
+            <ErrorState onRetry={refetch} />
+          </div>
+        ) : exercises.length === 0 ? (
+          <div className="mt-10">
+            <TapeDivider className="mb-7" />
+            <p className="text-[19px] font-medium">
+              Este treino ainda não tem exercícios
+            </p>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Não há nada para trocar aqui — mas você pode montar o treino você
+              mesmo.
+            </p>
+            <button
+              type="button"
+              onClick={() => navigate(`/student/manage-workouts/${id}/edit`)}
+              className="mt-5 min-h-12 border-2 border-foreground px-6 text-[11px] font-semibold uppercase tracking-[0.2em] transition-colors duration-200 ficha-mono hover:bg-foreground hover:text-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+            >
+              Adicionar exercícios
+            </button>
+          </div>
         ) : (
           <>
-            <div className="mb-4 flex items-start gap-3 rounded-xl border border-border/70 bg-surface/60 p-3.5 text-sm text-muted-foreground">
-              <Info
-                className="mt-0.5 h-4 w-4 shrink-0 text-primary"
-                aria-hidden="true"
-              />
-              <div>
-                <p>
-                  A estrutura do treino não muda: ao trocar um exercício, ele
-                  assume as mesmas séries e a mesma prescrição da posição.
-                </p>
-                <button
-                  type="button"
-                  onClick={() => navigate(`/student/manage-workouts/${id}/edit`)}
-                  className="mt-1.5 inline-flex items-center gap-1.5 rounded font-medium text-primary underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60"
-                >
-                  <SlidersHorizontal className="h-3.5 w-3.5" aria-hidden="true" />
-                  Mudar séries, ordem ou adicionar exercícios
-                </button>
-              </div>
-            </div>
-
-            <div className="space-y-3">
+            <ul className="mt-10 border-t border-border">
               {exercises.map((workoutExercise) => (
-                <ExerciseSwapCard
+                <ExerciseSwapRow
                   key={workoutExercise.id}
                   workoutExercise={workoutExercise}
                   selectedExercise={swaps[workoutExercise.id]}
@@ -206,31 +209,28 @@ export default function WorkoutEdit() {
                   onUndo={() => handleUndo(workoutExercise.id)}
                 />
               ))}
-            </div>
+            </ul>
 
-            <div className="sticky bottom-4 mt-6 flex flex-col gap-3 rounded-xl border border-border bg-card/95 p-4 shadow-popover backdrop-blur sm:flex-row sm:items-center sm:justify-between">
-              <p className="text-sm text-muted-foreground">
+            <div className="sticky bottom-4 mt-8 flex flex-col gap-4 border-2 border-foreground bg-card px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+              <p className="text-muted-foreground ficha-label">
                 {changes.length === 0
-                  ? "Nenhum exercício alterado."
+                  ? "Nenhuma troca pendente"
                   : `${changes.length} ${
                       changes.length === 1
-                        ? "exercício alterado"
-                        : "exercícios alterados"
-                    }.`}
+                        ? "posição trocada"
+                        : "posições trocadas"
+                    }`}
               </p>
 
-              <Button
+              <button
                 type="button"
                 onClick={handleSave}
                 disabled={changes.length === 0 || saving}
+                className="flex min-h-12 items-center justify-center gap-3 border-2 border-foreground bg-primary px-6 text-[11px] font-semibold uppercase tracking-[0.2em] text-primary-foreground transition-colors duration-200 ficha-mono ficha-wipe hover:text-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none disabled:border-input disabled:bg-transparent disabled:text-muted-foreground"
               >
-                {saving ? (
-                  <Spinner className="h-4 w-4" />
-                ) : (
-                  <Save className="h-4 w-4" aria-hidden="true" />
-                )}
-                Salvar alterações
-              </Button>
+                {saving ? <Spinner className="h-4 w-4" /> : null}
+                Salvar trocas
+              </button>
             </div>
           </>
         )}
@@ -242,14 +242,14 @@ export default function WorkoutEdit() {
         >
           <DialogCloseButton onClick={() => setPickerFor(null)} />
 
-          <div className="border-b border-border/80 px-6 py-5">
-            <h2 className="text-lg font-semibold text-foreground">
-              Trocar exercício
-            </h2>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Posição {pickerFor?.order} ·{" "}
+          <div className="border-b border-border px-6 py-5">
+            <p className="text-muted-foreground ficha-label">
+              Posição {String(pickerFor?.order ?? "").padStart(2, "0")} ·{" "}
               {pickerFor?.exercise?.name || "exercício atual"}
             </p>
+            <h2 className="mt-2.5 text-[1.75rem] ficha-display">
+              Trocar exercício
+            </h2>
           </div>
 
           <div className="px-6 py-5">

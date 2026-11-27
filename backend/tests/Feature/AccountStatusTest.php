@@ -18,7 +18,7 @@ class AccountStatusTest extends TestCase
 			'is_active' => false,
 		]);
 
-		$response = $this->actingAs($student)->getJson('/api/student/daily-checkins');
+		$response = $this->actingAs($student)->getJson('/api/student/checkins');
 
 		$response->assertStatus(403);
 		$response->assertJson(['code' => 'ACCOUNT_INACTIVE']);
@@ -37,7 +37,7 @@ class AccountStatusTest extends TestCase
 			'phone' => '11999999999',
 		]);
 
-		$response = $this->actingAs($student)->getJson('/api/student/daily-checkins');
+		$response = $this->actingAs($student)->getJson('/api/student/checkins');
 
 		$response->assertStatus(200);
 	}
@@ -66,7 +66,7 @@ class AccountStatusTest extends TestCase
 
 		// O aluno removido não consegue mais acessar rotas protegidas.
 		$this->actingAs($student->fresh())
-			->getJson('/api/student/daily-checkins')
+			->getJson('/api/student/checkins')
 			->assertStatus(403);
 	}
 }

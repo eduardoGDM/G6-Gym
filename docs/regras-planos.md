@@ -61,9 +61,8 @@ Diferença entre degraus, resumida:
 
 Prescrição completa de treino (séries, RIR, técnicas avançadas, cadência);
 anamnese em texto; **avaliação física completa** (medidas, IMC, RCQ, massa
-gorda/magra e variação entre avaliações); check-in de treino; check-in diário de
-sono e dieta; gráficos de evolução de exercício; streak e gamificação; **ficha
-em PDF**; perfil do aluno.
+gorda/magra e variação entre avaliações); check-in de treino; gráficos de
+evolução de exercício; streak e gamificação; **ficha em PDF**; perfil do aluno.
 
 ### Por que o Free tem 1 aluno e não 3
 
@@ -140,7 +139,7 @@ Bloqueado acima do limite:
 Nunca bloqueado, em nenhum cenário:
 
 - **Acesso do aluno ao próprio treino**
-- Check-in de treino e check-in diário
+- Check-in de treino
 - Emissão do PDF da ficha
 - Consulta a tudo que já foi produzido (treinos, avaliações, mídias, histórico)
 

@@ -1,25 +1,16 @@
 import { useQuery } from "@tanstack/react-query";
-import { BookOpenText, Dumbbell, Pencil, Play, Repeat2 } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { useEffect } from "react";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 
-import ActionIconButton from "../../components/common/ActionIconButton";
 import PageContainer from "../../components/common/PageContainer";
-import PageTitle from "../../components/common/PageTitle";
+import TapeDivider from "../../components/ficha/TapeDivider";
 import ErrorState from "../../components/loading/ErrorState";
-import ListSkeleton from "../../components/loading/ListSkeleton";
-import { Badge } from "../../components/ui/badge";
-import { Card, CardContent } from "../../components/ui/card";
 import { usePendingWorkout } from "../../hooks/usePendingWorkout";
+import { cn } from "../../lib/utils";
 import workoutsService from "../../services/WorkoutsService";
 import useAuthStore from "../../store/authStore";
-
-/**
- * Quantos grupos musculares aparecem antes de virar "+N". Passar de três chips
- * numa linha começa a competir com o nome do treino pela atenção.
- */
-const VISIBLE_MUSCLE_GROUPS = 3;
 
 function getMuscleGroups(workout) {
   const names = (workout.workout_exercises || [])
@@ -30,169 +21,131 @@ function getMuscleGroups(workout) {
 }
 
 /**
- * Card de treino do aluno.
+ * Uma ficha na prancheta.
  *
- * O card inteiro é a ação: um botão em overlay cobre a superfície e o círculo
- * de play é apenas o indicador visual dela (aria-hidden). Isso mantém um único
- * ponto de foco por card e evita elemento interativo dentro de elemento
- * interativo — o botão vermelho de largura total dava a mesma função dominando
- * o layout.
+ * O bloco inteiro é a ação: um botão em overlay cobre a superfície, então há um
+ * único ponto de foco por treino e nenhum interativo dentro de interativo. Os
+ * atalhos de edição ficam acima do overlay (z-20) porque levam para outra tela
+ * — `onSwap` troca o exercício de cada posição mantendo a prescrição, `onEdit`
+ * abre a montagem completa.
  *
- * As exceções são os botões de edição: levam para outra tela, então precisam de
- * clique próprio e ficam acima do overlay (z-20). São dois caminhos distintos —
- * `onSwap` só troca o exercício de cada posição mantendo a prescrição, `onEdit`
- * abre a montagem completa do treino. `isPending` destaca o treino que foi
- * iniciado e não concluído, e nele a ação passa a ser retomar.
+ * O treino iniciado e não concluído é o único que recebe Anilha: é "onde você
+ * está agora". Os demais são tinta sobre papel.
  */
-function WorkoutCard({ workout, onStart, onSwap, onEdit, isPending = false }) {
+function WorkoutRow({ workout, onStart, onSwap, onEdit, isPending, delay }) {
   const muscleGroups = getMuscleGroups(workout);
   const exerciseCount = workout.workout_exercises?.length || 0;
-  const visibleGroups = muscleGroups.slice(0, VISIBLE_MUSCLE_GROUPS);
-  const hiddenGroups = muscleGroups.length - visibleGroups.length;
 
   return (
-    <Card
-      className={[
-        "group relative flex flex-col rounded-2xl bg-card p-5",
-        "transition-[transform,box-shadow,border-color] duration-200 ease-out",
-        "hover:-translate-y-0.5 hover:border-border hover:shadow-popover",
-        "focus-within:border-border focus-within:shadow-popover",
-        "active:translate-y-0",
-        "motion-reduce:transform-none motion-reduce:transition-none",
-        isPending
-          ? "border-primary/50 shadow-subtle ring-1 ring-primary/25"
-          : "border-border/60",
-      ].join(" ")}
+    <li
+      className={cn(
+        "group relative animate-rise border-b border-border",
+        "transition-colors duration-200 hover:bg-foreground/5",
+        isPending && "border-l-[3px] border-l-primary pl-4",
+      )}
+      style={{ animationDelay: `${delay}ms` }}
     >
-      {/* Superfície clicável do card. Fica sobre o conteúdo para que qualquer
-          ponto inicie o treino, mantendo um só elemento focável. */}
+      {/* Superfície clicável. Fica sobre o conteúdo para qualquer ponto da
+          ficha iniciar o treino, mantendo um só elemento focável. */}
       <button
         type="button"
         onClick={onStart}
-        aria-label={`${isPending ? "Retomar" : "Iniciar"} treino: ${workout.name}`}
-        className="absolute inset-0 z-10 rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+        aria-label={`${isPending ? "Retomar" : "Iniciar"} ${workout.name}`}
+        className="absolute inset-0 z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
       />
 
-      <CardContent className="flex flex-1 flex-col p-0">
-        <div className="flex items-start gap-3.5">
-          <span
-            aria-hidden="true"
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary ring-1 ring-primary/15"
-          >
-            <Dumbbell className="h-[18px] w-[18px]" />
-          </span>
-
+      <div className="pointer-events-none relative py-6 pr-1">
+        <div className="flex items-start gap-x-8 gap-y-2">
           <div className="min-w-0 flex-1">
             {isPending ? (
-              <Badge className="mb-1.5 px-2 py-0.5 text-[11px] uppercase tracking-wide">
-                Em andamento
-              </Badge>
+              <p className="mb-2 text-primary ficha-label">
+                Em andamento · retome de onde parou
+              </p>
             ) : null}
 
-            <h3
-              className="line-clamp-2 text-base font-semibold leading-snug tracking-tight text-foreground"
+            <h2
+              className="text-[clamp(1.5rem,3.2vw,2.15rem)] ficha-display"
               title={workout.name}
             >
               {workout.name}
-            </h3>
+            </h2>
 
             {workout.description ? (
               <p
-                className="mt-1 line-clamp-1 text-sm leading-5 text-muted-foreground"
+                className="mt-2.5 line-clamp-1 text-sm text-muted-foreground"
                 title={workout.description}
               >
                 {workout.description}
               </p>
             ) : null}
-
-            <p className="mt-1.5 text-xs text-muted-foreground">
-              {exerciseCount} {exerciseCount === 1 ? "exercício" : "exercícios"}
-              {muscleGroups.length > 0 ? (
-                <>
-                  <span aria-hidden="true" className="mx-1.5 text-border">
-                    ·
-                  </span>
-                  {muscleGroups.length}{" "}
-                  {muscleGroups.length === 1 ? "grupo" : "grupos"}
-                </>
-              ) : null}
-            </p>
           </div>
 
-          <div className="flex shrink-0 items-center gap-2">
-            {/* Acima do overlay: as ações do card que não iniciam o treino. */}
+          <div className="flex shrink-0 items-end gap-2">
+            <span className="text-[34px] ficha-display">{exerciseCount}</span>
+            <span className="pb-1.5 text-xs text-muted-foreground ficha-mono">
+              exerc.
+            </span>
+          </div>
+        </div>
+
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-x-8 gap-y-3">
+          {/* Grupos musculares como uma linha de ficha, não como chips. */}
+          <p className="min-w-0 text-muted-foreground ficha-label">
+            {muscleGroups.length > 0
+              ? muscleGroups.join(" · ")
+              : "Sem grupo muscular definido"}
+          </p>
+
+          <div className="flex items-center gap-6">
             {onSwap || onEdit ? (
-              <div className="relative z-20 flex items-center gap-2">
+              <div className="pointer-events-auto relative z-20 flex items-center gap-5">
                 {onSwap ? (
-                  <ActionIconButton
-                    icon={Repeat2}
-                    tooltip="Trocar exercícios"
+                  <button
+                    type="button"
                     onClick={onSwap}
-                  />
+                    className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground underline decoration-dotted underline-offset-4 transition-colors ficha-mono hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  >
+                    Trocar exercícios
+                  </button>
                 ) : null}
 
                 {onEdit ? (
-                  <ActionIconButton
-                    icon={Pencil}
-                    tooltip="Editar treino"
+                  <button
+                    type="button"
                     onClick={onEdit}
-                  />
+                    className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground underline decoration-dotted underline-offset-4 transition-colors ficha-mono hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  >
+                    Editar treino
+                  </button>
                 ) : null}
               </div>
             ) : null}
 
+            {/* Indicador da ação do bloco — o botão real é o overlay. */}
             <span
               aria-hidden="true"
-              className={[
-                "flex h-11 w-11 shrink-0 items-center justify-center rounded-full",
-                "transition-[background-color,color,transform,box-shadow] duration-200 ease-out",
-                isPending
-                  ? "bg-primary text-primary-foreground ring-1 ring-primary"
-                  : "bg-primary/10 text-primary ring-1 ring-primary/20",
-                "group-hover:bg-primary group-hover:text-primary-foreground group-hover:ring-primary",
-                "group-hover:scale-105 group-hover:shadow-subtle",
-                "group-focus-within:bg-primary group-focus-within:text-primary-foreground",
-                "motion-reduce:transform-none motion-reduce:transition-none",
-              ].join(" ")}
+              className={cn(
+                "flex items-center gap-2.5 text-[11px] font-semibold uppercase tracking-[0.2em] ficha-mono",
+                isPending ? "text-primary" : "text-foreground",
+              )}
             >
-              <Play className="h-[18px] w-[18px] translate-x-[1px] fill-current" />
+              {isPending ? "Retomar" : "Iniciar"}
+              <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-1 motion-reduce:transition-none motion-reduce:group-hover:translate-x-0" />
             </span>
           </div>
         </div>
-
-        <div className="mt-4 flex flex-wrap items-center gap-1.5 border-t border-border/60 pt-3.5">
-          {visibleGroups.length === 0 ? (
-            <span className="text-xs text-muted-foreground">
-              Nenhum grupo muscular definido
-            </span>
-          ) : (
-            <>
-              {visibleGroups.map((name) => (
-                <Badge
-                  key={name}
-                  variant="outline"
-                  className="border-border/60 bg-muted/30 px-2 py-0.5 text-[11px] font-medium text-muted-foreground"
-                >
-                  {name}
-                </Badge>
-              ))}
-
-              {hiddenGroups > 0 ? (
-                <span
-                  className="text-[11px] font-medium text-muted-foreground/80"
-                  title={muscleGroups.slice(VISIBLE_MUSCLE_GROUPS).join(", ")}
-                >
-                  +{hiddenGroups}
-                </span>
-              ) : null}
-            </>
-          )}
-        </div>
-      </CardContent>
-    </Card>
+      </div>
+    </li>
   );
 }
 
+/**
+ * "Meus treinos" no tema "A Ficha": a prancheta.
+ *
+ * Cada treino é uma ficha sobre a pauta — nome na display, grupos musculares em
+ * linha de micro-label e a contagem de exercícios como número tabular. Sem card
+ * por item, sem ícone em caixa arredondada, sem chip: a lista é o objeto.
+ */
 export default function MyWorkouts() {
   const navigate = useNavigate();
 
@@ -224,45 +177,57 @@ export default function MyWorkouts() {
       : `/student/workout/${workout.id}`;
 
   return (
-    <PageContainer>
-      <PageTitle
-        eyebrow="Meus dados"
-        title="Meus treinos"
-        description={
-          canManageWorkouts
-            ? "Veja aqui os treinos ativos atribuídos para você, inicie o check-in, troque exercícios ou edite o treino inteiro."
-            : "Veja aqui os treinos ativos atribuídos para você e inicie o check-in."
-        }
-      />
+    <PageContainer className="max-w-[1320px] lg:px-10">
+      <div className="border-b-2 border-foreground pb-6 pt-8">
+        <p className="text-muted-foreground ficha-label">
+          Meus treinos · fichas ativas
+        </p>
+
+        <h1 className="mt-5 text-[clamp(3rem,7vw,5.5rem)] ficha-display">
+          A prancheta
+        </h1>
+
+        <p className="mt-5 max-w-xl text-[15px] leading-relaxed text-muted-foreground">
+          {canManageWorkouts
+            ? "Escolha a ficha do dia para começar o registro. Você também pode trocar exercícios ou remontar o treino."
+            : "Escolha a ficha do dia para começar o registro."}
+        </p>
+      </div>
 
       {isLoading ? (
-        <ListSkeleton count={6} columns="md:grid-cols-2 xl:grid-cols-3" lines={2} />
+        <div aria-hidden="true" className="mt-10 border-t border-border">
+          {Array.from({ length: 4 }).map((_, index) => (
+            <div
+              key={index}
+              className="flex h-[132px] flex-col justify-center gap-4 border-b border-border"
+            >
+              <span className="block h-7 w-64 animate-pulse bg-muted" />
+              <span className="block h-3 w-40 animate-pulse bg-muted" />
+            </div>
+          ))}
+        </div>
       ) : isError ? (
-        <Card className="border-border/80 bg-card/80">
-          <CardContent>
-            <ErrorState onRetry={refetch} />
-          </CardContent>
-        </Card>
+        <div className="mt-10 border-2 border-border bg-card p-6">
+          <ErrorState onRetry={refetch} />
+        </div>
       ) : workouts.length === 0 ? (
-        <Card className="border-border/80 bg-card/80">
-          <CardContent className="flex items-center gap-4 p-6">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/15 text-primary">
-              <BookOpenText className="h-5 w-5" />
-            </div>
-            <div>
-              <p className="font-semibold">Nenhum treino disponível no momento</p>
-              <p className="text-sm text-muted-foreground">
-                Quando seu trainer publicar um treino, ele vai aparecer aqui.
-              </p>
-            </div>
-          </CardContent>
-        </Card>
+        <div className="mt-10">
+          <TapeDivider className="mb-7" />
+          <p className="text-[19px] font-medium">
+            Nenhuma ficha ativa no momento
+          </p>
+          <p className="mt-2 max-w-md text-sm text-muted-foreground">
+            Quando seu personal publicar um treino, ele aparece aqui pronto para
+            começar.
+          </p>
+        </div>
       ) : (
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {workouts.map((workout) => (
-            <WorkoutCard
+        <ul className="mt-10 border-t border-border">
+          {workouts.map((workout, index) => (
+            <WorkoutRow
               key={workout.id}
               workout={workout}
+              delay={index * 50}
               isPending={
                 Number(pendingCheckin?.workout_id) === Number(workout.id)
               }
@@ -274,13 +239,12 @@ export default function MyWorkouts() {
               }
               onEdit={
                 canManageWorkouts
-                  ? () =>
-                      navigate(`/student/manage-workouts/${workout.id}/edit`)
+                  ? () => navigate(`/student/manage-workouts/${workout.id}/edit`)
                   : null
               }
             />
           ))}
-        </div>
+        </ul>
       )}
     </PageContainer>
   );

@@ -5,7 +5,6 @@ import { useNavigate } from "react-router-dom";
 import PageContainer from "../../components/common/PageContainer";
 import TallyMarks from "../../components/ficha/TallyMarks";
 import TapeDivider from "../../components/ficha/TapeDivider";
-import QualityDot from "../../components/student/QualityDot";
 import { usePendingWorkout } from "../../hooks/usePendingWorkout";
 import { cn } from "../../lib/utils";
 import { formatDate } from "../../lib/format";
@@ -80,7 +79,7 @@ function Stat({ label, value, unit, loading, delay = 0, divider = true }) {
 
 /**
  * A semana em fita de demarcação de piso: preenchida onde treinou, vazada onde
- * não, anilha no dia de hoje. A bolinha abaixo mantém o indicador de sono.
+ * não, anilha no dia de hoje.
  */
 function WeekStrip({ days, loading }) {
   if (loading) {
@@ -132,9 +131,6 @@ function WeekStrip({ days, loading }) {
             >
               {WEEKDAY_SHORT[parseLocalDate(day.date).getDay()]}
             </p>
-            <div className="mt-1.5 flex justify-center">
-              <QualityDot level={day.sleep_level} size="sm" />
-            </div>
           </div>
         );
       })}
@@ -157,7 +153,7 @@ export default function Dashboard() {
   const { user } = useAuthStore();
   const now = new Date();
 
-  const { data: summary, isLoading: isLoadingSummary } = useQuery({
+  const { data: summary } = useQuery({
     queryKey: ["student-dashboard-summary"],
     queryFn: studentDashboardService.summary,
   });
@@ -419,18 +415,6 @@ export default function Dashboard() {
               value={formatNumber(evolution?.total_exercises_performed ?? 0)}
               loading={isLoadingEvolution}
               delay={460}
-            />
-            <Stat
-              label="Sono · média 30 dias"
-              value={summary?.avg_sleep_rating ?? "—"}
-              loading={isLoadingSummary}
-              delay={500}
-            />
-            <Stat
-              label="Dieta · média 30 dias"
-              value={summary?.avg_diet_rating ?? "—"}
-              loading={isLoadingSummary}
-              delay={540}
             />
 
             {evolution?.top_exercise ? (

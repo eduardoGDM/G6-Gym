@@ -162,7 +162,6 @@ Regra: `StudentProfile` possui:
 - `workouts()` / `latestWorkout()` — treinos do aluno
 - `physicalAssessments()` — avaliações físicas
 - `workoutCheckins()` — check-ins de treino
-- `dailyCheckins()` — check-ins diários
 - `anamnesis()` — anamnese (1:1)
 Onde: `app/Models/StudentProfile.php`.
 
@@ -384,31 +383,23 @@ Onde: `StudentExerciseEvolutionController` (métodos `muscleGroups`, `exercises`
 
 ---
 
-## Check-in Diário (Daily Check-ins)
+## Check-in Diário (Daily Check-ins) — REMOVIDO
 
-Entidade: `DailyCheckin` (avaliação diária de sono e dieta).
+O Check-in Diário (nota de sono e dieta, 0–10, um registro por aluno por dia)
+existiu até **27/11/2026** e foi removido do produto por não ter uso. Saíram com
+ele as regras **RN-DAILY-001** a **RN-DAILY-005** — os IDs ficam retirados de
+circulação, não reaproveitados.
 
-Origem: `Api/Student/DailyCheckinController.php`, `Api/Trainer/DailyCheckinController.php`, migration `create_daily_checkins_table`.
+Junto saíram: a tela do aluno, as telas e o menu do personal, os comentários do
+personal sobre check-in diário, as médias de sono/dieta no dashboard do aluno, o
+indicador de sono na semana (gamificação), o contador do dia, a lista de
+recentes, a lista de pendentes e o gráfico de dieta/sono no dashboard do
+personal. A tabela `daily_checkins` foi dropada pela migration
+`2026_11_27_000001_drop_daily_checkins_table`, que também apaga os comentários
+polimórficos que apontavam para ela.
 
-**RN-DAILY-001**
-Regra: Somente `student` cria/edita check-in diário do próprio perfil; o `trainer` apenas consulta os de seus alunos.
-Onde: rotas `/student/daily-checkins`, `/trainer/daily-checkins`.
-
-**RN-DAILY-002**
-Regra: Campos obrigatórios: `date` (≤ hoje), `sleep_rating` (0–10), `diet_rating` (0–10). Opcionais: `sleep_notes`, `diet_notes`. As notas de rating são inteiras (0–10).
-Onde: `Student/DailyCheckinController::VALIDATION_RULES`, migration (`unsignedTinyInteger`).
-
-**RN-DAILY-003 (Unicidade por dia)**
-Regra: Só pode existir **um** check-in diário por aluno por data. Na criação/edição, data duplicada gera erro de validação (`Já existe um Check-in Diário cadastrado para essa data.`). Há também restrição única no banco (`unique(student_profile_id, date)`).
-Onde: `Student/DailyCheckinController::store/update`, migration `create_daily_checkins_table`.
-
-**RN-DAILY-004 (Lembrete)**
-Regra: O endpoint de lembrete indica se falta o check-in diário **do dia anterior** (`expected_date = ontem`), retornando `pending = true/false`.
-Onde: `Student/DailyCheckinController::reminder`.
-
-**RN-DAILY-005 (Escopo do trainer)**
-Regra: O trainer só vê check-ins diários de alunos que possuem **ao menos um treino criado por ele** (`whereHas('studentProfile.workouts', trainer_id)`).
-Onde: `Trainer/DailyCheckinController::scopeToTrainer`, `Trainer/DashboardController`.
+Comentário do personal continua existindo **somente** sobre check-in de treino
+(`Comment` → `WorkoutCheckin`, ver `CheckinCommentController`).
 
 ---
 

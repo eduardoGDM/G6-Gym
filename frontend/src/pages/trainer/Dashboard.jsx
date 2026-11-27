@@ -4,7 +4,6 @@ import {
   ClipboardList,
   Dumbbell,
   FileText,
-  Moon,
   Plus,
   UserPlus,
   Users,
@@ -18,10 +17,7 @@ import ActivityTimeline from "../../components/dashboard/ActivityTimeline";
 import DonutStat from "../../components/dashboard/DonutStat";
 import ProgressRing from "../../components/dashboard/ProgressRing";
 import StatCard from "../../components/dashboard/StatCard";
-import {
-  DietSleepChart,
-  WeeklyWorkoutChart,
-} from "../../components/dashboard/WeeklyCharts";
+import { WeeklyWorkoutChart } from "../../components/dashboard/WeeklyCharts";
 import EmptyState from "../../components/loading/EmptyState";
 import { Button } from "../../components/ui/button";
 import { Card, CardTitle } from "../../components/ui/card";
@@ -109,12 +105,6 @@ export default function Dashboard() {
       queryFn: trainerDashboardService.recentWorkoutCheckins,
     });
 
-  const { data: recentDailyCheckins, isLoading: isLoadingDailyCheckins } =
-    useQuery({
-      queryKey: ["trainer-dashboard-recent-daily-checkins"],
-      queryFn: trainerDashboardService.recentDailyCheckins,
-    });
-
   const { data: studentsList, isLoading: isLoadingStudents } = useQuery({
     queryKey: ["trainer-dashboard-active-students"],
     queryFn: trainerDashboardService.activeStudents,
@@ -149,9 +139,8 @@ export default function Dashboard() {
   const weeklyAdherence = summary?.weekly_adherence;
   const students = studentsList || [];
 
-  // Atividade recente: mescla check-ins de treino (vermelho) e diários (cinza),
-  // ordenada do mais recente para o mais antigo, com sistema de ícones por tipo.
-  const workoutActivity = (recentWorkoutCheckins || []).map((row) => ({
+  // Atividade recente: check-ins de treino, do mais recente para o mais antigo.
+  const activityItems = (recentWorkoutCheckins || []).map((row) => ({
     id: `workout-${row.id}`,
     name: row.student_name,
     action: row.workout_name
@@ -159,27 +148,10 @@ export default function Dashboard() {
       : "Registrou check-in de treino",
     whenLabel: relativeDay(row.date),
     whenTime: row.time ? row.time.slice(0, 5) : null,
-    sortKey: `${row.date ?? ""} ${row.time ?? ""}`,
     icon: Dumbbell,
     tone: "red",
     onClick: () => navigate(`/trainer/checkins/workouts/${row.id}`),
   }));
-
-  const dailyActivity = (recentDailyCheckins || []).map((row) => ({
-    id: `daily-${row.id}`,
-    name: row.student_name,
-    action: "Registrou check-in diário",
-    whenLabel: relativeDay(row.date),
-    whenTime: null,
-    sortKey: `${row.date ?? ""}`,
-    icon: Moon,
-    tone: "gray",
-    onClick: () => navigate(`/trainer/checkins/daily/${row.id}`),
-  }));
-
-  const activityItems = [...workoutActivity, ...dailyActivity]
-    .sort((a, b) => b.sortKey.localeCompare(a.sortKey))
-    .slice(0, 8);
 
   const quickActions = [
     {
@@ -251,7 +223,7 @@ export default function Dashboard() {
         <ActivityTimeline
           title="Atividade recente"
           items={activityItems}
-          loading={isLoadingWorkoutCheckins || isLoadingDailyCheckins}
+          loading={isLoadingWorkoutCheckins}
           emptyIcon={ClipboardList}
           emptyTitle="Nenhuma atividade recente"
           emptyDescription="Assim que seus alunos registrarem check-ins, eles aparecem aqui."
@@ -350,17 +322,12 @@ export default function Dashboard() {
         </Card>
       </div>
 
-      {/* Evolução semanal: check-ins de treino e médias de dieta/sono. */}
-      <div className="mt-4 grid gap-4 lg:grid-cols-2">
+      {/* Evolução semanal: check-ins de treino por dia. */}
+      <div className="mt-4">
         <WeeklyWorkoutChart
           data={weeklyEvolution?.workout_checkins || []}
           loading={isLoadingWeekly}
           delay={120}
-        />
-        <DietSleepChart
-          data={weeklyEvolution?.daily_checkins || []}
-          loading={isLoadingWeekly}
-          delay={160}
         />
       </div>
     </PageContainer>

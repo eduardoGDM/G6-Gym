@@ -1,6 +1,5 @@
 import {
   BarChart3,
-  BedDouble,
   CalendarCheck,
   Dumbbell,
   LayoutDashboard,
@@ -28,11 +27,6 @@ const navGroups = [
         label: "Check-ins",
         path: "/trainer/checkins/workouts",
         icon: CalendarCheck,
-      },
-      {
-        label: "Check-ins diários",
-        path: "/trainer/checkins/daily",
-        icon: BedDouble,
       },
     ],
   },

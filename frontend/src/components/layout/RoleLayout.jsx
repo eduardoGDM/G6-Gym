@@ -9,7 +9,6 @@ const DRAWER_WIDTH = 280;
 
 /**
  * @param {object} props
- * @param {React.ReactNode} [props.banner] - aviso no topo do conteúdo (ocupa espaço no fluxo).
  * @param {React.ReactNode} [props.overlay] - camada sobreposta (modais) que o papel exibe
  *   em qualquer tela, montada fora do <main> para não interferir no layout.
  * @param {string} [props.theme] - nome do tema aplicado como `data-theme` na raiz.
@@ -24,7 +23,6 @@ export default function RoleLayout({
   navGroups,
   title,
   roleLabel,
-  banner,
   overlay,
   profilePath,
   theme,
@@ -76,7 +74,6 @@ export default function RoleLayout({
         />
 
         <main className="px-4 pt-0 pb-6 sm:px-6 lg:px-8 lg:pt-0 lg:pb-8">
-          {banner}
           <Outlet />
         </main>
       </div>

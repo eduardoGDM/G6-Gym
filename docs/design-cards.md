@@ -1,8 +1,12 @@
 # Design — Cards e Painéis
 
-Linguagem visual dos cards do G6Fit, extraída da refatoração da tela de
-Check-in Diário (`student/DailyCheckins`). Serve como base para novas telas e
-como referência em prompts.
+Linguagem visual dos cards do G6Fit. Serve como base para novas telas e como
+referência em prompts.
+
+> **Histórico:** esta linguagem nasceu da refatoração da tela de Check-in
+> Diário, que foi **removida do produto em 27/11/2026** junto com a feature (ver
+> `regras-de-negocio.md`). Os exemplos abaixo seguem valendo; só a tela de
+> origem não existe mais para consulta.
 
 > **Nota:** a seção "Interface" do `docs/frontend.md` está desatualizada. **MUI
 > não está instalado** no projeto. A interface é Tailwind v4 + componentes
@@ -127,34 +131,17 @@ por rede hoje).
 
 ---
 
-## Entrada de valor: dial
+## Entrada de valor em escala curta
 
-Para nota em escala curta (0–10), usar `RatingDial` em vez de slider: alvo de
-toque maior e valor legível de relance.
+O `RatingDial` (anel de progresso com gradiente e glow) e o `CheckinPulse`
+(traço de eletrocardiograma) viviam só na tela de Check-in Diário e foram
+removidos com ela. Não recriar nenhum dos dois: **anel de progresso e traço com
+glow são justamente o visual genérico** que o tema do aluno abandonou — ver
+"Número é a imagem" na seção do tema "A Ficha".
 
-Padrão do componente, replicável para outras escalas:
-
-- Anel SVG com `strokeDasharray` fixo e `strokeDashoffset` animado.
-- Gradiente `primary-dark → primary → primary-hover`, com `useId()` no id do
-  gradiente (evita colisão quando há dois dials na mesma tela).
-- Número centralizado com `key={valor}` no `<span>` — o remount reinicia a
-  animação de mola sem hack de reflow.
-- Marcações da escala, uma por ponto, com o `<svg>` girado `-rotate-90` para o
-  zero cair no topo.
-- Botões `−` / `+` circulares de 44px com `active:scale-[0.87]`.
-
-Sempre controlado, para uso com `Controller` do React Hook Form.
-
----
-
-## Dado de apoio: traço
-
-Resumo histórico no rodapé do card usa `CheckinPulse` — traço tipo
-eletrocardiograma com dados reais, nunca placeholder. Retorna `null` com menos
-de 2 pontos.
-
-`vectorEffect="non-scaling-stroke"` é obrigatório quando o SVG usa
-`preserveAspectRatio="none"`, senão a linha distorce junto com a escala.
+Para nota em escala curta, preferir a leitura direta: número grande em
+`ficha-display` com a escala em segmentos de tinta cheia/vazada, no padrão da
+fita da semana do Dashboard.
 
 ---
 
@@ -219,9 +206,8 @@ Antes de fechar uma tela nova:
 
 | Arquivo | O que demonstra |
 |---|---|
-| `student/DailyCheckins/DailyCheckinsIndex.jsx` | Anatomia completa do painel |
-| `student/DailyCheckins/components/RatingDial.jsx` | Dial, mola, SVG acessível |
-| `student/DailyCheckins/components/CheckinPulse.jsx` | Traço de histórico |
+| `trainer/Checkins/CheckinsShow.jsx` | Anatomia do painel (barra, faixa, título) |
+| `trainer/Dashboard.jsx` | Cards de indicador, donut, gráfico |
 | `src/index.css` | Tokens e keyframes |
 
 ---
@@ -387,6 +373,18 @@ com o risco por cima, futuras só com o alvo — e expandem ao toque para corre�
 | `student/Dashboard.jsx` | Grid assimétrico, número sangrando, pauzinhos, fita |
 | `student/components/workout/CheckinSet.jsx` | Série herói, número editável, risco |
 | `student/History.jsx` | Pauta de caderno, busca em linha de ficha |
+| `student/MyWorkouts.jsx` | Linha-ficha clicável, grupos musculares em micro-label |
+| `student/HistoryDetail.jsx` | Folha preenchida: cabeçalho de coluna uma vez, séries em pauta |
+| `student/Profile.jsx` | Ficha de cadastro: nome como título, dados em linha de pauta |
+| `student/WorkoutEdit.jsx` | Troca de posição com risco de caneta, barra de salvar |
+| `components/student/PendingWorkoutModal.jsx` | Modal sem ícone de alerta: fita, display e uma Anilha |
 | `components/student/WorkoutRecordsModal.jsx` | Carimbo de recorde |
 | `src/index.css` | Blocos de modo escuro/claro, keyframes, utilitários |
 | `src/store/themeStore.js` | Persistência do modo, com o escuro como padrão |
+
+## Telas do aluno fora do tema
+
+Duas por decisão, porque são compartilhadas com a área do personal e herdam a
+paleta pelos tokens escopados: `ExerciseEvolutionPanel` (em `Evolution.jsx`) e
+`AssessmentCard` (em `Profile.jsx`). `PrescriptionInfo` ainda usa chips dentro
+da tela de execução — é o último resíduo do visual antigo na área do aluno.

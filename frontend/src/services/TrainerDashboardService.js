@@ -14,22 +14,6 @@ const trainerDashboardService = {
     return data;
   },
 
-  async recentDailyCheckins() {
-    const { data } = await sanctumRequest(
-      "get",
-      "/trainer/dashboard/recent-daily-checkins",
-    );
-    return data;
-  },
-
-  async pendingDailyCheckins() {
-    const { data } = await sanctumRequest(
-      "get",
-      "/trainer/dashboard/pending-daily-checkins",
-    );
-    return data;
-  },
-
   async weeklyEvolution() {
     const { data } = await sanctumRequest(
       "get",

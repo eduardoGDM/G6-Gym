@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Api\Trainer;
 
 use App\Http\Controllers\Controller;
-use App\Models\DailyCheckin;
 use App\Models\StudentProfile;
 use App\Models\Workout;
 use App\Models\WorkoutCheckin;
@@ -42,12 +41,6 @@ class DashboardController extends Controller
 			->whereDate('performed_at', $today)
 			->count();
 
-		$dailyCheckinsToday = DailyCheckin::whereHas('studentProfile', function ($query) use ($trainerId) {
-			$query->where('trainer_id', $trainerId);
-		})
-			->whereDate('date', $today)
-			->count();
-
 		// --- Variações (deltas) e adesão da semana ---------------------------
 		$yesterday = now()->subDay()->toDateString();
 		$weekStart = now()->startOfWeek();
@@ -84,7 +77,6 @@ class DashboardController extends Controller
 			'active_students' => $activeStudents,
 			'active_workouts' => $activeWorkouts,
 			'workout_checkins_today' => $workoutCheckinsToday,
-			'daily_checkins_today' => $dailyCheckinsToday,
 			'workout_checkins_today_delta' => [
 				'value' => abs($checkinsDiff),
 				'direction' => $checkinsDiff > 0 ? 'up' : ($checkinsDiff < 0 ? 'down' : 'flat'),
@@ -137,34 +129,9 @@ class DashboardController extends Controller
 		);
 	}
 
-	public function recentDailyCheckins(Request $request)
-	{
-		$trainerId = $request->user()->id;
-
-		$checkins = DailyCheckin::whereHas('studentProfile', function ($query) use ($trainerId) {
-			$query->where('trainer_id', $trainerId);
-		})
-			->with('studentProfile.user:id,name')
-			->orderByDesc('date')
-			->orderByDesc('created_at')
-			->limit(self::RECENT_LIMIT)
-			->get();
-
-		return response()->json(
-			$checkins->map(fn ($checkin) => [
-				'id' => $checkin->id,
-				'student_name' => $checkin->studentProfile?->user?->name,
-				'sleep_rating' => $checkin->sleep_rating,
-				'diet_rating' => $checkin->diet_rating,
-				'date' => $checkin->date?->format('Y-m-d'),
-			]),
-		);
-	}
-
 	/**
-	 * Séries semanais (semana corrente, seg→dom) para os dois gráficos do
-	 * dashboard: check-ins de treino por dia e check-ins de dieta/sono por dia
-	 * (com médias das notas). Apenas leitura/agregação — nada muda de regra.
+	 * Série semanal (semana corrente, seg→dom) para o gráfico de check-ins de
+	 * treino por dia. Apenas leitura/agregação — nada muda de regra.
 	 */
 	public function weeklyEvolution(Request $request)
 	{
@@ -186,36 +153,14 @@ class DashboardController extends Controller
 			->groupBy('d')
 			->pluck('c', 'd');
 
-		$dailyAgg = DailyCheckin::whereHas('studentProfile', function ($query) use ($trainerId) {
-			$query->where('trainer_id', $trainerId);
-		})
-			->whereBetween('date', [$startDate, $endDate])
-			->selectRaw('DATE(`date`) as d, COUNT(*) as c, AVG(sleep_rating) as sleep_avg, AVG(diet_rating) as diet_avg')
-			->groupBy('d')
-			->get()
-			->keyBy('d');
-
 		$workoutSeries = $days->map(fn ($date, $index) => [
 			'day' => $labels[$index],
 			'date' => $date,
 			'count' => (int) ($workoutCounts[$date] ?? 0),
 		])->values();
 
-		$dailySeries = $days->map(function ($date, $index) use ($dailyAgg, $labels) {
-			$row = $dailyAgg->get($date);
-
-			return [
-				'day' => $labels[$index],
-				'date' => $date,
-				'count' => (int) ($row->c ?? 0),
-				'sleep_avg' => $row && $row->sleep_avg !== null ? round((float) $row->sleep_avg, 1) : null,
-				'diet_avg' => $row && $row->diet_avg !== null ? round((float) $row->diet_avg, 1) : null,
-			];
-		})->values();
-
 		return response()->json([
 			'workout_checkins' => $workoutSeries,
-			'daily_checkins' => $dailySeries,
 		]);
 	}
 
@@ -290,30 +235,5 @@ class DashboardController extends Controller
 		}
 
 		return 'Check-in há ' . (int) $day->diffInDays(Carbon::today()) . ' dias';
-	}
-
-	public function pendingDailyCheckins(Request $request)
-	{
-		$trainerId = $request->user()->id;
-		$yesterday = now()->subDay()->toDateString();
-
-		$students = $this->scopeStudentsToTrainer(
-			StudentProfile::with('user:id,name')->withMax('dailyCheckins', 'date'),
-			$trainerId,
-		)
-			->whereDoesntHave('dailyCheckins', function ($query) use ($yesterday) {
-				$query->whereDate('date', $yesterday);
-			})
-			->limit(self::RECENT_LIMIT)
-			->get();
-
-		return response()->json(
-			$students->map(fn ($student) => [
-				'id' => $student->id,
-				'name' => $student->user?->name,
-				'phone' => $student->phone,
-				'last_daily_checkin' => $student->daily_checkins_max_date,
-			]),
-		);
 	}
 }

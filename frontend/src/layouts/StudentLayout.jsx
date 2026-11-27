@@ -1,5 +1,4 @@
 import {
-  CalendarCheck,
   ClipboardList,
   Dumbbell,
   History,
@@ -11,7 +10,6 @@ import { useEffect } from "react";
 
 import ThemeModeToggle from "../components/ficha/ThemeModeToggle";
 import RoleLayout from "../components/layout/RoleLayout";
-import DailyCheckinReminder from "../components/student/DailyCheckinReminder";
 import PendingWorkoutModal from "../components/student/PendingWorkoutModal";
 import authService from "../services/authService";
 import useAuthStore from "../store/authStore";
@@ -34,11 +32,6 @@ const buildNavGroups = (canManageWorkouts) => [
   {
     heading: "Acompanhamento",
     items: [
-      {
-        label: "Check-in Diário",
-        path: "/student/daily-checkins",
-        icon: CalendarCheck,
-      },
       { label: "Evolução", path: "/student/evolution", icon: TrendingUp },
       { label: "Histórico", path: "/student/history", icon: History },
     ],
@@ -90,7 +83,6 @@ export default function StudentLayout() {
       navGroups={buildNavGroups(canManageWorkouts)}
       title="G6Fit"
       roleLabel="Aluno"
-      banner={<DailyCheckinReminder />}
       overlay={<PendingWorkoutModal />}
       profilePath="/student/profile"
     />

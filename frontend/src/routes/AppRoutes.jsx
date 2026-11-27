@@ -23,9 +23,6 @@ const AdminTrainersNewEdit = lazy(
 );
 
 const DashboardStudent = lazy(() => import("../pages/student/Dashboard"));
-const DailyCheckinsIndex = lazy(
-  () => import("../pages/student/DailyCheckins/DailyCheckinsIndex"),
-);
 const Evolution = lazy(() => import("../pages/student/Evolution"));
 const History = lazy(() => import("../pages/student/History"));
 const HistoryDetail = lazy(() => import("../pages/student/HistoryDetail"));
@@ -37,12 +34,6 @@ const WorkoutEdit = lazy(() => import("../pages/student/WorkoutEdit"));
 const CheckinsIndex = lazy(() => import("../pages/trainer/Checkins/CheckinsIndex"));
 const CheckinsShow = lazy(() => import("../pages/trainer/Checkins/CheckinsShow"));
 const DashboardTrainer = lazy(() => import("../pages/trainer/Dashboard"));
-const TrainerDailyCheckinsIndex = lazy(
-  () => import("../pages/trainer/DailyCheckins/DailyCheckinsIndex"),
-);
-const TrainerDailyCheckinsShow = lazy(
-  () => import("../pages/trainer/DailyCheckins/DailyCheckinsShow"),
-);
 const ExercisesIndex = lazy(() => import("../pages/trainer/Exercises/ExercisesIndex"));
 const ExercisesNewEdit = lazy(
   () => import("../pages/trainer/Exercises/ExercisesNewEdit"),
@@ -145,9 +136,6 @@ export default function AppRoutes() {
           <Route path="checkins/workouts" element={<CheckinsIndex />} />
           <Route path="checkins/workouts/:id" element={<CheckinsShow />} />
 
-          <Route path="checkins/daily" element={<TrainerDailyCheckinsIndex />} />
-          <Route path="checkins/daily/:id" element={<TrainerDailyCheckinsShow />} />
-
           {/* Planos ocultos do front do personal — ver TrainerLayout.
           <Route path="plans" element={<TrainerPlans />} /> */}
         </Route>
@@ -169,7 +157,6 @@ export default function AppRoutes() {
           <Route path="evolution" element={<Evolution />} />
           <Route path="history" element={<History />} />
           <Route path="history/:id" element={<HistoryDetail />} />
-          <Route path="daily-checkins" element={<DailyCheckinsIndex />} />
           <Route path="profile" element={<StudentProfile />} />
 
           {/* Autogestão de treinos: reaproveita as telas do personal, liberada
