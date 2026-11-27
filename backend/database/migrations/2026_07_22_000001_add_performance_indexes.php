@@ -37,10 +37,6 @@ return new class extends Migration
 		Schema::table('workout_checkins', function (Blueprint $table) {
 			$table->index('performed_at', 'workout_checkins_performed_at_index');
 		});
-
-		Schema::table('daily_checkins', function (Blueprint $table) {
-			$table->index('date', 'daily_checkins_date_index');
-		});
 	}
 
 	public function down(): void
@@ -60,10 +56,6 @@ return new class extends Migration
 
 		Schema::table('workout_checkins', function (Blueprint $table) {
 			$table->dropIndex('workout_checkins_performed_at_index');
-		});
-
-		Schema::table('daily_checkins', function (Blueprint $table) {
-			$table->dropIndex('daily_checkins_date_index');
 		});
 	}
 };

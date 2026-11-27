@@ -413,7 +413,7 @@ export default function Workout() {
                 ? ` · ${fields.length} ${fields.length === 1 ? "exercício" : "exercícios"}`
                 : ""}
             </p>
-            <h1 className="mt-3 text-[clamp(2.25rem,7vw,3.75rem)] ficha-display">
+            <h1 className="mt-3 break-words text-[clamp(1.75rem,8vw,3.75rem)] ficha-display">
               {workout?.name || "Treino"}
             </h1>
           </div>

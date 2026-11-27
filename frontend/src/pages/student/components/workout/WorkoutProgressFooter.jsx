@@ -118,7 +118,7 @@ export default function WorkoutProgressFooter({
           type="submit"
           disabled={submitting || autosaveStatus === AUTOSAVE_STATUS.SAVING}
           className={cn(
-            "flex min-h-14 shrink-0 items-center justify-center gap-2.5 border-2 border-foreground px-6 text-xs font-semibold uppercase tracking-[0.2em] transition-colors duration-200 ficha-mono",
+            "flex min-h-14 shrink-0 items-center justify-center gap-2.5 border-2 border-foreground px-5 text-xs font-semibold uppercase tracking-[0.16em] transition-colors duration-200 ficha-mono sm:px-6 sm:tracking-[0.2em]",
             "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
             "disabled:pointer-events-none disabled:opacity-50",
             allDone
@@ -127,7 +127,15 @@ export default function WorkoutProgressFooter({
           )}
         >
           {submitting ? <Spinner className="h-4 w-4" /> : null}
-          {submitting ? "Salvando" : "Concluir treino"}
+          {submitting ? (
+            "Salvando"
+          ) : (
+            <>
+              {/* Em 360px o rótulo inteiro, com tracking de 0,2em, empurrava o
+                  contador de séries para fora da barra. */}
+              Concluir<span className="hidden sm:inline">&nbsp;treino</span>
+            </>
+          )}
         </button>
       </div>
     </div>

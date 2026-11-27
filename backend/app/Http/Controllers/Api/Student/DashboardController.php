@@ -8,13 +8,11 @@ use App\Models\Workout;
 use App\Models\WorkoutCheckin;
 use App\Models\WorkoutCheckinExercise;
 use App\Models\WorkoutCheckinExerciseSet;
-use App\Models\DailyCheckin;
 use Illuminate\Http\Request;
 
 class DashboardController extends Controller
 {
 	private const RECENT_LIMIT = 5;
-	private const EVOLUTION_DAYS = 30;
 
 	private function resolveProfile(Request $request)
 	{
@@ -38,18 +36,9 @@ class DashboardController extends Controller
 		$lastWorkoutCheckin = WorkoutCheckin::where('student_profile_id', $profile->id)
 			->max('performed_at');
 
-		$since = now()->subDays(self::EVOLUTION_DAYS)->toDateString();
-
-		$dailyAverages = DailyCheckin::where('student_profile_id', $profile->id)
-			->where('date', '>=', $since)
-			->selectRaw('avg(sleep_rating) as avg_sleep, avg(diet_rating) as avg_diet')
-			->first();
-
 		return response()->json([
 			'active_workouts' => $activeWorkouts,
 			'last_workout_checkin' => $lastWorkoutCheckin,
-			'avg_sleep_rating' => $dailyAverages?->avg_sleep !== null ? round($dailyAverages->avg_sleep, 1) : null,
-			'avg_diet_rating' => $dailyAverages?->avg_diet !== null ? round($dailyAverages->avg_diet, 1) : null,
 		]);
 	}
 

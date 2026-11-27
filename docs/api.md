@@ -278,17 +278,10 @@ Resposta (200): arquivo PDF (`Content-Type: application/pdf`), nome `ficha-trein
 - **GET /api/trainer/checkins/{id}** — detalhe do check-in (com aluno, treino, exercícios, séries). `404`.
 - **GET /api/trainer/checkins/students** — lista alunos que possuem ao menos um treino do trainer (para filtro).
 
-## Check-ins diários (visão do trainer)
-
-- **GET /api/trainer/daily-checkins** — lista paginada. Query: `student` (nome, like), `date_from`, `date_to`, `per_page` (1–100).
-- **GET /api/trainer/daily-checkins/{id}** — detalhe. `404`.
-
 ## Dashboard do trainer
 
-- **GET /api/trainer/dashboard/summary** — `{ active_students, active_workouts, workout_checkins_today, daily_checkins_today }`.
+- **GET /api/trainer/dashboard/summary** — `{ active_students, active_workouts, workout_checkins_today }`.
 - **GET /api/trainer/dashboard/recent-workout-checkins** — últimos 5 check-ins de treino.
-- **GET /api/trainer/dashboard/recent-daily-checkins** — últimos 5 check-ins diários.
-- **GET /api/trainer/dashboard/pending-daily-checkins** — até 5 alunos sem check-in diário de ontem.
 
 ## Anamnese (papel `role:trainer,admin`)
 
@@ -415,30 +408,9 @@ Body: `performed_at` (opcional), `completed` (opcional), `notes`, `exercises[].s
 Resposta (200): `WorkoutCheckinResource` + `{"message": "Check-in atualizado com sucesso"}`.
 Erros: `404`, `422`.
 
-## Check-ins diários
-
-### GET /api/student/daily-checkins
-Objetivo: Lista paginada. Parâmetros: `date` (filtro), `per_page` (default 10).
-Resposta (200): coleção paginada `DailyCheckinResource`.
-
-### GET /api/student/daily-checkins/reminder
-Objetivo: Indica se falta o check-in diário de ontem.
-Resposta (200): `{ "pending": true, "expected_date": "2026-07-20" }`.
-
-### POST /api/student/daily-checkins
-Objetivo: Cria o check-in diário.
-Body: `date` (req ≤ hoje), `sleep_rating` (req 0–10), `sleep_notes`, `diet_rating` (req 0–10), `diet_notes`.
-Resposta (201): `DailyCheckinResource` + `{"message": "Check-in Diário registrado com sucesso"}`.
-Erros: `422` — inclui data duplicada (`Já existe um Check-in Diário cadastrado para essa data.`).
-
-### PUT /api/student/daily-checkins/{id}
-Objetivo: Atualiza o check-in diário (mantém unicidade por data, ignorando o próprio registro).
-Resposta (200): `DailyCheckinResource` + `{"message": "Check-in Diário atualizado com sucesso"}`.
-Erros: `404` (`Check-in Diário não encontrado`), `422`.
-
 ## Dashboard do aluno
 
-- **GET /api/student/dashboard/summary** — `{ active_workouts, last_workout_checkin, avg_sleep_rating, avg_diet_rating }` (médias dos últimos 30 dias).
+- **GET /api/student/dashboard/summary** — `{ active_workouts, last_workout_checkin }`.
 - **GET /api/student/dashboard/recent-workouts** — últimos 5 check-ins (`id, workout_name, date, exercises_count`).
 - **GET /api/student/dashboard/evolution** — `{ top_exercise, max_weight, total_checkins, total_exercises_performed }`.
 
@@ -528,7 +500,6 @@ Erro: `404` (`Aluno não encontrado`).
 | GET | /api/trainer/students/{student}/checkins/exercises | trainer | StudentExerciseEvolutionController |
 | GET | /api/trainer/students/{student}/exercises/{exercise}/evolution | trainer | StudentExerciseEvolutionController |
 | GET | /api/trainer/checkins[/students\|/{id}] | trainer | Trainer\WorkoutCheckinController |
-| GET | /api/trainer/daily-checkins[/{id}] | trainer | Trainer\DailyCheckinController |
 | GET | /api/trainer/dashboard/* | trainer | Trainer\DashboardController |
 | GET/PUT | /api/trainer/students/{student}/anamnesis | trainer,admin | StudentAnamnesisController |
 | POST/DELETE | /api/trainer/students/{student}/anamnesis/photos[/{photo}] | trainer,admin | StudentAnamnesisPhotoController |
@@ -537,7 +508,6 @@ Erro: `404` (`Aluno não encontrado`).
 | GET | /api/student/workout/{id} | student | Student\WorkoutController |
 | PUT | /api/student/workout/{id}/exercises | student + can-manage-workouts | Student\WorkoutController |
 | GET/POST/PUT | /api/student/checkins[...] | student | Student\WorkoutCheckinController |
-| GET/POST/PUT | /api/student/daily-checkins[...] | student | Student\DailyCheckinController |
 | GET | /api/student/dashboard/* | student | Student\DashboardController |
 | GET | /api/admin/dashboard/summary | admin | Admin\DashboardController |
 | GET/PATCH | /api/admin/trainers[/{id}/status] | admin | Admin\TrainerController |

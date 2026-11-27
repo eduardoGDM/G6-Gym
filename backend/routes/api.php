@@ -15,7 +15,6 @@ use App\Http\Controllers\Api\Trainer\StudentAnamnesisPhotoController;
 use App\Http\Controllers\Api\Trainer\StudentAnamnesisVideoController;
 use App\Http\Controllers\Api\Trainer\StudentPhysicalAssessmentController;
 use App\Http\Controllers\Api\Trainer\WorkoutCheckinController as TrainerWorkoutCheckinController;
-use App\Http\Controllers\Api\Trainer\DailyCheckinController as TrainerDailyCheckinController;
 use App\Http\Controllers\Api\Trainer\CheckinCommentController;
 use App\Http\Controllers\Api\Trainer\DashboardController as TrainerDashboardController;
 use App\Http\Controllers\Api\Student\WorkoutController as StudentWorkoutController;
@@ -23,7 +22,6 @@ use App\Http\Controllers\Api\Student\ManagedWorkoutController;
 use App\Http\Controllers\Api\Student\WorkoutCheckinController;
 use App\Http\Controllers\Api\Student\ExerciseHistoryController;
 use App\Http\Controllers\Api\Student\ExerciseEvolutionController as StudentExerciseEvolutionSelfController;
-use App\Http\Controllers\Api\Student\DailyCheckinController;
 use App\Http\Controllers\Api\Student\ProfileController as StudentSelfProfileController;
 use App\Http\Controllers\Api\Student\DashboardController as StudentDashboardController;
 use App\Http\Controllers\Api\Student\GamificationController as StudentGamificationController;
@@ -55,8 +53,6 @@ Route::middleware('auth:sanctum')->group(function () {
 
 			Route::get('dashboard/summary', [TrainerDashboardController::class, 'summary']);
 			Route::get('dashboard/recent-workout-checkins', [TrainerDashboardController::class, 'recentWorkoutCheckins']);
-			Route::get('dashboard/recent-daily-checkins', [TrainerDashboardController::class, 'recentDailyCheckins']);
-			Route::get('dashboard/pending-daily-checkins', [TrainerDashboardController::class, 'pendingDailyCheckins']);
 			Route::get('dashboard/weekly-evolution', [TrainerDashboardController::class, 'weeklyEvolution']);
 			Route::get('dashboard/active-students', [TrainerDashboardController::class, 'activeStudents']);
 
@@ -75,10 +71,6 @@ Route::middleware('auth:sanctum')->group(function () {
 			Route::get('checkins/{id}', [TrainerWorkoutCheckinController::class, 'show']);
 			Route::post('checkins/{id}/comments', [CheckinCommentController::class, 'storeOnWorkoutCheckin']);
 			Route::get('checkins', [TrainerWorkoutCheckinController::class, 'index']);
-
-			Route::get('daily-checkins/{id}', [TrainerDailyCheckinController::class, 'show']);
-			Route::post('daily-checkins/{id}/comments', [CheckinCommentController::class, 'storeOnDailyCheckin']);
-			Route::get('daily-checkins', [TrainerDailyCheckinController::class, 'index']);
 
 			Route::patch('checkin-comments/{id}', [CheckinCommentController::class, 'update']);
 			Route::delete('checkin-comments/{id}', [CheckinCommentController::class, 'destroy']);
@@ -130,11 +122,6 @@ Route::middleware('auth:sanctum')->group(function () {
 			Route::put('/checkins/{id}', [WorkoutCheckinController::class, 'update']);
 			Route::delete('/checkins/{id}', [WorkoutCheckinController::class, 'destroy']);
 			Route::get('/checkins/{id}/achievements', [StudentAchievementController::class, 'forCheckin']);
-
-			Route::get('/daily-checkins/reminder', [DailyCheckinController::class, 'reminder']);
-			Route::get('/daily-checkins', [DailyCheckinController::class, 'index']);
-			Route::post('/daily-checkins', [DailyCheckinController::class, 'store']);
-			Route::put('/daily-checkins/{id}', [DailyCheckinController::class, 'update']);
 
 			// Autogestão de treinos: só para alunos autorizados pelo personal.
 			// Catálogo de exercícios e grupos musculares é global e somente leitura aqui.

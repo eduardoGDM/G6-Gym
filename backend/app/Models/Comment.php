@@ -21,7 +21,7 @@ class Comment extends Model
 	];
 
 	/**
-	 * Alvo do comentário (DailyCheckin, WorkoutCheckin, ...).
+	 * Alvo do comentário (WorkoutCheckin).
 	 */
 	public function commentable(): MorphTo
 	{

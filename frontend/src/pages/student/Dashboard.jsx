@@ -5,7 +5,6 @@ import { useNavigate } from "react-router-dom";
 import PageContainer from "../../components/common/PageContainer";
 import TallyMarks from "../../components/ficha/TallyMarks";
 import TapeDivider from "../../components/ficha/TapeDivider";
-import QualityDot from "../../components/student/QualityDot";
 import { usePendingWorkout } from "../../hooks/usePendingWorkout";
 import { cn } from "../../lib/utils";
 import { formatDate } from "../../lib/format";
@@ -80,7 +79,7 @@ function Stat({ label, value, unit, loading, delay = 0, divider = true }) {
 
 /**
  * A semana em fita de demarcação de piso: preenchida onde treinou, vazada onde
- * não, anilha no dia de hoje. A bolinha abaixo mantém o indicador de sono.
+ * não, anilha no dia de hoje.
  */
 function WeekStrip({ days, loading }) {
   if (loading) {
@@ -132,9 +131,6 @@ function WeekStrip({ days, loading }) {
             >
               {WEEKDAY_SHORT[parseLocalDate(day.date).getDay()]}
             </p>
-            <div className="mt-1.5 flex justify-center">
-              <QualityDot level={day.sleep_level} size="sm" />
-            </div>
           </div>
         );
       })}
@@ -157,7 +153,7 @@ export default function Dashboard() {
   const { user } = useAuthStore();
   const now = new Date();
 
-  const { data: summary, isLoading: isLoadingSummary } = useQuery({
+  const { data: summary } = useQuery({
     queryKey: ["student-dashboard-summary"],
     queryFn: studentDashboardService.summary,
   });
@@ -219,20 +215,23 @@ export default function Dashboard() {
         ) : null}
       </div>
 
-      <div className="flex flex-wrap gap-x-12 gap-y-16 pt-12">
+      <div className="flex flex-wrap gap-x-12 gap-y-12 pt-8 sm:gap-y-16 sm:pt-12">
         {/* ── Coluna principal ─────────────────────────────────────── */}
         <section className="relative min-w-0 flex-[999_1_560px]">
+          {/* Só a partir do desktop: a sangria de -6% na margem viraria
+              rolagem horizontal no mobile, e atrás de um título de 30px o
+              número gigante deixa de ser marca d'água e passa a ser ruído. */}
           {watermark > 0 ? (
             <span
               aria-hidden="true"
-              className="pointer-events-none absolute -left-[6%] top-10 select-none text-[clamp(11rem,24vw,20rem)] leading-none text-foreground/[0.07] ficha-display"
+              className="pointer-events-none absolute -left-[6%] top-10 hidden select-none text-[clamp(11rem,24vw,20rem)] leading-none text-foreground/[0.07] ficha-display lg:block"
             >
               {watermark}
             </span>
           ) : null}
 
           <div className="relative">
-            <h1 className="text-[clamp(3.25rem,8vw,7.25rem)] ficha-display">
+            <h1 className="break-words text-[clamp(2.125rem,9vw,7.25rem)] ficha-display">
               {heroTitle}
             </h1>
 
@@ -265,7 +264,7 @@ export default function Dashboard() {
                 className="mt-9 max-w-[540px] animate-rise text-[19px] leading-[1.5]"
                 style={{ animationDelay: "240ms" }}
               >
-                <span className="mx-1.5 align-[-0.18em] text-[4.5rem] text-primary ficha-display">
+                <span className="mx-1.5 align-[-0.18em] text-[3.25rem] text-primary ficha-display sm:text-[4.5rem]">
                   {trainedThisWeek}
                 </span>
                 {trainedThisWeek === 1 ? "dia treinado" : "dias treinados"} nesta
@@ -314,19 +313,21 @@ export default function Dashboard() {
                     <button
                       type="button"
                       onClick={() => navigate(`/student/history/${row.id}`)}
-                      className="flex h-16 w-full animate-rise items-end gap-4 border-b border-border pb-[9px] pr-2.5 text-left transition-colors duration-200 ficha-ruled hover:bg-foreground/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
+                      className="flex h-16 w-full animate-rise items-end gap-3 border-b border-border pb-[9px] pr-1 text-left transition-colors duration-200 ficha-ruled hover:bg-foreground/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring sm:gap-4 sm:pr-2.5"
                       style={{ animationDelay: `${380 + index * 40}ms` }}
                     >
-                      <span className="w-14 shrink-0 text-xs text-muted-foreground ficha-mono">
+                      <span className="w-12 shrink-0 text-xs text-muted-foreground ficha-mono">
                         {formatDate(row.date, "—").slice(0, 5)}
                       </span>
                       <span className="min-w-0 flex-1 truncate text-[17px] font-medium">
                         {row.workout_name || "Treino removido"}
                       </span>
-                      <span className="w-24 text-right text-[26px] ficha-display">
+                      {/* Em 360px as colunas fixas engoliam o nome do treino:
+                          a unidade só aparece quando há largura para ela. */}
+                      <span className="w-10 shrink-0 text-right text-[26px] ficha-display sm:w-24">
                         {row.exercises_count ?? 0}
                       </span>
-                      <span className="w-14 text-xs text-muted-foreground ficha-mono">
+                      <span className="hidden w-14 shrink-0 text-xs text-muted-foreground ficha-mono sm:block">
                         exerc.
                       </span>
                     </button>
@@ -355,7 +356,9 @@ export default function Dashboard() {
             ) : (
               <>
                 <div className="flex items-end gap-4">
-                  <span className="text-[104px] ficha-display">{streak}</span>
+                  <span className="text-[76px] ficha-display sm:text-[104px]">
+                    {streak}
+                  </span>
                   <span className="pb-3.5 text-muted-foreground ficha-label">
                     {streak === 1 ? "dia" : "dias"}
                     <br />
@@ -419,18 +422,6 @@ export default function Dashboard() {
               value={formatNumber(evolution?.total_exercises_performed ?? 0)}
               loading={isLoadingEvolution}
               delay={460}
-            />
-            <Stat
-              label="Sono · média 30 dias"
-              value={summary?.avg_sleep_rating ?? "—"}
-              loading={isLoadingSummary}
-              delay={500}
-            />
-            <Stat
-              label="Dieta · média 30 dias"
-              value={summary?.avg_diet_rating ?? "—"}
-              loading={isLoadingSummary}
-              delay={540}
             />
 
             {evolution?.top_exercise ? (

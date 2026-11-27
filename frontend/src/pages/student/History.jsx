@@ -65,7 +65,7 @@ export default function History() {
 
         <div className="mt-5 flex flex-wrap items-end justify-between gap-x-10 gap-y-6">
           <div className="min-w-0">
-            <h1 className="text-[clamp(3rem,7vw,5.5rem)] ficha-display">
+            <h1 className="break-words text-[clamp(2.25rem,8vw,5.5rem)] ficha-display">
               O caderno
             </h1>
             {total !== undefined && !debouncedSearch ? (
@@ -146,7 +146,7 @@ export default function History() {
                 <button
                   type="button"
                   onClick={() => navigate(`/student/history/${checkin.id}`)}
-                  className="flex h-16 w-full animate-rise items-end gap-4 border-b border-border pb-[9px] pr-2.5 text-left transition-colors duration-200 ficha-ruled hover:bg-foreground/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
+                  className="flex h-16 w-full animate-rise items-end gap-3 border-b border-border pb-[9px] pr-1 text-left transition-colors duration-200 ficha-ruled hover:bg-foreground/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring sm:gap-4 sm:pr-2.5"
                   style={{ animationDelay: `${index * 40}ms` }}
                 >
                   <span className="w-[86px] shrink-0 text-xs text-muted-foreground ficha-mono">
@@ -155,10 +155,12 @@ export default function History() {
                   <span className="min-w-0 flex-1 truncate text-[17px] font-medium">
                     {checkin.workout?.name || "Treino removido"}
                   </span>
-                  <span className="w-20 text-right text-[26px] ficha-display">
+                  {/* A unidade só entra quando sobra largura — em 360px ela
+                      roubava o nome do treino. */}
+                  <span className="w-10 shrink-0 text-right text-[26px] ficha-display sm:w-20">
                     {checkin.exercises_count ?? 0}
                   </span>
-                  <span className="w-14 shrink-0 text-xs text-muted-foreground ficha-mono">
+                  <span className="hidden w-14 shrink-0 text-xs text-muted-foreground ficha-mono sm:block">
                     exerc.
                   </span>
                 </button>

@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Api\Trainer;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\CommentResource;
 use App\Models\Comment;
-use App\Models\DailyCheckin;
 use App\Models\WorkoutCheckin;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
@@ -26,11 +25,6 @@ class CheckinCommentController extends Controller
 		return $query->whereHas('studentProfile', function ($query) use ($trainerId) {
 			$query->where('trainer_id', $trainerId);
 		});
-	}
-
-	public function storeOnDailyCheckin(Request $request, $id)
-	{
-		return $this->storeOnParent($request, DailyCheckin::query(), $id);
 	}
 
 	public function storeOnWorkoutCheckin(Request $request, $id)

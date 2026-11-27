@@ -2,7 +2,6 @@
 
 namespace Tests\Feature\Student;
 
-use App\Models\DailyCheckin;
 use App\Models\StudentProfile;
 use App\Models\User;
 use App\Models\Workout;
@@ -100,37 +99,18 @@ class GamificationTest extends TestCase
 		$this->assertSame(1, $profile->workoutStreak()['current']);
 	}
 
-	public function test_rating_level_thresholds(): void
-	{
-		$this->assertSame('good', DailyCheckin::ratingLevel(10));
-		$this->assertSame('good', DailyCheckin::ratingLevel(7));
-		$this->assertSame('attention', DailyCheckin::ratingLevel(6));
-		$this->assertSame('attention', DailyCheckin::ratingLevel(4));
-		$this->assertSame('bad', DailyCheckin::ratingLevel(3));
-		$this->assertSame('bad', DailyCheckin::ratingLevel(0));
-		$this->assertNull(DailyCheckin::ratingLevel(null));
-	}
-
-	public function test_summary_endpoint_returns_streak_sleep_and_week(): void
+	public function test_summary_endpoint_returns_streak_and_week(): void
 	{
 		[$studentUser, $profile, $workout] = $this->createStudentWithWorkout();
 
 		$this->checkinOn($profile, $workout, Carbon::today()->toDateString());
 
-		DailyCheckin::create([
-			'student_profile_id' => $profile->id,
-			'date' => Carbon::today()->toDateString(),
-			'sleep_rating' => 8,
-			'diet_rating' => 6,
-		]);
-
 		$response = $this->actingAs($studentUser)->getJson('/api/student/gamification/summary');
 
 		$response->assertStatus(200);
 		$response->assertJsonPath('streak.current', 1);
-		$response->assertJsonPath('sleep.level', 'good');
 		$response->assertJsonCount(7, 'week');
 		$response->assertJsonPath('week.6.trained', true);
-		$response->assertJsonPath('week.6.sleep_level', 'good');
+		$response->assertJsonMissingPath('week.6.sleep_level');
 	}
 }

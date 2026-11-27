@@ -153,8 +153,7 @@ class WorkoutCheckinController extends Controller
 	 * modal de retomada ao entrar no sistema.
 	 *
 	 * Só olha hoje e ontem: um treino abandonado semanas atrás não deve ficar
-	 * perseguindo o aluno em todo login. Mesmo formato do lembrete de check-in
-	 * diário (DailyCheckinController@reminder).
+	 * perseguindo o aluno em todo login.
 	 */
 	public function pending(Request $request)
 	{

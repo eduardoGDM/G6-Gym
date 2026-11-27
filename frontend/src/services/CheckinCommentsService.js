@@ -1,20 +1,11 @@
 import { sanctumRequest } from "../sanctumRequest";
 
 /**
- * Comentários do personal nos check-ins (diário e de treino). Só o personal
+ * Comentários do personal nos check-ins de treino. Só o personal
  * escreve/edita/remove; o aluno apenas lê (os comentários vêm embutidos no
  * próprio check-in).
  */
 const checkinCommentsService = {
-  async addToDailyCheckin(checkinId, body) {
-    const { data } = await sanctumRequest(
-      "post",
-      `/trainer/daily-checkins/${checkinId}/comments`,
-      { body },
-    );
-    return data.data;
-  },
-
   async addToWorkoutCheckin(checkinId, body) {
     const { data } = await sanctumRequest(
       "post",

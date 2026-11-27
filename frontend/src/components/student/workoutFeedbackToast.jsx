@@ -1,22 +1,15 @@
-import { CheckCircle2, Flame, Moon, X } from "lucide-react";
+import { CheckCircle2, Flame, X } from "lucide-react";
 import toast from "react-hot-toast";
 
 import { cn } from "../../lib/utils";
-import QualityDot from "./QualityDot";
 
 const dayLabel = (value) => `${value} ${value === 1 ? "dia" : "dias"}`;
-
-const SLEEP_TEXT = {
-  good: "Sono bom",
-  attention: "Atenção ao sono",
-  bad: "Sono ruim",
-};
 
 /**
  * Feedback discreto exibido ao concluir um treino. Usa react-hot-toast
  * (toast.custom) para aparecer e desaparecer automaticamente, sem bloquear a tela.
  */
-export function showWorkoutFeedbackToast({ streak, sleep } = {}) {
+export function showWorkoutFeedbackToast({ streak } = {}) {
   const current = streak?.current ?? 0;
 
   toast.custom(
@@ -49,13 +42,6 @@ export function showWorkoutFeedbackToast({ streak, sleep } = {}) {
                 ? `Sequência atual: ${dayLabel(current)}`
                 : "Comece sua sequência hoje!"}
             </p>
-            {sleep ? (
-              <p className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                <Moon className="h-4 w-4" />
-                Sono: <QualityDot level={sleep.level} />
-                <span>{SLEEP_TEXT[sleep.level] || "—"}</span>
-              </p>
-            ) : null}
           </div>
           <button
             type="button"

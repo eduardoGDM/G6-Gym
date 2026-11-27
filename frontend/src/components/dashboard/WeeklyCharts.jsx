@@ -2,9 +2,6 @@ import {
   Bar,
   BarChart,
   CartesianGrid,
-  Legend,
-  Line,
-  LineChart,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -17,8 +14,6 @@ import { Card, CardTitle } from "../ui/card";
 const GRID = "#262b36";
 const TICK = "#a1a7b3";
 const PRIMARY = "#ef4444"; // treino
-const DIET = "#f59e0b"; // dieta (aviso/laranja)
-const SLEEP = "#3b82f6"; // sono (info/azul)
 
 const TOOLTIP_STYLE = {
   background: "#181b22",
@@ -92,65 +87,6 @@ export function WeeklyWorkoutChart({ data = [], loading = false, delay = 0 }) {
             maxBarSize={28}
           />
         </BarChart>
-      </ResponsiveContainer>
-    </ChartCard>
-  );
-}
-
-/** Linhas: média das notas de dieta e sono por dia. */
-export function DietSleepChart({ data = [], loading = false, delay = 0 }) {
-  return (
-    <ChartCard
-      title="Dieta e sono"
-      subtitle="Média por dia (0–10)"
-      loading={loading}
-      delay={delay}
-    >
-      <ResponsiveContainer width="100%" height="100%">
-        <LineChart data={data} margin={{ top: 8, right: 12, left: -6, bottom: 4 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke={GRID} vertical={false} />
-          <XAxis
-            dataKey="day"
-            stroke={GRID}
-            tick={{ fill: TICK, fontSize: 12 }}
-            tickLine={false}
-            axisLine={{ stroke: GRID }}
-          />
-          <YAxis
-            stroke={GRID}
-            tick={{ fill: TICK, fontSize: 12 }}
-            tickLine={false}
-            axisLine={false}
-            width={28}
-            domain={[0, 10]}
-            ticks={[0, 5, 10]}
-          />
-          <Tooltip
-            contentStyle={TOOLTIP_STYLE}
-            labelStyle={{ color: "#f9fafb", fontWeight: 600 }}
-          />
-          <Legend wrapperStyle={{ color: TICK, fontSize: 12 }} />
-          <Line
-            type="monotone"
-            dataKey="sleep_avg"
-            name="Sono"
-            stroke={SLEEP}
-            strokeWidth={2}
-            connectNulls={false}
-            dot={{ r: 3, fill: SLEEP }}
-            activeDot={{ r: 5 }}
-          />
-          <Line
-            type="monotone"
-            dataKey="diet_avg"
-            name="Dieta"
-            stroke={DIET}
-            strokeWidth={2}
-            connectNulls={false}
-            dot={{ r: 3, fill: DIET }}
-            activeDot={{ r: 5 }}
-          />
-        </LineChart>
       </ResponsiveContainer>
     </ChartCard>
   );
