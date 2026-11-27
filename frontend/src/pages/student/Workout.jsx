@@ -93,7 +93,7 @@ export default function Workout() {
     watch,
     getValues,
     setValue,
-    formState: { errors },
+    formState: { errors, isDirty },
   } = useForm({
     resolver: yupResolver(checkinSchema),
     defaultValues: {
@@ -120,6 +120,17 @@ export default function Workout() {
 
   const draftToSyncRef = useRef(null);
 
+  // Espelho do `isDirty` em ref: o autosave ignora alterações enquanto o
+  // formulário está limpo, para o pré-preenchimento não criar check-in. Em
+  // efeito, e não durante o render, porque o lint do projeto (regras do React
+  // Compiler) proíbe escrever ref no render. O autosave tem debounce de 1,5 s,
+  // então o efeito já rodou muito antes de o primeiro save ser considerado.
+  const isDirtyRef = useRef(false);
+
+  useEffect(() => {
+    isDirtyRef.current = isDirty;
+  }, [isDirty]);
+
   const { status: autosaveStatus, saveNow } = useCheckinAutosave({
     watch,
     enabled: !loading && !notFound && Boolean(workout),
@@ -127,6 +138,7 @@ export default function Workout() {
     onCheckinCreated: setCheckinId,
     buildPayload,
     draftId,
+    isDirtyRef,
   });
 
   // Rascunho local recuperado ao reabrir a página é sincronizado com a API
@@ -228,6 +240,22 @@ export default function Workout() {
     scrollToOpenRef.current = true;
     setOpenIndex((current) => (current === index ? null : index));
   };
+
+  // Pré-preenchimento de aquecimento/reconhecimento com a execução anterior.
+  // `shouldDirty: false` é essencial: junto com a trava do autosave, impede que
+  // abrir um exercício crie um check-in que o aluno não pediu.
+  const handlePrefillSet = useCallback(
+    (exerciseIndex, setIndex, values) => {
+      Object.entries(values).forEach(([field, value]) => {
+        setValue(
+          `exercises.${exerciseIndex}.sets.${setIndex}.${field}`,
+          value,
+          { shouldDirty: false },
+        );
+      });
+    },
+    [setValue],
+  );
 
   const handleToggleSet = (exerciseIndex, setIndex) => {
     const path = `exercises.${exerciseIndex}.sets.${setIndex}.completed`;
@@ -444,6 +472,7 @@ export default function Workout() {
                   onToggleOpen={handleToggleOpen}
                   onToggleSet={handleToggleSet}
                   onWeightChange={handleWeightChange}
+                  onPrefillSet={handlePrefillSet}
                   onOpenHistory={() =>
                     setHistoryExercise({
                       id: field.exercise_id,
