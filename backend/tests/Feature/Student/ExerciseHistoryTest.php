@@ -181,4 +181,147 @@ class ExerciseHistoryTest extends TestCase
         $response->assertOk();
         $this->assertCount(0, $response->json('data'));
     }
+
+    /** Segunda série prescrita, para provar a soma do volume da sessão. */
+    private function addSecondSeries(WorkoutExercise $workoutExercise): void
+    {
+        WorkoutExerciseSeries::create([
+            'workout_exercise_id' => $workoutExercise->id,
+            'order' => 2,
+            'repetitions' => 10,
+            'weight' => 50,
+            'rest_time' => 60,
+            'type' => 'Válida',
+        ]);
+    }
+
+    /** Check-in com séries arbitrárias (sem `completed`: caminho do autosave). */
+    private function registerCheckinWithSets(
+        User $studentUser,
+        Workout $workout,
+        Exercise $exercise,
+        string $date,
+        array $sets,
+    ): void {
+        $this->actingAs($studentUser)->postJson('/api/student/checkins', [
+            'workout_id' => $workout->id,
+            'performed_at' => $date,
+            'exercises' => [
+                [
+                    'exercise_id' => $exercise->id,
+                    'sets' => $sets,
+                ],
+            ],
+        ])->assertCreated();
+    }
+
+    public function test_history_paginates_beyond_the_default_limit(): void
+    {
+        [$studentUser, $workout, $exercise] = $this->createStudentWithWorkout();
+
+        foreach ([20, 15, 10, 5] as $daysAgo) {
+            $this->registerCheckin($studentUser, $workout, $exercise, now()->subDays($daysAgo)->toDateString());
+        }
+
+        $response = $this->actingAs($studentUser)
+            ->getJson("/api/student/exercises/{$exercise->id}/history?per_page=3&page=2");
+
+        $response->assertOk();
+        $response->assertJsonCount(1, 'data');
+        $response->assertJsonPath('meta.total', 4);
+    }
+
+    public function test_history_clamps_out_of_range_per_page(): void
+    {
+        [$studentUser, $workout, $exercise] = $this->createStudentWithWorkout();
+
+        $this->registerCheckin($studentUser, $workout, $exercise, now()->subDays(5)->toDateString());
+
+        $this->actingAs($studentUser)
+            ->getJson("/api/student/exercises/{$exercise->id}/history?per_page=999")
+            ->assertOk()
+            ->assertJsonPath('meta.per_page', 20);
+
+        $this->actingAs($studentUser)
+            ->getJson("/api/student/exercises/{$exercise->id}/history?per_page=0")
+            ->assertOk()
+            ->assertJsonPath('meta.per_page', 2);
+    }
+
+    public function test_history_excludes_the_checkin_being_edited_across_pages(): void
+    {
+        [$studentUser, $workout, $exercise] = $this->createStudentWithWorkout();
+
+        foreach ([20, 15, 10, 5] as $daysAgo) {
+            $this->registerCheckin($studentUser, $workout, $exercise, now()->subDays($daysAgo)->toDateString());
+        }
+
+        $newest = WorkoutCheckin::orderBy('performed_at', 'desc')->first();
+
+        $response = $this->actingAs($studentUser)->getJson(
+            "/api/student/exercises/{$exercise->id}/history?per_page=10&exclude_checkin_id={$newest->id}",
+        );
+
+        $response->assertOk();
+        $response->assertJsonPath('meta.total', 3);
+        $this->assertNotContains(
+            $newest->id,
+            collect($response->json('data'))->pluck('checkin_id')->all(),
+        );
+    }
+
+    public function test_history_exposes_volume_per_set_and_session_total(): void
+    {
+        [$studentUser, $workout, $exercise, $workoutExercise] = $this->createStudentWithWorkout();
+        $this->addSecondSeries($workoutExercise);
+
+        $this->registerCheckinWithSets($studentUser, $workout, $exercise, now()->subDays(5)->toDateString(), [
+            ['set_number' => 1, 'performed_weight' => 40, 'performed_repetitions' => 10],
+            ['set_number' => 2, 'performed_weight' => 50, 'performed_repetitions' => 8],
+        ]);
+
+        $response = $this->actingAs($studentUser)
+            ->getJson("/api/student/exercises/{$exercise->id}/history");
+
+        $response->assertOk();
+        $response->assertJsonPath('data.0.sets.0.volume', 400);
+        $response->assertJsonPath('data.0.sets.1.volume', 400);
+        $response->assertJsonPath('data.0.total_volume', 800);
+    }
+
+    public function test_history_reports_null_volume_when_a_value_is_missing(): void
+    {
+        [$studentUser, $workout, $exercise] = $this->createStudentWithWorkout();
+
+        // Carga sem repetições: o autosave aceita parcial, e sem os dois não há volume.
+        $this->registerCheckinWithSets($studentUser, $workout, $exercise, now()->subDays(5)->toDateString(), [
+            ['set_number' => 1, 'performed_weight' => 40, 'performed_repetitions' => null],
+        ]);
+
+        $response = $this->actingAs($studentUser)
+            ->getJson("/api/student/exercises/{$exercise->id}/history");
+
+        $response->assertOk();
+
+        // Chave ausente também leria como null, então a asserção exige que o
+        // campo exista e esteja nulo.
+        $set = $response->json('data.0.sets.0');
+        $this->assertArrayHasKey('volume', $set);
+        $this->assertNull($set['volume']);
+
+        $entry = $response->json('data.0');
+        $this->assertArrayHasKey('total_volume', $entry);
+        $this->assertNull($entry['total_volume']);
+    }
+
+    public function test_history_is_empty_for_exercise_never_performed(): void
+    {
+        [$studentUser, , $exercise] = $this->createStudentWithWorkout();
+
+        $response = $this->actingAs($studentUser)
+            ->getJson("/api/student/exercises/{$exercise->id}/history");
+
+        $response->assertOk();
+        $response->assertJsonCount(0, 'data');
+    }
 }
