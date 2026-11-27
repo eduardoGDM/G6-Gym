@@ -61,14 +61,18 @@ function ColumnLabel({ children, className }) {
 /** Valor executado: número na display, unidade em mono. */
 function SetValue({ value, unit }) {
   if (value === null || value === undefined) {
-    return <span className="text-[22px] text-muted-foreground ficha-display">—</span>;
+    return (
+      <span className="text-[19px] text-muted-foreground ficha-display sm:text-[22px]">
+        —
+      </span>
+    );
   }
 
   return (
-    <span className="text-[22px] ficha-display">
+    <span className="text-[19px] ficha-display sm:text-[22px]">
       {value}
       {unit ? (
-        <span className="ml-1 text-[11px] font-medium text-muted-foreground ficha-mono">
+        <span className="ml-0.5 text-[10px] font-medium text-muted-foreground ficha-mono sm:ml-1 sm:text-[11px]">
           {unit}
         </span>
       ) : null}
@@ -76,7 +80,10 @@ function SetValue({ value, unit }) {
   );
 }
 
-const SET_GRID = "grid grid-cols-[2.25rem_1fr_1fr_1fr] items-end gap-x-3";
+// Quatro colunas em 328px de conteúdo: a coluna da série encolhe e o espaço
+// entre elas cede antes dos números.
+const SET_GRID =
+  "grid grid-cols-[1.75rem_1fr_1fr_1fr] items-end gap-x-2 sm:grid-cols-[2.25rem_1fr_1fr_1fr] sm:gap-x-3";
 
 /**
  * Um exercício da folha: nome, grupo muscular e as séries executadas em linhas
@@ -96,7 +103,7 @@ function ExerciseSheet({ item, delay }) {
         </p>
       ) : null}
 
-      <h2 className="mt-2 text-[clamp(1.375rem,2.6vw,1.75rem)] ficha-display">
+      <h2 className="mt-2 break-words text-[clamp(1.25rem,4.5vw,1.75rem)] ficha-display">
         {item.exercise?.name || `Exercício #${item.exercise_id}`}
       </h2>
 
@@ -147,7 +154,7 @@ function ExerciseSheet({ item, delay }) {
 }
 
 const ACTION_LINK =
-  "min-h-11 text-[11px] font-semibold uppercase tracking-[0.2em] underline decoration-dotted underline-offset-4 transition-colors ficha-mono";
+  "inline-flex min-h-11 items-center text-xs font-semibold uppercase tracking-[0.16em] underline decoration-dotted underline-offset-4 transition-colors ficha-mono";
 
 /**
  * Detalhe de um check-in no tema "A Ficha": a folha preenchida.
@@ -232,7 +239,7 @@ export default function HistoryDetail() {
             : "Folha de treino"}
         </p>
 
-        <h1 className="mt-4 text-[clamp(2.5rem,6vw,4.5rem)] ficha-display">
+        <h1 className="mt-4 break-words text-[clamp(1.875rem,8vw,4.5rem)] ficha-display">
           {checkin?.workout?.name || "Check-in"}
         </h1>
 
@@ -258,7 +265,7 @@ export default function HistoryDetail() {
               ) : null}
             </p>
 
-            <div className="flex flex-wrap items-center gap-7">
+            <div className="flex flex-wrap items-center gap-x-7 gap-y-1">
               {checkin.workout_id ? (
                 <button
                   type="button"

@@ -1,10 +1,8 @@
 import { LogOut } from "lucide-react";
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect } from "react";
 
+import { useLogout } from "../../hooks/useLogout";
 import { cn } from "../../lib/utils";
-import authService from "../../services/authService";
-import useAuthStore from "../../store/authStore";
 import Logo from "./Logo";
 import MenuItem from "./MenuItem";
 
@@ -23,9 +21,7 @@ export default function Sidebar({
       ? navGroups
       : [{ heading: null, items: navGroups }]
     : [];
-  const navigate = useNavigate();
-  const { logout } = useAuthStore();
-  const [loadingLogout, setLoadingLogout] = useState(false);
+  const { logout: handleLogout, loading: loadingLogout } = useLogout();
 
   useEffect(() => {
     if (mobileOpen && !isDesktop) {
@@ -36,22 +32,6 @@ export default function Sidebar({
       document.body.style.overflow = "";
     };
   }, [mobileOpen, isDesktop]);
-
-  const handleLogout = async () => {
-    setLoadingLogout(true);
-
-    try {
-      await authService.logout();
-    } catch (error) {
-      if (import.meta.env.DEV) {
-        console.warn("Backend logout falhou:", error);
-      }
-    } finally {
-      logout();
-      navigate("/");
-      setLoadingLogout(false);
-    }
-  };
 
   return (
     <>

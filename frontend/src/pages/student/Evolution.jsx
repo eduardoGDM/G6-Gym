@@ -19,7 +19,7 @@ export default function Evolution() {
         <p className="text-muted-foreground ficha-label">
           Evolução · carga e repetições
         </p>
-        <h1 className="mt-5 text-[clamp(3rem,7vw,5.5rem)] ficha-display">
+        <h1 className="mt-5 break-words text-[clamp(2.25rem,8vw,5.5rem)] ficha-display">
           A régua
         </h1>
         <p className="mt-5 max-w-xl text-[15px] leading-relaxed text-muted-foreground">

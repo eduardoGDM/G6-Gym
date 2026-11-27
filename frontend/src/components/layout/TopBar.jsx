@@ -12,6 +12,12 @@ export default function Topbar({
   title = "G6Fit",
   subtitle = "",
   isDesktop,
+  // Quando o papel tem barra de navegação no rodapé (ver RoleLayout.mobileNav),
+  // a gaveta não tem mais função e o chip de usuário é só um avatar sem nome
+  // nem papel — o perfil já é um destino da barra. Os dois saem da topbar para
+  // sobrar espaço em 360px.
+  showMenuButton = true,
+  showUserChip = true,
   roleLabel = "Personal",
   profilePath,
   actions,
@@ -38,7 +44,7 @@ export default function Topbar({
     <header className="sticky top-0 z-30 border-b border-border bg-background/80 backdrop-blur-xl">
       <div className="flex min-h-[56px] items-center gap-3 px-4 sm:gap-4 sm:px-6 lg:px-8">
         <div className="flex min-w-0 shrink-0 items-center gap-3">
-          {!isDesktop ? (
+          {!isDesktop && showMenuButton ? (
             <button
               type="button"
               onClick={onMenuClick}
@@ -70,17 +76,19 @@ export default function Topbar({
           <NotificationsMenu />
 
           {/* Só vira link quando o papel tem uma tela de perfil (hoje, o aluno). */}
-          {profilePath ? (
-            <Link
-              to={profilePath}
-              aria-label={`Perfil de ${userName}`}
-              className={USER_CHIP_CLASSES}
-            >
-              {userChip}
-            </Link>
-          ) : (
-            <div className={USER_CHIP_CLASSES}>{userChip}</div>
-          )}
+          {showUserChip ? (
+            profilePath ? (
+              <Link
+                to={profilePath}
+                aria-label={`Perfil de ${userName}`}
+                className={USER_CHIP_CLASSES}
+              >
+                {userChip}
+              </Link>
+            ) : (
+              <div className={USER_CHIP_CLASSES}>{userChip}</div>
+            )
+          ) : null}
         </div>
       </div>
     </header>

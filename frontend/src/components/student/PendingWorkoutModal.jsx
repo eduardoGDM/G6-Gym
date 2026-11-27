@@ -127,7 +127,7 @@ export default function PendingWorkoutModal() {
           onClick={handleGo}
           className="mt-7 flex min-h-14 w-full items-center justify-between gap-6 border-2 border-foreground bg-primary px-5 text-primary-foreground transition-colors duration-200 ficha-wipe hover:text-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
         >
-          <span className="text-[11px] font-semibold uppercase tracking-[0.2em] ficha-mono">
+          <span className="text-xs font-semibold uppercase tracking-[0.18em] ficha-mono">
             Retomar o treino
           </span>
           <ArrowRight className="h-5 w-5 shrink-0" aria-hidden="true" />
@@ -136,7 +136,7 @@ export default function PendingWorkoutModal() {
         <button
           type="button"
           onClick={handleDismiss}
-          className="mt-4 min-h-11 w-full text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground underline decoration-dotted underline-offset-4 transition-colors ficha-mono hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className="mt-4 min-h-12 w-full text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground underline decoration-dotted underline-offset-4 transition-colors ficha-mono hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
           Depois
         </button>

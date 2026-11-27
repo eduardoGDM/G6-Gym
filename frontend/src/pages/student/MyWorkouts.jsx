@@ -12,6 +12,9 @@ import { cn } from "../../lib/utils";
 import workoutsService from "../../services/WorkoutsService";
 import useAuthStore from "../../store/authStore";
 
+const SECONDARY_ACTION =
+  "flex min-h-11 items-center text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground underline decoration-dotted underline-offset-4 transition-colors ficha-mono hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
+
 function getMuscleGroups(workout) {
   const names = (workout.workout_exercises || [])
     .map((item) => item.exercise?.muscle_group?.name)
@@ -64,7 +67,7 @@ function WorkoutRow({ workout, onStart, onSwap, onEdit, isPending, delay }) {
             ) : null}
 
             <h2
-              className="text-[clamp(1.5rem,3.2vw,2.15rem)] ficha-display"
+              className="break-words text-[clamp(1.375rem,5.5vw,2.15rem)] ficha-display"
               title={workout.name}
             >
               {workout.name}
@@ -80,7 +83,10 @@ function WorkoutRow({ workout, onStart, onSwap, onEdit, isPending, delay }) {
             ) : null}
           </div>
 
-          <div className="flex shrink-0 items-end gap-2">
+          {/* Em 360px o número ao lado do título comprimia o nome do treino
+              a duas palavras por linha: no mobile a contagem desce para a
+              linha de meta, abaixo. */}
+          <div className="hidden shrink-0 items-end gap-2 sm:flex">
             <span className="text-[34px] ficha-display">{exerciseCount}</span>
             <span className="pb-1.5 text-xs text-muted-foreground ficha-mono">
               exerc.
@@ -91,31 +97,29 @@ function WorkoutRow({ workout, onStart, onSwap, onEdit, isPending, delay }) {
         <div className="mt-4 flex flex-wrap items-center justify-between gap-x-8 gap-y-3">
           {/* Grupos musculares como uma linha de ficha, não como chips. */}
           <p className="min-w-0 text-muted-foreground ficha-label">
+            <span className="text-foreground sm:hidden">
+              {exerciseCount} exerc.{" "}
+            </span>
+            <span className="sm:hidden">· </span>
             {muscleGroups.length > 0
               ? muscleGroups.join(" · ")
               : "Sem grupo muscular definido"}
           </p>
 
-          <div className="flex items-center gap-6">
+          <div className="flex flex-1 items-center justify-between gap-5 sm:flex-initial sm:justify-end sm:gap-6">
+            {/* Rótulo curto no mobile: o texto inteiro empurrava a ação
+                principal para uma terceira linha. Alvo de 44px nos dois. */}
             {onSwap || onEdit ? (
               <div className="pointer-events-auto relative z-20 flex items-center gap-5">
                 {onSwap ? (
-                  <button
-                    type="button"
-                    onClick={onSwap}
-                    className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground underline decoration-dotted underline-offset-4 transition-colors ficha-mono hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                  >
-                    Trocar exercícios
+                  <button type="button" onClick={onSwap} className={SECONDARY_ACTION}>
+                    Trocar<span className="hidden sm:inline">&nbsp;exercícios</span>
                   </button>
                 ) : null}
 
                 {onEdit ? (
-                  <button
-                    type="button"
-                    onClick={onEdit}
-                    className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground underline decoration-dotted underline-offset-4 transition-colors ficha-mono hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                  >
-                    Editar treino
+                  <button type="button" onClick={onEdit} className={SECONDARY_ACTION}>
+                    Editar<span className="hidden sm:inline">&nbsp;treino</span>
                   </button>
                 ) : null}
               </div>
@@ -125,7 +129,7 @@ function WorkoutRow({ workout, onStart, onSwap, onEdit, isPending, delay }) {
             <span
               aria-hidden="true"
               className={cn(
-                "flex items-center gap-2.5 text-[11px] font-semibold uppercase tracking-[0.2em] ficha-mono",
+                "flex shrink-0 items-center gap-2.5 text-xs font-semibold uppercase tracking-[0.2em] ficha-mono",
                 isPending ? "text-primary" : "text-foreground",
               )}
             >
@@ -183,7 +187,7 @@ export default function MyWorkouts() {
           Meus treinos · fichas ativas
         </p>
 
-        <h1 className="mt-5 text-[clamp(3rem,7vw,5.5rem)] ficha-display">
+        <h1 className="mt-5 break-words text-[clamp(2.25rem,8vw,5.5rem)] ficha-display">
           A prancheta
         </h1>
 

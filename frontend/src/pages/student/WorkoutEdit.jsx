@@ -15,7 +15,7 @@ import ExercisePicker from "../trainer/Workouts/components/ExercisePicker";
 import ExerciseSwapRow from "./components/workout/ExerciseSwapRow";
 
 const LINK =
-  "min-h-11 text-[11px] font-semibold uppercase tracking-[0.2em] underline decoration-dotted underline-offset-4 transition-colors ficha-mono";
+  "inline-flex min-h-11 items-center text-xs font-semibold uppercase tracking-[0.16em] underline decoration-dotted underline-offset-4 transition-colors ficha-mono";
 
 /**
  * Troca de exercícios de um treino do aluno — o caminho rápido e conservador.
@@ -134,7 +134,7 @@ export default function WorkoutEdit() {
             Troca de exercícios
           </p>
 
-          <h1 className="mt-4 text-[clamp(2.25rem,5.5vw,3.75rem)] ficha-display">
+          <h1 className="mt-4 break-words text-[clamp(1.75rem,7vw,3.75rem)] ficha-display">
             {workout?.name || "Editar treino"}
           </h1>
 
@@ -146,7 +146,7 @@ export default function WorkoutEdit() {
           <button
             type="button"
             onClick={() => navigate(`/student/manage-workouts/${id}/edit`)}
-            className={cn(LINK, "mt-3 block hover:text-primary")}
+            className={cn(LINK, "mt-2 hover:text-primary")}
           >
             Mudar séries, ordem ou adicionar exercícios
           </button>
@@ -191,7 +191,7 @@ export default function WorkoutEdit() {
             <button
               type="button"
               onClick={() => navigate(`/student/manage-workouts/${id}/edit`)}
-              className="mt-5 min-h-12 border-2 border-foreground px-6 text-[11px] font-semibold uppercase tracking-[0.2em] transition-colors duration-200 ficha-mono hover:bg-foreground hover:text-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+              className="mt-5 min-h-12 border-2 border-foreground px-6 text-xs font-semibold uppercase tracking-[0.18em] transition-colors duration-200 ficha-mono hover:bg-foreground hover:text-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
             >
               Adicionar exercícios
             </button>
@@ -211,7 +211,7 @@ export default function WorkoutEdit() {
               ))}
             </ul>
 
-            <div className="sticky bottom-4 mt-8 flex flex-col gap-4 border-2 border-foreground bg-card px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="sticky bottom-[max(1rem,env(safe-area-inset-bottom))] mt-8 flex flex-col gap-4 border-2 border-foreground bg-card px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
               <p className="text-muted-foreground ficha-label">
                 {changes.length === 0
                   ? "Nenhuma troca pendente"
@@ -226,7 +226,7 @@ export default function WorkoutEdit() {
                 type="button"
                 onClick={handleSave}
                 disabled={changes.length === 0 || saving}
-                className="flex min-h-12 items-center justify-center gap-3 border-2 border-foreground bg-primary px-6 text-[11px] font-semibold uppercase tracking-[0.2em] text-primary-foreground transition-colors duration-200 ficha-mono ficha-wipe hover:text-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none disabled:border-input disabled:bg-transparent disabled:text-muted-foreground"
+                className="flex min-h-12 items-center justify-center gap-3 border-2 border-foreground bg-primary px-6 text-xs font-semibold uppercase tracking-[0.18em] text-primary-foreground transition-colors duration-200 ficha-mono ficha-wipe hover:text-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none disabled:border-input disabled:bg-transparent disabled:text-muted-foreground"
               >
                 {saving ? <Spinner className="h-4 w-4" /> : null}
                 Salvar trocas

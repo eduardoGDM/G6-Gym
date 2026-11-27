@@ -1,4 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
+import { ClipboardList, LogOut } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 import PageContainer from "../../components/common/PageContainer";
 import TapeDivider from "../../components/ficha/TapeDivider";
@@ -9,15 +11,19 @@ import {
   formatAssessmentDate,
   formatMeasureValue,
 } from "../../components/physicalAssessment/fields";
+import { useLogout } from "../../hooks/useLogout";
 import { cn } from "../../lib/utils";
 import studentProfileService from "../../services/StudentProfileService";
+import useAuthStore from "../../store/authStore";
 
 /** Linha de ficha: rótulo em micro-label, valor na mesma pauta. */
 function Entry({ label, value, hint }) {
   return (
-    <div className="flex flex-wrap items-baseline gap-x-5 gap-y-1 border-b border-[color:var(--color-rule)] py-3">
-      <p className="w-36 shrink-0 text-muted-foreground ficha-label">{label}</p>
-      <p className="min-w-0 flex-1 text-[15px]">
+    <div className="border-b border-[color:var(--color-rule)] py-3 sm:flex sm:flex-wrap sm:items-baseline sm:gap-x-5">
+      <p className="text-muted-foreground ficha-label sm:w-36 sm:shrink-0">
+        {label}
+      </p>
+      <p className="mt-1.5 min-w-0 break-words text-[15px] sm:mt-0 sm:flex-1">
         {value || <span className="text-muted-foreground">—</span>}
         {value && hint ? (
           <span className="text-muted-foreground"> {hint}</span>
@@ -66,6 +72,13 @@ function SectionLabel({ children, className }) {
  * do personal: ele herda a paleta pelos tokens escopados, sem reescrita.
  */
 export default function Profile() {
+  const navigate = useNavigate();
+  const { logout, loading: loggingOut } = useLogout();
+
+  const canManageWorkouts = useAuthStore(
+    (state) => state.user?.student_profile?.can_manage_workouts === true,
+  );
+
   const {
     data: profile,
     isLoading,
@@ -103,7 +116,7 @@ export default function Profile() {
             className="mt-5 block h-16 w-80 max-w-full animate-pulse bg-muted"
           />
         ) : (
-          <h1 className="mt-5 text-[clamp(2.5rem,6vw,4.75rem)] ficha-display">
+          <h1 className="mt-5 break-words text-[clamp(1.875rem,8vw,4.75rem)] ficha-display">
             {profile?.name || "Aluno"}
           </h1>
         )}
@@ -208,6 +221,37 @@ export default function Profile() {
               ))}
             </div>
           )}
+        </div>
+      </section>
+
+      <TapeDivider delay={200} className="my-11" tilt={false} />
+
+      {/* No mobile a gaveta deu lugar à barra inferior, então estes dois
+          caminhos moram aqui — é a última aba da barra. */}
+      <section>
+        <SectionLabel>Conta</SectionLabel>
+
+        <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+          {canManageWorkouts ? (
+            <button
+              type="button"
+              onClick={() => navigate("/student/manage-workouts")}
+              className="flex min-h-12 items-center justify-center gap-3 border-2 border-foreground px-6 text-xs font-semibold uppercase tracking-[0.18em] transition-colors duration-200 ficha-mono hover:bg-foreground hover:text-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+            >
+              <ClipboardList className="h-4 w-4" aria-hidden="true" />
+              Gerenciar treinos
+            </button>
+          ) : null}
+
+          <button
+            type="button"
+            onClick={logout}
+            disabled={loggingOut}
+            className="flex min-h-12 items-center justify-center gap-3 border-2 border-destructive px-6 text-xs font-semibold uppercase tracking-[0.18em] text-destructive transition-colors duration-200 ficha-mono hover:bg-destructive hover:text-destructive-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-destructive focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-50"
+          >
+            <LogOut className="h-4 w-4" aria-hidden="true" />
+            {loggingOut ? "Saindo…" : "Sair da conta"}
+          </button>
         </div>
       </section>
     </PageContainer>

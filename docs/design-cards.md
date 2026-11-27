@@ -378,9 +378,57 @@ com o risco por cima, futuras só com o alvo — e expandem ao toque para corre�
 | `student/Profile.jsx` | Ficha de cadastro: nome como título, dados em linha de pauta |
 | `student/WorkoutEdit.jsx` | Troca de posição com risco de caneta, barra de salvar |
 | `components/student/PendingWorkoutModal.jsx` | Modal sem ícone de alerta: fita, display e uma Anilha |
+| `components/layout/MobileTabBar.jsx` | Navegação do mobile: aba ativa em tinta, área segura |
 | `components/student/WorkoutRecordsModal.jsx` | Carimbo de recorde |
 | `src/index.css` | Blocos de modo escuro/claro, keyframes, utilitários |
 | `src/store/themeStore.js` | Persistência do modo, com o escuro como padrão |
+
+## Mobile primeiro (área do aluno)
+
+A área do aluno é usada **principalmente no celular**, de pé, na academia e com
+uma mão. As regras abaixo valem para toda tela nova dela.
+
+**Gutter.** O padding lateral vive **só** no `PageContainer` (`px-4` = 16px no
+mobile). O `<main>` do `RoleLayout` não tem padding horizontal — quando os dois
+tinham, o conteúdo perdia 32px de cada lado.
+
+**Navegação.** No mobile (< 900px) o aluno navega pela `MobileTabBar` fixa no
+rodapé, montada pelo `StudentLayout` via `RoleLayout.mobileNav`; a gaveta e o
+chip de usuário saem da topbar. Limite de **5 destinos** — o sexto rótulo quebra
+em 360px. O que não cabe (sair da conta, gerenciar treinos) fica na tela de
+perfil, a última aba. Nas telas de tarefa do treino (`/student/workout/*`) a
+barra é escondida por `mobileNavHidden`, porque elas já têm a própria barra fixa
+de ação.
+
+**A aba ativa é tinta, não Anilha.** A barra conviveria com o CTA em Anilha de
+quase toda tela; a Anilha fica reservada ao conteúdo. O sinal da aba é o traço
+de tinta no topo mais o peso do rótulo.
+
+**Área segura.** O `index.html` traz `viewport-fit=cover` — sem ele
+`env(safe-area-inset-*)` resolve 0 e as barras fixas caem sob o indicador de
+home do iPhone. Toda barra fixa no rodapé soma
+`env(safe-area-inset-bottom)` ao próprio padding.
+
+**Tipografia que cede.** Título em `ficha-display` sempre com `break-words` e um
+piso de clamp que caiba em 328px — na prática `clamp(1.75rem…2.25rem, 8vw, …)`.
+Quando o texto vem do banco (nome de treino, de exercício), o piso é ainda mais
+baixo: ninguém controla o comprimento.
+
+**Colunas fixas comem o conteúdo.** Em linha de lista, a soma das colunas fixas
+mais os gaps não pode passar de ~45% dos 328px. O padrão é encolher a coluna do
+número (`w-10 sm:w-24`) e esconder a unidade (`hidden sm:block`), nunca truncar
+o nome em duas palavras.
+
+**Alvo de toque.** Mínimo 44px (`min-h-11`); ação principal 48–56px
+(`min-h-12`/`min-h-14`). Link de ação em mono tem **12px** (`text-xs`), não
+11px, e tracking no máximo `0.16em` — acima disso o rótulo estoura a linha.
+Rótulo longo encurta no mobile com `<span className="hidden sm:inline">`.
+
+**Número gigante decorativo não sangra a margem no mobile.** A marca d'água do
+Dashboard é `hidden lg:block`: o deslocamento negativo viraria rolagem
+horizontal, e atrás de um título de 30px ela deixa de ser marca d'água.
+
+---
 
 ## Telas do aluno fora do tema
 

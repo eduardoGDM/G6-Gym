@@ -58,7 +58,7 @@ export default function ExerciseSwapRow({
         changed && "border-l-[3px] border-l-primary pl-4",
       )}
     >
-      <div className="flex flex-wrap items-start gap-x-6 gap-y-4">
+      <div className="flex flex-wrap items-start gap-x-6 gap-y-3">
         {/* A posição é uma sequência de verdade (a ordem do treino), então o
             número numerado se justifica aqui. */}
         <span className="w-7 shrink-0 pt-1.5 text-sm text-muted-foreground ficha-mono">
@@ -70,7 +70,7 @@ export default function ExerciseSwapRow({
             {current?.muscle_group?.name || "Sem grupo muscular"}
           </p>
 
-          <h3 className="mt-2 text-[clamp(1.25rem,2.4vw,1.5rem)] ficha-display">
+          <h3 className="mt-2 break-words text-[clamp(1.125rem,4.5vw,1.5rem)] ficha-display">
             {current?.name || "—"}
           </h3>
 
@@ -93,13 +93,13 @@ export default function ExerciseSwapRow({
           </p>
         </div>
 
-        <div className="flex shrink-0 items-center gap-5">
+        <div className="flex w-full shrink-0 items-center justify-end gap-5 sm:w-auto">
           {changed ? (
             <button
               type="button"
               onClick={onUndo}
               disabled={disabled}
-              className="min-h-11 text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground underline decoration-dotted underline-offset-4 transition-colors ficha-mono hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-40"
+              className="inline-flex min-h-11 items-center text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground underline decoration-dotted underline-offset-4 transition-colors ficha-mono hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-40"
             >
               Desfazer
             </button>
@@ -109,7 +109,7 @@ export default function ExerciseSwapRow({
             type="button"
             onClick={onSwap}
             disabled={disabled}
-            className="min-h-11 border-2 border-foreground px-5 text-[11px] font-semibold uppercase tracking-[0.18em] transition-colors duration-200 ficha-mono hover:bg-foreground hover:text-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-40"
+            className="min-h-11 border-2 border-foreground px-6 text-xs font-semibold uppercase tracking-[0.16em] transition-colors duration-200 ficha-mono hover:bg-foreground hover:text-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-40"
           >
             Trocar
           </button>
