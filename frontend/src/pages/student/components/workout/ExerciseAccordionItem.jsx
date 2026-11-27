@@ -60,8 +60,12 @@ export default function ExerciseAccordionItem({
     [field.sets],
   );
 
-  // Mesma queryKey da ExerciseHistoryModal: a última execução carregada aqui
-  // já deixa a modal pronta. Só busca quando o exercício está aberto.
+  // Última execução, para a dica "Última vez" na série e para o pré-preenchimento
+  // de aquecimento/reconhecimento. Só busca quando o exercício está aberto.
+  //
+  // Chave própria, separada da ExerciseHistoryModal: ela pagina o log completo
+  // (per_page 10, useInfiniteQuery) e não pode compartilhar cache com esta, que
+  // quer só as 2 últimas.
   const { data: history } = useQuery({
     queryKey: ["exercise-history", field.exercise_id, checkinId ?? null],
     queryFn: () =>
@@ -255,6 +259,7 @@ export default function ExerciseAccordionItem({
                 onWeightChange={(target, previous, next) =>
                   onWeightChange(index, target, previous, next)
                 }
+                onOpenHistory={onOpenHistory}
               />
             ))}
           </div>

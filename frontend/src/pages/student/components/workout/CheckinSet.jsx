@@ -1,4 +1,4 @@
-import { Check, ChevronDown, Minus, Plus } from "lucide-react";
+import { Check, ChevronDown, History, Minus, Plus } from "lucide-react";
 import { useState } from "react";
 import { Controller, useWatch } from "react-hook-form";
 
@@ -148,6 +148,7 @@ export default function CheckinSet({
   lastSet,
   onToggle,
   onWeightChange,
+  onOpenHistory,
 }) {
   const [expanded, setExpanded] = useState(false);
   const [detailsOpen, setDetailsOpen] = useState(false);
@@ -176,6 +177,22 @@ export default function CheckinSet({
       performed_repetitions: repetitions,
     });
   const blockedReason = "Informe carga e reps para marcar";
+
+  // O histórico completo só é oferecido na série Válida: é a série que carrega
+  // a progressão. Aquecimento e reconhecimento já vêm pré-preenchidos.
+  const showHistory = set.planned_type === "Válida" && Boolean(onOpenHistory);
+
+  const historyButton = showHistory ? (
+    <button
+      type="button"
+      onClick={onOpenHistory}
+      aria-label="Histórico de carga e repetições deste exercício"
+      title="Histórico de carga e repetições"
+      className="flex h-11 w-11 shrink-0 items-center justify-center text-muted-foreground transition-colors duration-150 hover:text-primary active:scale-90"
+    >
+      <History className="h-4 w-4" aria-hidden="true" />
+    </button>
+  ) : null;
 
   const handleToggle = () => {
     setExpanded(false);
@@ -214,6 +231,8 @@ export default function CheckinSet({
             </span>
           )}
         </button>
+
+        {historyButton}
 
         <button
           type="button"
@@ -265,9 +284,14 @@ export default function CheckinSet({
           {completed ? " · feita" : ""}
         </p>
 
-        {target ? (
-          <p className="text-muted-foreground ficha-label">Alvo · {target}</p>
-        ) : null}
+        <span className="flex items-center gap-1">
+          {target ? (
+            <span className="text-muted-foreground ficha-label">
+              Alvo · {target}
+            </span>
+          ) : null}
+          {historyButton}
+        </span>
       </div>
 
       {lastSummary ? (
